@@ -22,29 +22,6 @@ The system provides **personalized advice** through a **chat assistant** interfa
 
 ---
 
-## 🗂️ Repository structure
-```
-
-airbytes-hack/
-├─ app.py                 # Flask backend (API + frontend server)
-├─ requirements.txt
-├─ templates/index.html   # Frontend UI (chat + info panel)
-├─ static/
-│  ├─ css/styles.css
-│  └─ js/chat.js
-├─ model/
-│  ├─ predictor.py        # Prediction wrapper (model or fallback heuristic)
-│  ├─ train_model.py      # Training script (optional)
-│  └─ model.pkl           # Pretrained model (if available)
-├─ data/
-│  └─ sample_aq_bogota.csv # Sample historical data (optional)
-└─ docs/
-└─ demo_instructions.md
-
-````
-
----
-
 ## ⚙️ Installation & Running locally
 
 1. Clone the repo:
