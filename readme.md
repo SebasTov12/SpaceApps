@@ -107,7 +107,7 @@ The system provides **personalized advice** through a **chat assistant** interfa
 ## 👩‍🚀 Team
 
 Built with 💙 for **NASA Space Apps Challenge 2025**
-**Team: Airbites**
+**Team: Airbytes**
 
 * FullStack – Juan Sebastián Murcia Tovar
 * FullStack – Daniel Santiago Polanco Reyes
