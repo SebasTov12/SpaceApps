@@ -26,7 +26,7 @@ The system provides **personalized advice** through a **chat assistant** interfa
 
 1. Clone the repo:
    ```bash
-   git clone https://github.com/YOUR-TEAM/airbytes-hack.git
+   git clone https://github.com/SebasTov12/SpaceApps.git
    cd airbytes-hack
 ````
 
@@ -109,9 +109,12 @@ The system provides **personalized advice** through a **chat assistant** interfa
 Built with 💙 for **NASA Space Apps Challenge 2025**
 **Team: [Your Team Name]**
 
-* Role 1 – Name
-* Role 2 – Name
-* Role 3 – Name
+* FullStack – Juan Sebastián Murcia Tovar
+* FullStack – Daniel Santiago Polanco Reyes
+* FullStack – Kevin David Rodriguez Hernandez
+* FullStack – Nicolás Salazar Tamayo
+* FullStack – Juan Angel Pacheco Valencia
+* FullStack – Carlos Rivera
 
 ---
 
