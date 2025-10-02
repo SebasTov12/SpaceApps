@@ -1,6 +1,6 @@
 import requests
 import psycopg2
-from datetime import datetime
+from datetime import datetime, timezone
 
 # ===================== CONFIG =====================
 DB_CONFIG = {
@@ -13,13 +13,21 @@ DB_CONFIG = {
 
 OPENAQ_URL = "https://api.openaq.org/v2/measurements"
 OPENWEATHER_URL = "https://api.openweathermap.org/data/2.5/weather"
-OPENWEATHER_KEY = "ab910a1b5dfba0f337567d29c64cb219"
+OPENWEATHER_KEY = "851fc0b7aecc41c3eed4ceb24d129f82"
 
 # Ciudad/coords de ejemplo (Bogotá)
 CITY = "Bogotá"
 LAT = 4.7110
 LON = -74.0721
 # ==================================================
+
+
+# ---------------- UTILS ----------------
+def clean_str(value):
+    """Sanitiza cualquier string a UTF-8, reemplazando caracteres inválidos."""
+    if value is None:
+        return None
+    return str(value).encode("utf-8", errors="replace").decode("utf-8", errors="replace")
 
 
 # ---------------- FUNCIONES DB ----------------
@@ -32,11 +40,14 @@ def insert_measurement(station_id, timestamp, param, value, unit, source):
     try:
         conn = get_conn()
         cur = conn.cursor()
+
+        print("DEBUG measurement:", station_id, param, value, unit, source)
+
         cur.execute("""
             INSERT INTO measurements (station_id, timestamp, pm25, pm10, co2, o3, no2, so2, fuente)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """, (
-            station_id,
+            clean_str(station_id),
             timestamp,
             value if param == "pm25" else None,
             value if param == "pm10" else None,
@@ -44,14 +55,14 @@ def insert_measurement(station_id, timestamp, param, value, unit, source):
             value if param == "o3" else None,
             value if param == "no2" else None,
             value if param == "so2" else None,
-            source
+            clean_str(source)
         ))
         conn.commit()
     except Exception as e:
         print("❌ Error insertando en measurements:", e)
     finally:
-        if cur: cur.close()
-        if conn: conn.close()
+        if 'cur' in locals(): cur.close()
+        if 'conn' in locals(): conn.close()
 
 
 def insert_weather(timestamp, temp, humidity, wind_speed, wind_dir, pressure, source="OpenWeather"):
@@ -59,19 +70,23 @@ def insert_weather(timestamp, temp, humidity, wind_speed, wind_dir, pressure, so
     try:
         conn = get_conn()
         cur = conn.cursor()
+
+        # DEBUG para ver qué se está insertando
+        print("DEBUG weather insert:", timestamp, LAT, LON, temp, humidity, wind_speed, wind_dir, pressure, repr(clean_str(source)))
+
         cur.execute("""
             INSERT INTO weather_observations 
             (datetime_utc, lat, lon, temp, humidity, wind_speed, wind_dir, pressure, source)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """, (
-            timestamp, LAT, LON, temp, humidity, wind_speed, wind_dir, pressure, source
+            timestamp, LAT, LON, temp, humidity, wind_speed, wind_dir, pressure, clean_str(source)
         ))
         conn.commit()
     except Exception as e:
         print("❌ Error insertando en weather_observations:", e)
     finally:
-        if cur: cur.close()
-        if conn: conn.close()
+        if 'cur' in locals(): cur.close()
+        if 'conn' in locals(): conn.close()
 
 
 # ---------------- ETL ----------------
@@ -90,7 +105,12 @@ def fetch_openaq():
         print("❌ Error en request OpenAQ:", e)
         return
 
-    for result in data.get("results", []):
+    results = data.get("results", [])
+    if not results:
+        print("✅ OpenAQ actualizado con 0 registros.")
+        return
+
+    for result in results:
         timestamp = result["date"]["utc"]
         param = result["parameter"]
         value = result["value"]
@@ -98,7 +118,7 @@ def fetch_openaq():
         station_id = result["location"]
         insert_measurement(station_id, timestamp, param, value, unit, "OpenAQ")
 
-    print("✅ OpenAQ actualizado.")
+    print(f"✅ OpenAQ actualizado con {len(results)} registros.")
 
 
 def fetch_openweather():
@@ -120,7 +140,7 @@ def fetch_openweather():
         print("❌ Respuesta inesperada de OpenWeather:", data)
         return
 
-    timestamp = datetime.utcfromtimestamp(data["dt"])
+    timestamp = datetime.fromtimestamp(data["dt"], tz=timezone.utc)
     temp = data["main"].get("temp")
     humidity = data["main"].get("humidity")
     pressure = data["main"].get("pressure")
