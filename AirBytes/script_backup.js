@@ -2,7 +2,7 @@ class AirBytesApp {
     constructor() {
     
         this.nasaApiKey = '8VFqhy83c3Ji3gbebKoLe3DfMO4UkothFZJElztB';
-        this.tempoBaseUrl = 'https:
+        this.tempoBaseUrl = 'https://api.nasa.gov/planetary/earth/assets';
         this.tempoEndpoints = {
             no2: `${this.tempoBaseUrl}`,
             o3: `${this.tempoBaseUrl}`,
@@ -10,10 +10,11 @@ class AirBytesApp {
         };
         
         this.weatherApiKey = '147e23d2ab0429fc6473a00033041c0d';
-        this.weatherBaseUrl = 'https:
+        this.weatherBaseUrl = 'https://api.openweathermap.org/data/2.5';
+
         
         this.airQualityApiKey = '147e23d2ab0429fc6473a00033041c0d';
-        this.airQualityBaseUrl = 'https:
+        this.airQualityBaseUrl = 'https://api.openweathermap.org/data/2.5';
         
         this.currentLocation = 'colombia';
         this.updateInterval = 300000;
