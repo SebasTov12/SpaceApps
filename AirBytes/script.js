@@ -1111,6 +1111,78 @@ class AirBytesApp {
         return await this.fetchRealTempoDataForLocation(locationData);
     }
 
+// === OpenAQ (últimas mediciones por ciudad) ===
+    async loadGroundDataForLocation(location) {
+        try {
+            const url = `${AIRBYTES_CONFIG.openaq.baseUrl}${AIRBYTES_CONFIG.openaq.endpoints.latest}?coordinates=${location.lat},${location.lon}&radius=10000&limit=1`;
+            const res = await fetch(url);
+            const data = await res.json();
+            if (data.results && data.results.length > 0) {
+                const measurements = {};
+                data.results[0].measurements.forEach(m => {
+                    measurements[m.parameter] = m.value;
+                });
+                return {
+                    pm25: measurements.pm25 || 0,
+                    pm10: measurements.pm10 || 0,
+                    co: measurements.co || 0
+                };
+            }
+            return { pm25: 0, pm10: 0, co: 0 };
+        } catch (err) {
+            console.error("OpenAQ error:", err);
+            return { pm25: 12, pm10: 20, co: 0.5 }; // fallback
+        }
+    }
+
+    // === NASA FIRMS (incendios) ===
+    async loadFires() {
+        try {
+            const url = `${AIRBYTES_CONFIG.nasaFirms.baseUrl}${AIRBYTES_CONFIG.nasaFirms.endpoints.global}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            return data.features.slice(0, 5).map(f => ({
+                lat: f.geometry.coordinates[1],
+                lon: f.geometry.coordinates[0],
+                brightness: f.properties.brightness,
+                date: f.properties.acq_date
+            }));
+        } catch (err) {
+            console.error("FIRMS error:", err);
+            return [];
+        }
+    }
+
+    async checkAlerts() {
+        // Antes generabas alertas simuladas, ahora puedes meter incendios reales
+        const fires = await this.loadFires();
+        const alertsContainer = document.getElementById('alertsContainer');
+        alertsContainer.innerHTML = '';
+
+        if (fires.length === 0) {
+            alertsContainer.innerHTML = '<p style="text-align: center; color: #666;">No hay alertas activas</p>';
+            return;
+        }
+
+        fires.forEach(fire => {
+            const alertCard = document.createElement('div');
+            alertCard.className = 'alert-card danger';
+            alertCard.innerHTML = `
+                <div class="alert-icon">
+                    <i class="fas fa-fire"></i>
+                </div>
+                <div class="alert-content">
+                    <h4>Incendio Detectado</h4>
+                    <p>Lat: ${fire.lat.toFixed(2)}, Lon: ${fire.lon.toFixed(2)} <br>
+                    Brillo: ${fire.brightness} <br>
+                    Fecha: ${fire.date}</p>
+                </div>
+            `;
+            alertsContainer.appendChild(alertCard);
+        });
+    }
+
+
     async loadGroundDataForLocation(locationData) {
         return await this.fetchOpenWeatherAirData(locationData);
     }
