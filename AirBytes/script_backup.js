@@ -11,7 +11,6 @@ class AirBytesApp {
         
         this.weatherApiKey = '147e23d2ab0429fc6473a00033041c0d';
         this.weatherBaseUrl = 'https://api.openweathermap.org/data/2.5';
-
         
         this.airQualityApiKey = '147e23d2ab0429fc6473a00033041c0d';
         this.airQualityBaseUrl = 'https://api.openweathermap.org/data/2.5';
@@ -1554,7 +1553,7 @@ class AirBytesApp {
         this.map = L.map('pollutionMap').setView([4.5709, -74.2973], 6);
 
         
-        L.tileLayer('https:
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(this.map);
 
@@ -1682,7 +1681,7 @@ class AirBytesApp {
         try {
             
             const response = await fetch(
-                `https:
+                `https://api.waqi.info/feed/geo:${locationData.lat};${locationData.lon}/?token=demo`
             );
 
             if (response.ok) {
@@ -1937,7 +1936,7 @@ class AirBytesApp {
         try {
             
             const response = await fetch(
-                `https:
+                `https://api.waqi.info/feed/geo:${locationData.lat};${locationData.lon}/?token=demo`
             );
 
             if (!response.ok) {
@@ -1964,7 +1963,7 @@ class AirBytesApp {
         try {
             
             const response = await fetch(
-                `https:
+                `https://api.waqi.info/feed/geo:${locationData.lat};${locationData.lon}/?token=demo`
             );
 
             if (!response.ok) {
