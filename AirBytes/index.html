@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#4CAF50">
+    <title>AirBytes - Monitoreo de Calidad del Aire</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath fill='%234CAF50' d='M288 32c0 17.7 14.3 32 32 32h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H320c-17.7 0-32 14.3-32 32s14.3 32 32 32h32c53 0 96-43 96-96s-43-96-96-96H320c-17.7 0-32 14.3-32 32zM160 96c0 17.7 14.3 32 32 32h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H192c-17.7 0-32 14.3-32 32s14.3 32 32 32h32c53 0 96-43 96-96s-43-96-96-96H192c-17.7 0-32 14.3-32 32zM64 192c0 17.7 14.3 32 32 32h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H96c-17.7 0-32 14.3-32 32s14.3 32 32 32h32c53 0 96-43 96-96s-43-96-96-96H96c-17.7 0-32 14.3-32 32zM288 256c0 17.7 14.3 32 32 32h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H320c-17.7 0-32 14.3-32 32s14.3 32 32 32h32c53 0 96-43 96-96s-43-96-96-96H320c-17.7 0-32 14.3-32 32zM160 352c0 17.7 14.3 32 32 32h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H192c-17.7 0-32 14.3-32 32s14.3 32 32 32h32c53 0 96-43 96-96s-43-96-96-96H192c-17.7 0-32 14.3-32 32zM64 448c0 17.7 14.3 32 32 32h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H96c-17.7 0-32 14.3-32 32s14.3 32 32 32h32c53 0 96-43 96-96s-43-96-96-96H96c-17.7 0-32 14.3-32 32z'/%3E%3C/svg%3E">
+    <link rel="alternate icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath fill='%234CAF50' d='M288 32c0 17.7 14.3 32 32 32h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H320c-17.7 0-32 14.3-32 32s14.3 32 32 32h32c53 0 96-43 96-96s-43-96-96-96H320c-17.7 0-32 14.3-32 32zM160 96c0 17.7 14.3 32 32 32h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H192c-17.7 0-32 14.3-32 32s14.3 32 32 32h32c53 0 96-43 96-96s-43-96-96-96H192c-17.7 0-32 14.3-32 32zM64 192c0 17.7 14.3 32 32 32h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H96c-17.7 0-32 14.3-32 32s14.3 32 32 32h32c53 0 96-43 96-96s-43-96-96-96H96c-17.7 0-32 14.3-32 32zM288 256c0 17.7 14.3 32 32 32h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H320c-17.7 0-32 14.3-32 32s14.3 32 32 32h32c53 0 96-43 96-96s-43-96-96-96H320c-17.7 0-32 14.3-32 32zM160 352c0 17.7 14.3 32 32 32h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H192c-17.7 0-32 14.3-32 32s14.3 32 32 32h32c53 0 96-43 96-96s-43-96-96-96H192c-17.7 0-32 14.3-32 32zM64 448c0 17.7 14.3 32 32 32h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H96c-17.7 0-32 14.3-32 32s14.3 32 32 32h32c53 0 96-43 96-96s-43-96-96-96H96c-17.7 0-32 14.3-32 32z'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
+          crossorigin=""/>
+</head>
+<body>
+    <div class="app-container">
+      
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <div class="logo-circle">
+                            <i class="fas fa-wind"></i>
+                        </div>
+                    </div>
+                    <h1>AirBytes</h1>
+                </div>
+                
+                
+                <div class="header-info">
+                    <span class="last-update">Última actualización: <span id="lastUpdate">--</span></span>
+                    <button class="refresh-btn" id="refreshBtn">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <nav class="main-navigation">
+            <div class="nav-container">
+                <button class="nav-btn active" data-section="today">
+                    <i class="fas fa-calendar-day"></i>
+                    <span>Hoy</span>
+                </button>
+                <button class="nav-btn" data-section="hourly">
+                    <i class="fas fa-clock"></i>
+                    <span>Cada Hora</span>
+                </button>
+                <button class="nav-btn" data-section="daily">
+                    <i class="fas fa-calendar-week"></i>
+                    <span>Diario</span>
+                </button>
+                <button class="nav-btn" data-section="monthly">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Mensual</span>
+                </button>
+                <button class="nav-btn" data-section="air-quality">
+                    <i class="fas fa-wind"></i>
+                    <span>Calidad del Aire</span>
+                </button>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <section class="content-section active" id="today-section">
+                <section class="current-aqi-card">
+                <div class="card-header">
+                    <h2>Calidad del Aire Actual</h2>
+                    <div class="location-selector">
+                        <button class="location-btn" id="currentLocationBtn" title="Usar mi ubicación actual">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>Mi Ubicación</span>
+                        </button>
+                        <button class="reset-location-btn" id="resetLocationBtn" title="Volver a ubicación por defecto" style="display: none;">
+                            <i class="fas fa-times"></i>
+                            <span>Reset</span>
+                        </button>
+                        <select id="locationSelect">
+                            <optgroup label="Norteamérica (TEMPO)">
+                                <option value="north-america">Norteamérica</option>
+                                <option value="usa">Estados Unidos</option>
+                                <option value="canada">Canadá</option>
+                                <option value="mexico">México</option>
+                            </optgroup>
+                            <optgroup label="Colombia">
+                                <option value="colombia">Colombia</option>
+                                <option value="bogota">Bogotá</option>
+                                <option value="medellin">Medellín</option>
+                                <option value="cali">Cali</option>
+                                <option value="barranquilla">Barranquilla</option>
+                                <option value="cartagena">Cartagena</option>
+                                <option value="bucaramanga">Bucaramanga</option>
+                                <option value="pereira">Pereira</option>
+                                <option value="santa-marta">Santa Marta</option>
+                                <option value="ibague">Ibagué</option>
+                                <option value="manizales">Manizales</option>
+                                <option value="neiva">Neiva</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                </div>
+                <div class="aqi-display">
+                    <div class="aqi-circle" id="aqiCircle">
+                        <div class="aqi-value" id="aqiValue">--</div>
+                        <div class="aqi-label">AQI</div>
+                    </div>
+                    <div class="aqi-info">
+                        <h3 id="aqiStatus">Cargando...</h3>
+                        <p id="aqiDescription">Obteniendo datos de AirBytes...</p>
+                        <div class="health-recommendations" id="healthRecommendations">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            
+            <section class="data-sources">
+                <div class="source-card tempo-data">
+                    <div class="source-header">
+                        <i class="fas fa-satellite-dish"></i>
+                        <h3>Datos TEMPO</h3>
+                    </div>
+                    <div class="source-content">
+                        <div class="metric">
+                            <span class="metric-label">NO₂</span>
+                            <span class="metric-value" id="tempoNo2">--</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">O₃</span>
+                            <span class="metric-value" id="tempoO3">--</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">HCHO</span>
+                            <span class="metric-value" id="tempoHcho">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="source-card ground-data">
+                    <div class="source-header">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <h3>Mediciones Terrestres</h3>
+                    </div>
+                    <div class="source-content">
+                        <div class="metric">
+                            <span class="metric-label">PM2.5</span>
+                            <span class="metric-value" id="groundPm25">--</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">PM10</span>
+                            <span class="metric-value" id="groundPm10">--</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">CO</span>
+                            <span class="metric-value" id="groundCo">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="source-card weather-data">
+                    <div class="source-header">
+                        <i class="fas fa-cloud-sun"></i>
+                        <h3>Datos Meteorológicos</h3>
+                    </div>
+                    <div class="source-content">
+                        <div class="metric">
+                            <span class="metric-label">Temperatura</span>
+                            <span class="metric-value" id="weatherTemp">--</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Humedad</span>
+                            <span class="metric-value" id="weatherHumidity">--</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Viento</span>
+                            <span class="metric-value" id="weatherWind">--</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="prediction-section">
+                <h2>Predicción Avanzada de Calidad del Aire</h2>
+                <div class="prediction-controls">
+                    <div class="prediction-input">
+                        <label for="predictionDays">Días a predecir:</label>
+                        <select id="predictionDays">
+                            <option value="1">1 día</option>
+                            <option value="3">3 días</option>
+                            <option value="7">7 días</option>
+                            <option value="15">15 días</option>
+                        </select>
+                    </div>
+                    <button class="predict-btn" id="predictBtn">
+                        <i class="fas fa-crystal-ball"></i>
+                        Generar Predicción
+                    </button>
+                </div>
+                <div class="prediction-results" id="predictionResults">
+                </div>
+            </section>
+
+
+            <section class="forecast-section">
+                <h2>Pronóstico de Calidad del Aire</h2>
+                <div class="forecast-timeline" id="forecastTimeline">
+                </div>
+            </section>
+
+        
+            <section class="alerts-section">
+                <h2>Alertas de Calidad del Aire</h2>
+                <div class="alerts-container" id="alertsContainer">
+                </div>
+            </section>
+
+            <section class="map-section">
+                <div class="map-header">
+                    <h2>Mapa de Contaminación en Tiempo Real</h2>
+                    <div class="map-controls">
+                        <button class="map-control-btn" id="refreshMapBtn">
+                            <i class="fas fa-sync-alt"></i>
+                            Actualizar Mapa
+                        </button>
+                        <div class="map-legend">
+                            <div class="legend-item">
+                                <div class="legend-color good"></div>
+                                <span>Buena (0-50)</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color moderate"></div>
+                                <span>Moderada (51-100)</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color unhealthy-sensitive"></div>
+                                <span>Insalubre Sensibles (101-150)</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color unhealthy"></div>
+                                <span>Insalubre (151-200)</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color very-unhealthy"></div>
+                                <span>Muy Insalubre (201-300)</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color hazardous"></div>
+                                <span>Peligroso (301+)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="map-container" id="mapContainer">
+                    <div id="pollutionMap"></div>
+                </div>
+            </section>
+            </section>
+
+            <section class="content-section" id="hourly-section">
+                <div class="section-header">
+                    <h2>Pronóstico por Horas</h2>
+                    <p>Datos detallados de clima y calidad del aire cada hora</p>
+                </div>
+                <div class="hourly-forecast" id="hourlyForecast">
+                </div>
+            </section>
+
+            <section class="content-section" id="daily-section">
+                <div class="section-header">
+                    <h2>Pronóstico Diario</h2>
+                    <p>Resumen del clima y calidad del aire por días</p>
+                </div>
+                <div class="daily-forecast" id="dailyForecast">
+                </div>
+            </section>
+
+
+            <section class="content-section" id="monthly-section">
+                <div class="section-header">
+                    <h2>Análisis Mensual</h2>
+                    <p>Tendencias y estadísticas de calidad del aire por mes</p>
+                </div>
+                <div class="monthly-analysis" id="monthlyAnalysis">
+                </div>
+            </section>
+
+            <section class="content-section" id="air-quality-section">
+                <div class="section-header">
+                    <h2>Análisis de Calidad del Aire</h2>
+                    <p>Información detallada sobre contaminantes y sus efectos</p>
+                </div>
+                <div class="air-quality-details" id="airQualityDetails">
+                </div>
+            </section>
+
+
+        </main>
+
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>AirBytes</h3>
+                    <p>Monitoreo de Calidad del Aire en Tiempo Real</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Contacto</h4>
+                    <div class="contact-info">
+                        <p><i class="fas fa-envelope"></i> airbytesteam@gmail.com</p>
+                        <p><i class="fas fa-phone"></i> +57 3103561871</p>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h4>Datos</h4>
+                    <p>NASA TEMPO • OpenWeatherMap • Estaciones Terrestres</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 AirBytes Team. Todos los derechos reservados.</p>
+            </div>
+        </footer>
+
+        <div class="notifications" id="notifications">
+        </div>
+
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="loading-spinner">
+                <i class="fas fa-satellite fa-spin"></i>
+                <p>Obteniendo datos de AirBytes...</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
+            crossorigin=""></script>
+    <script src="config.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
