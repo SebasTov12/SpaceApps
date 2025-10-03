@@ -454,6 +454,24 @@ def insert_weather_safe(timestamp, temp, humidity, wind_speed, wind_dir, pressur
         if 'cur' in locals(): cur.close()
         if 'conn' in locals(): conn.close()
 
+def ensure_openweather_station():
+    """Crea una estación dummy para guardar mediciones de OpenWeather."""
+    conn = get_conn()
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            INSERT INTO stations (nombre, lat, lon, tipo, fuente)
+            VALUES (%s, %s, %s, %s, %s)
+            ON CONFLICT (nombre) DO NOTHING
+        """, ("OpenWeather_air", LAT, LON, "virtual", "OpenWeather"))
+        conn.commit()
+        print("✅ Estación OpenWeather_air creada/verificada en DB")
+    except Exception as e:
+        print("❌ Error creando estación OpenWeather_air:", e)
+        conn.rollback()
+    finally:
+        cur.close()
+        conn.close()
 
 # ------------- SATELLITE helper (local NetCDF CSV) -------------
 def insert_tropomi_from_csv(csv_path):
