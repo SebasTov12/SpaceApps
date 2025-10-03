@@ -336,12 +336,11 @@ def insert_measurement_safe(station_openaq, timestamp, param, value, unit, sourc
             return
 
         # Insert con upsert
-        cur.execute(f"""
-            INSERT INTO measurements (station_id, timestamp, {col}, fuente)
-            VALUES (%s, %s, %s, %s)
-            ON CONFLICT (station_id, timestamp) DO UPDATE
-            SET {col} = EXCLUDED.{col}
-        """, (station_id, timestamp, value, source))
+        cur.execute("""
+            INSERT INTO measurements (station_id, datetime_utc, parameter, value, unit, provider)
+            VALUES (%s,%s,%s,%s,%s,%s)
+            ON CONFLICT (station_id, datetime_utc, parameter) DO NOTHING
+        """, (station_id, dt, param, val, unit, provider))
         
         conn.commit()
         cur.close()
@@ -483,41 +482,62 @@ def insert_tropomi_from_csv(csv_path):
 def build_model_features():
     conn = get_conn()
     cur = conn.cursor()
-    # Si la tabla tiene columnas diferentes, ajusta la INSERT (usamos other_features JSONB fallback)
     try:
-        cur.execute("TRUNCATE model_features")
-    except Exception as e:
-        print("⚠ No existe model_features o no se puede truncar:", e)
+        cur.execute("""
+            INSERT INTO model_features(datetime_utc, lat, lon, pm25, no2, o3, temp, wind_speed, other_features)
+            SELECT
+                g.datetime_utc,
+                s.lat,
+                s.lon,
+                g_pm25.value AS pm25,
+                g_no2.value  AS no2,
+                g_o3.value   AS o3,
+                w.temp,
+                w.wind_speed,
+                '{}'::jsonb
+            FROM measurements g
+            JOIN stations s ON g.station_id = s.id
 
-    cur.execute("""
-        INSERT INTO model_features(datetime_utc, lat, lon, pm25, no2, o3, temp, wind_speed, other_features)
-        SELECT
-            g.timestamp,
-            s.lat,
-            s.lon,
-            COALESCE(g_pm25.pm25, NULL),
-            COALESCE(g_no2.no2, NULL),
-            COALESCE(g_o3.o3, NULL),
-            w.temp,
-            w.wind_speed,
-            jsonb_build_object(
-                'pm10', g_pm10.pm10,
-                'humidity', w.humidity,
-                'wind_dir', w.wind_dir,
-                'pressure', w.pressure
-            )
-        FROM measurements g
-        JOIN stations s ON g.station_id = s.id
-        LEFT JOIN measurements g_pm25 ON g_pm25.station_id=g.station_id AND g_pm25.pm25 IS NOT NULL AND g_pm25.timestamp=g.timestamp
-        LEFT JOIN measurements g_pm10 ON g_pm10.station_id=g.station_id AND g_pm10.pm10 IS NOT NULL AND g_pm10.timestamp=g.timestamp
-        LEFT JOIN measurements g_no2 ON g_no2.station_id=g.station_id AND g_no2.no2 IS NOT NULL AND g_no2.timestamp=g.timestamp
-        LEFT JOIN measurements g_o3 ON g_o3.station_id=g.station_id AND g_o3.o3 IS NOT NULL AND g_o3.timestamp=g.timestamp
-        LEFT JOIN weather_observations w ON w.lat=s.lat AND w.lon=s.lon AND w.datetime_utc=g.timestamp
-    """)
-    conn.commit()
-    cur.close()
-    conn.close()
-    print("✅ model_features actualizado (fallback JSONB para columnas extras).")
+            -- PM2.5
+            LEFT JOIN measurements g_pm25
+              ON g_pm25.station_id = g.station_id
+             AND g_pm25.datetime_utc = g.datetime_utc
+             AND g_pm25.parameter = 'pm25'
+
+            -- NO2
+            LEFT JOIN measurements g_no2
+              ON g_no2.station_id = g.station_id
+             AND g_no2.datetime_utc = g.datetime_utc
+             AND g_no2.parameter = 'no2'
+
+            -- O3
+            LEFT JOIN measurements g_o3
+              ON g_o3.station_id = g.station_id
+             AND g_o3.datetime_utc = g.datetime_utc
+             AND g_o3.parameter = 'o3'
+
+            -- Weather
+            LEFT JOIN weather_observations w
+              ON w.lat = s.lat
+             AND w.lon = s.lon
+             AND w.datetime_utc = g.datetime_utc
+
+            ON CONFLICT (datetime_utc, lat, lon) DO UPDATE
+            SET pm25 = EXCLUDED.pm25,
+                no2 = EXCLUDED.no2,
+                o3 = EXCLUDED.o3,
+                temp = EXCLUDED.temp,
+                wind_speed = EXCLUDED.wind_speed,
+                other_features = EXCLUDED.other_features;
+        """)
+        conn.commit()
+        print("✅ model_features actualizado")
+    except Exception as e:
+        print("❌ Error build_model_features:", e)
+        conn.rollback()
+    finally:
+        cur.close()
+        conn.close()
 
 def ensure_openweather_station():
     """Crea una estación dummy para guardar mediciones de OpenWeather."""
