@@ -1,27 +1,26 @@
-import os
-import base64
 import requests
-from dotenv import load_dotenv
+import base64
 
-# Cargar variables del archivo .env
-load_dotenv()
+# =============================
+# ⚠️ ESCRIBE AQUÍ TUS CREDENCIALES MANUALMENTE
+# =============================
+username = "sebastiantovar12"
+password = "Sebas_1979*#$12101371"  # Ejemplo recomendado: Tropomi2025!
 
-username = os.getenv("EARTHDATA_USER")
-password = os.getenv("EARTHDATA_PASS")
-
-if not username or not password:
-    raise ValueError("⚠ No se encontraron credenciales en .env")
-
-# Construir header Authorization
+# =============================
+# 🔐 Generar encabezado Authorization
+# =============================
 token = base64.b64encode(f"{username}:{password}".encode()).decode()
 
-# URL del archivo TROPOMI NO2
-url = "https://data.gesdisc.earthdata.nasa.gov/data/S5P_TROPOMI_Level2/S5P_L2__NO2____HiR.1/2021/182/S5P_OFFL_L2__NO2____20210701T170324_20210701T184453_19257_01_010400_20210703T102341.nc"
+url = "https://data.gesdisc.earthdata.nasa.gov/data/S5P_NRTI_L2/NO2/2025/275/S5P_NRTI_L2__NO2____20251002T143110_20251002T161240.nc"
 
 session = requests.Session()
-session.headers.update({"Authorization": f"Basic {token}"})
+session.headers.update({
+    "Authorization": f"Basic {token}",
+    "User-Agent": "tromopi-client/1.0"
+})
 
-response = session.get(url, allow_redirects=True)
+response = session.get(url, allow_redirects=True, timeout=60)
 
 print("Status:", response.status_code)
 
