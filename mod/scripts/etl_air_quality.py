@@ -5,6 +5,9 @@ import time
 import math
 import pandas as pd
 from datetime import datetime, timedelta, timezone
+import xarray as xr
+import numpy as np
+import pandas as pd
 
 # ============== CONFIG ==============
 DB_CONFIG = {
@@ -40,6 +43,103 @@ def clean_str(value):
 #-------------- CONECT TO DB ------------
 def get_conn():
     return psycopg2.connect(**DB_CONFIG)
+
+
+# ---------------- SATELLITE NRT (TEMPO + TROPOMI) ----------------
+
+def download_file(url, out_path):
+    import requests, os
+    if os.path.exists(out_path):
+        return out_path
+    print(f"⬇️ Downloading {url} ...")
+    r = requests.get(url, stream=True)
+    r.raise_for_status()
+    with open(out_path, "wb") as f:
+        for chunk in r.iter_content(chunk_size=8192):
+            f.write(chunk)
+    return out_path
+
+
+def insert_satellite_rows(rows):
+    conn = get_conn()
+    cur = conn.cursor()
+    try:
+        psycopg2.extras.execute_batch(cur, """
+            INSERT INTO satellite_observations
+            (datetime_utc, lat, lon, product, pollutant, value, unit, raw_path)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+            ON CONFLICT DO NOTHING
+        """, rows)
+        conn.commit()
+        print(f"✅ Inserted {len(rows)} satellite rows")
+    except Exception as e:
+        print("❌ DB insert error:", e)
+        conn.rollback()
+    finally:
+        cur.close()
+        conn.close()
+
+
+def process_netcdf_to_rows(path, product_name, pollutant_var, lat_bounds=None, lon_bounds=None, limit=10):
+    ds = xr.open_dataset(path)
+    rows = []
+
+    if pollutant_var not in ds.variables:
+        print(f"⚠ {pollutant_var} not found in {path}")
+        return rows
+
+    data = ds[pollutant_var].values.flatten()
+    lats = ds['latitude'].values.flatten() if 'latitude' in ds else np.zeros_like(data)
+    lons = ds['longitude'].values.flatten() if 'longitude' in ds else np.zeros_like(data)
+    time_var = ds['time'].values[0] if 'time' in ds else np.datetime64(datetime.utcnow())
+
+    count = 0
+    for lat, lon, val in zip(lats, lons, data):
+        if np.isnan(val):
+            continue
+        if lat_bounds and not (lat_bounds[0] <= lat <= lat_bounds[1]):
+            continue
+        if lon_bounds and not (lon_bounds[0] <= lon <= lon_bounds[1]):
+            continue
+        rows.append((
+            pd.to_datetime(str(time_var)),
+            float(lat), float(lon),
+            product_name,
+            pollutant_var,
+            float(val),
+            "mol/m2",
+            path
+        ))
+        count += 1
+        if count >= limit:
+            break
+    return rows
+
+
+def fetch_tempo_and_tropomi():
+    # ⚠ Usa URLs de ejemplo. En producción, deberías buscar el archivo más reciente vía API Earthdata.
+    TEMPO_URL = "https://asdc.larc.nasa.gov/data/TEMPO/TEMPO_L2_NO2.001/2025/275/TEMPO_L2_NO2_20251002T1500Z_001.nc"
+    TROPOMI_URL = "https://data.gesdisc.earthdata.nasa.gov/data/S5P_NRTI_L2/NO2/2025/275/S5P_NRTI_L2__NO2____20251002T143110_20251002T161240.nc"
+
+    try:
+        tempo_file = download_file(TEMPO_URL, "tempo_sample.nc")
+        tempo_rows = process_netcdf_to_rows(tempo_file, "TEMPO", "nitrogendioxide_tropospheric_column")
+        insert_satellite_rows(tempo_rows)
+    except Exception as e:
+        print("⚠ TEMPO failed:", e)
+
+    try:
+        trop_file = download_file(TROPOMI_URL, "tropomi_sample.nc")
+        trop_rows = process_netcdf_to_rows(
+            trop_file,
+            "TROPOMI",
+            "nitrogendioxide_tropospheric_column",
+            lat_bounds=(4.0, 6.0),
+            lon_bounds=(-75.0, -73.0)
+        )
+        insert_satellite_rows(trop_rows)
+    except Exception as e:
+        print("⚠ TROPOMI failed:", e)
 
 
 def request_with_retries(url, params=None, headers=None, max_retries=3, backoff=1.5):
@@ -101,14 +201,20 @@ def filter_active_locations(locations, days=60):
     return active
 
 def fetch_locations_by_coords(lat=LAT, lon=LON, radius=RADIUS, limit=100):
-    """Listar locations por coordenadas y radius (fallback)."""
-    print(f"🔎 Buscando estaciones por coords {lat},{lon} radius={radius}m ...")
+    print(f"🔎 Buscando estaciones por coords {lat},{lon} distance={radius}m ...")
     results = []
     page = 1
     headers = {"x-api-key": OPENAQ_KEY} if OPENAQ_KEY else {}
     while True:
-        params = {"coordinates": f"{lat},{lon}", "radius": radius, "limit": limit, "page": page}
-        data = request_with_retries(OPENAQ_LOCATIONS, params=params, headers=headers)
+        params = {"coordinates": f"{lat},{lon}", "distance": radius, "limit": limit, "page": page}
+        try:
+            data = request_with_retries(OPENAQ_LOCATIONS, params=params, headers=headers)
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code in (404, 500):
+                print(f"⚠ No se pudieron obtener estaciones (status={e.response.status_code}) → abortando fallback coords.")
+                break
+            else:
+                raise
         page_results = data.get("results", [])
         if not page_results:
             break
@@ -402,7 +508,7 @@ def build_model_features():
                 'pressure', w.pressure
             )
         FROM measurements g
-        JOIN stations s ON g.station_id = s.station_id
+        JOIN stations s ON g.station_id = s.id
         LEFT JOIN measurements g_pm25 ON g_pm25.station_id=g.station_id AND g_pm25.pm25 IS NOT NULL AND g_pm25.timestamp=g.timestamp
         LEFT JOIN measurements g_pm10 ON g_pm10.station_id=g.station_id AND g_pm10.pm10 IS NOT NULL AND g_pm10.timestamp=g.timestamp
         LEFT JOIN measurements g_no2 ON g_no2.station_id=g.station_id AND g_no2.no2 IS NOT NULL AND g_no2.timestamp=g.timestamp
@@ -415,22 +521,35 @@ def build_model_features():
     print("✅ model_features actualizado (fallback JSONB para columnas extras).")
 
 
-# ------------- MAIN -------------
 if __name__ == "__main__":
-    print("📌 Iniciando ETL OpenAQ + Weather + Satellite (local CSV) ...")
-    # 1) OpenAQ historical (60 días por defecto)
-    populate_openaq_historical(days=60)
-    # 2) OpenWeather current and air pollution
+    print("📌 Iniciando ETL OpenAQ + Weather + Satellite (local CSV + NRT) ...")
+
+    # 0) Asegurar estación OpenWeather dummy
+    ensure_openweather_station()
+
+    # 1) OpenAQ histórico (usar pocos días para demo)
+    try:
+        populate_openaq_historical(days=7)
+    except Exception as e:
+        print("⚠ OpenAQ falló:", e)
+
+    # 2) OpenWeather
     try:
         fetch_openweather_current()
-    except Exception as e:
-        print("⚠ OpenWeather current failed:", e)
-    try:
         fetch_openweather_air()
     except Exception as e:
-        print("⚠ OpenWeather air failed:", e)
-    # 3) If you have a local TROPOMI CSV: uncomment and provide path
-    # insert_tropomi_from_csv("tropomi_sample.csv")
-    # 4) Build features
+        print("⚠ OpenWeather falló:", e)
+
+    # 3) Satélite CSV local (si lo tienes)
+    try:
+        insert_tropomi_from_csv("tropomi_sample.csv")
+    except Exception as e:
+        print("⚠ TROPOMI CSV no cargado:", e)
+
+    # 4) Satélite NRT real (TEMPO + TROPOMI)
+    fetch_tempo_and_tropomi()
+
+    # 5) Features
     build_model_features()
+
     print("✅ ETL finalizado.")
