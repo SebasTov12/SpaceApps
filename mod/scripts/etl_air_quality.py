@@ -321,7 +321,6 @@ def insert_measurement_safe(station_openaq, timestamp, param, value, unit, sourc
             return
         station_id = row[0]
 
-        # Mapear parámetros de OpenAQ a columnas locales
         col_map = {
             "pm25": "pm25",
             "pm10": "pm10",
@@ -335,18 +334,18 @@ def insert_measurement_safe(station_openaq, timestamp, param, value, unit, sourc
             print(f"⚠ param {param} no mapeado → skip")
             return
 
-        # Insert con upsert
         cur.execute("""
             INSERT INTO measurements (station_id, datetime_utc, parameter, value, unit, provider)
             VALUES (%s,%s,%s,%s,%s,%s)
             ON CONFLICT (station_id, datetime_utc, parameter) DO NOTHING
-        """, (station_id, dt, param, val, unit, provider))
-        
+        """, (station_id, timestamp, param, value, unit, source))
+
         conn.commit()
         cur.close()
         conn.close()
     except Exception as e:
         print(f"❌ Error insert measurement: {e}")
+
 
 # ================================
 # MAIN OpenAQ con resumen debug
