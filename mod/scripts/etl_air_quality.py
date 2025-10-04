@@ -102,102 +102,124 @@ def guess_pollutant_var(ds):
             return var
     return None
 
-import xarray as xr
-import numpy as np
-
-def process_netcdf_to_rows(file_path, sat_name=None, lat_bounds=None, lon_bounds=None):
+def process_tropomi_l2(file_path: str, qa_threshold: float = 0.75,
+                       lat_bounds=None, lon_bounds=None) -> list:
     """
-    Lee un NetCDF (TROPOMI o TEMPO) y devuelve filas listas para insertar en la DB.
-    - Detecta el satélite según 'sat_name' si viene forzado, o por atributos/variables en caso contrario.
+    Procesa archivo Sentinel-5P TROPOMI L2 (NO2 troposférico).
+    Devuelve registros compatibles con measurements.
     """
+    try:
+        ds = xr.open_dataset(file_path, group="PRODUCT")
 
-    ds = xr.open_dataset(file_path, engine="netcdf4")
-    rows = []
+        lat = ds["latitude"].values.flatten()
+        lon = ds["longitude"].values.flatten()
+        no2 = ds["nitrogendioxide_tropospheric_column"].values.flatten()
+        qa = ds["qa_value"].values.flatten()
 
-    # 🔧 Detección forzada primero
-    if sat_name == "TROPOMI":
-        is_tropomi, is_tempo = True, False
-    elif sat_name == "TEMPO":
-        is_tempo, is_tropomi = True, False
-    else:
-        attrs = ds.attrs
-        is_tempo = "TEMPO" in str(attrs) or "Smithsonian" in str(attrs) or "TEMPO_SDPC" in str(attrs)
-        is_tropomi = not is_tempo and ("Sentinel 5 precursor" in str(attrs) or "TROPOMI" in str(attrs))
+        df = pd.DataFrame({
+            "latitude": lat,
+            "longitude": lon,
+            "value": no2,
+            "qa_value": qa
+        })
 
-    print(f"📌 Procesando {file_path} detectado como {'TROPOMI' if is_tropomi else 'TEMPO' if is_tempo else 'DESCONOCIDO'}")
+        # Filtro QA
+        df = df[df["qa_value"] >= qa_threshold]
 
-    if is_tropomi:
-        # Variables clave en TROPOMI
-        var_no2 = "nitrogendioxide_tropospheric_column"
-        var_qa = "qa_value"
-
-        # Algunos archivos tienen las variables dentro de PRODUCT/
-        for prefix in ["", "PRODUCT/"]:
-            if f"{prefix}{var_no2}" in ds.variables:
-                var_no2 = f"{prefix}{var_no2}"
-            if f"{prefix}{var_qa}" in ds.variables:
-                var_qa = f"{prefix}{var_qa}"
-
-        if var_no2 not in ds.variables:
-            print("⚠ NO₂ troposférico no encontrado en TROPOMI")
-            ds.close()
-            return []
-
-        lats = ds["latitude"].values
-        lons = ds["longitude"].values
-        no2 = ds[var_no2].values
-        qa = ds[var_qa].values if var_qa in ds.variables else np.ones_like(no2)
-
-        # Filtro geográfico
+        # Bounding box opcional
         if lat_bounds and lon_bounds:
-            mask = (
-                (lats >= lat_bounds[0]) & (lats <= lat_bounds[1]) &
-                (lons >= lon_bounds[0]) & (lons <= lon_bounds[1])
-            )
-        else:
-            mask = np.ones_like(lats, dtype=bool)
+            df = df[
+                (df["latitude"] >= lat_bounds[0]) & (df["latitude"] <= lat_bounds[1]) &
+                (df["longitude"] >= lon_bounds[0]) & (df["longitude"] <= lon_bounds[1])
+            ]
 
-        for lat, lon, val, q in zip(lats[mask], lons[mask], no2[mask], qa[mask]):
-            rows.append({
-                "satellite": "TROPOMI",
-                "latitude": float(lat),
-                "longitude": float(lon),
-                "value": float(val),
-                "qa": float(q)
+        # Fecha desde metadata global
+        datetime_val = None
+        try:
+            datetime_val = ds.attrs.get("time_coverage_start")
+            datetime_val = datetime.fromisoformat(datetime_val.replace("Z", "+00:00"))
+        except:
+            datetime_val = datetime.utcnow()
+
+        records = []
+        for _, row in df.iterrows():
+            records.append({
+                "station_id": "TROPOMI",
+                "parameter": "no2",
+                "value": float(row["value"]),
+                "datetime": datetime_val,
+                "latitude": float(row["latitude"]),
+                "longitude": float(row["longitude"])
             })
 
-    elif is_tempo:
-        # Variables clave en TEMPO
-        vars_candidates = {
-            "cloud_fraction": "product/cloud_fraction",
-            "cloud_pressure": "product/cloud_pressure",
-            "surface_pressure": "support_data/surface_pressure",
-            "terrain_height": "support_data/terrain_height"
-        }
+        return records
 
-        lats = ds["geolocation/latitude"].values if "geolocation/latitude" in ds.variables else None
-        lons = ds["geolocation/longitude"].values if "geolocation/longitude" in ds.variables else None
+    except Exception as e:
+        print(f"⚠ Error procesando TROPOMI L2: {e}")
+        return []
 
-        for key, var in vars_candidates.items():
-            if var in ds.variables:
-                vals = ds[var].values.flatten()
-                if lats is not None and lons is not None:
-                    for lat, lon, val in zip(lats.flatten(), lons.flatten(), vals):
-                        rows.append({
-                            "satellite": "TEMPO",
-                            "variable": key,
-                            "latitude": float(lat),
-                            "longitude": float(lon),
-                            "value": float(val)
-                        })
-                else:
-                    print(f"⚠ {key} encontrado, pero sin coordenadas")
 
-    else:
-        print("⚠ No se pudo identificar el tipo de NetCDF (ni TEMPO ni TROPOMI).")
+def process_tempo(file_path: str, lat_bounds=None, lon_bounds=None) -> list:
+    """
+    Procesa archivo TEMPO L2 (clouds).
+    Devuelve registros compatibles con measurements.
+    """
+    try:
+        ds = xr.open_dataset(file_path, group="geolocation")
 
-    ds.close()
-    return rows
+        lat = ds["latitude"].values.flatten()
+        lon = ds["longitude"].values.flatten()
+
+        # Buscar cloud_fraction
+        cloud_fraction = None
+        for var in ds.variables:
+            if "cloud" in var.lower() and "fraction" in var.lower():
+                cloud_fraction = ds[var].values.flatten()
+                break
+
+        if cloud_fraction is None:
+            print("⚠ TEMPO sin cloud_fraction")
+            return []
+
+        df = pd.DataFrame({
+            "latitude": lat,
+            "longitude": lon,
+            "value": cloud_fraction
+        })
+
+        # Bounding box opcional
+        if lat_bounds and lon_bounds:
+            df = df[
+                (df["latitude"] >= lat_bounds[0]) & (df["latitude"] <= lat_bounds[1]) &
+                (df["longitude"] >= lon_bounds[0]) & (df["longitude"] <= lon_bounds[1])
+            ]
+
+        # Fecha desde metadata
+        datetime_val = None
+        try:
+            datetime_val = ds.attrs.get("time_coverage_start")
+            datetime_val = datetime.fromisoformat(datetime_val.replace("Z", "+00:00"))
+        except:
+            datetime_val = datetime.utcnow()
+
+        records = []
+        for _, row in df.iterrows():
+            records.append({
+                "station_id": "TEMPO",
+                "parameter": "cloud_fraction",
+                "value": float(row["value"]),
+                "datetime": datetime_val,
+                "latitude": float(row["latitude"]),
+                "longitude": float(row["longitude"])
+            })
+
+        return records
+
+    except Exception as e:
+        print(f"⚠ Error procesando TEMPO: {e}")
+        return []
+    
+import gdown
 
 def download_from_gdrive(file_id, output):
     url = f"https://drive.google.com/uc?id={file_id}"
@@ -205,32 +227,58 @@ def download_from_gdrive(file_id, output):
     gdown.download(url, output, quiet=False, fuzzy=True)
     return output
 
-import os
-import gdown
-
 def fetch_tempo_and_tropomi():
-    TEMPO_ID = "1rAR9MURN6eBG64sFbKvS8plC5yBB_rjo"
-    TROPOMI_ID = "1ovmXJ01FCreF06z8qMyECoXDhuMyOS2A"
+    """Descarga y procesa archivos de TROPOMI (Sentinel-5P) y TEMPO (NASA)"""
+    rows_all = []
 
     try:
-        tempo_file = download_from_gdrive(TEMPO_ID, "tempo_sample.nc")
-        tempo_rows = process_netcdf_to_rows(tempo_file, "TEMPO", "nitrogendioxide_tropospheric_column")
-        insert_satellite_rows(tempo_rows)
-    except Exception as e:
-        print("⚠ TEMPO failed:", e)
-
-    try:
-        trop_file = download_from_gdrive(TROPOMI_ID, "tropomi_sample.nc")
-        trop_rows = process_netcdf_to_rows(
-            trop_file,
-            "TROPOMI",
-            lat_bounds=(4.0, 6.0),
-            lon_bounds=(-75.0, -73.0)
+        # ==========================
+        # 🛰️ TROPOMI (Sentinel-5P L2 NO2)
+        # ==========================
+        print("⬇ Descargando archivo TROPOMI desde Google Drive...")
+        tropomi_file = download_from_gdrive(
+            "1Leyz9VtQw_ezob6PzUYCobSOIDGsW9fx",  # ID de Drive
+            "tropomi_sample.nc"
         )
-        insert_satellite_rows(trop_rows)
-    except Exception as e:
-        print("⚠ TROPOMI failed:", e)
+        print(f"📌 Procesando {tropomi_file} como TROPOMI L2 NO₂...")
+        tropomi_rows = process_tropomi_l2(
+            tropomi_file,
+            lat_bounds=(4, 6),   # ajusta para tu región
+            lon_bounds=(-75, -73)
+        )
+        rows_all.extend(tropomi_rows)
 
+    except Exception as e:
+        print(f"⚠ Error procesando TROPOMI: {e}")
+
+    try:
+        # ==========================
+        # 🛰️ TEMPO (Gridded NO2 L3)
+        # ==========================
+        print("⬇ Descargando archivo TEMPO desde Google Drive...")
+        tempo_file = download_from_gdrive(
+            "1w4aufwFEnBxqZso4B7wtTivDG96Yqb7r",  # ID de Drive
+            "tempo_sample.nc"
+        )
+        print(f"📌 Procesando {tempo_file} como TEMPO L3 NO₂...")
+        tempo_rows = process_tempo(
+            tempo_file,
+            lat_bounds=(4, 6),   # ajusta para tu región
+            lon_bounds=(-75, -73)
+        )
+        rows_all.extend(tempo_rows)
+
+    except Exception as e:
+        print(f"⚠ Error procesando TEMPO: {e}")
+
+    # ==========================
+    # Guardar en DB
+    # ==========================
+    if rows_all:
+        insert_satellite_rows(rows_all)
+        print(f"✅ Insertadas {len(rows_all)} filas en satellite_observations")
+    else:
+        print("⚠ No se insertaron filas de satélites (TROPOMI/TEMPO)")
 
 def request_with_retries(url, params=None, headers=None, max_retries=3, backoff=1.5):
     headers = headers or {}
@@ -244,7 +292,6 @@ def request_with_retries(url, params=None, headers=None, max_retries=3, backoff=
             if attempt == max_retries:
                 raise
             time.sleep(backoff * attempt)
-
 
 def fetch_locations_by_city(city=CITY, country=COUNTRY, limit=100, max_pages=5):
     """Intenta listar locations por city/country. Devuelve lista de locations (dicts)."""
@@ -313,7 +360,6 @@ def fetch_locations_by_coords(lat=LAT, lon=LON, radius=RADIUS, limit=100):
     print(f"  → Encontradas {len(results)} estaciones por coords.")
     return results
 
-
 def save_locations_to_db(locations):
     conn = get_conn()
     cur = conn.cursor()
@@ -357,7 +403,6 @@ def insert_station(conn, loc_id, name, city, country, lat, lon):
         conn.rollback()
     finally:
         cur.close()
-
 
 # =================================
 # FETCH measurements tolerante a 404
@@ -437,7 +482,6 @@ def insert_measurement_safe(station_openaq, timestamp, param, value, unit, sourc
     except Exception as e:
         print(f"❌ Error insert measurement: {e}")
 
-
 # ================================
 # MAIN OpenAQ con resumen debug
 # ================================
@@ -497,8 +541,6 @@ def populate_openaq_historical(days=60):
     print(f"✅ OpenAQ: total records inserted = {total}")
     print(f"📊 Resumen estaciones → con datos: {with_data}, sin datos: {empty}")
 
-
-
 # ------------- OPENWEATHER helpers -------------
 def fetch_openweather_current():
     params = {"lat": LAT, "lon": LON, "appid": OPENWEATHER_KEY, "units": "metric"}
@@ -512,7 +554,6 @@ def fetch_openweather_current():
                         data["main"].get("pressure"), "OpenWeather")
     print("✅ OpenWeather current saved:", ts)
 
-
 def fetch_openweather_air():
     params = {"lat": LAT, "lon": LON, "appid": OPENWEATHER_KEY}
     data = request_with_retries(OPENWEATHER_AIR, params=params)
@@ -524,7 +565,6 @@ def fetch_openweather_air():
         insert_measurement_safe("OpenWeather_air", ts, "co", components.get("co"), "µg/m3", "OpenWeather")
         insert_measurement_safe("OpenWeather_air", ts, "no2", components.get("no2"), "µg/m3", "OpenWeather")
     print("✅ OpenWeather air_pollution saved.")
-
 
 def insert_weather_safe(timestamp, temp, humidity, wind_speed, wind_dir, pressure, source="OpenWeather"):
     try:
@@ -566,7 +606,6 @@ def insert_tropomi_from_csv(csv_path):
     cur.close()
     conn.close()
     print(f"✅ Satellite inserted {inserted} rows from {csv_path}")
-
 
 # ------------- MODEL FEATURES builder (arreglado) -------------
 def build_model_features():

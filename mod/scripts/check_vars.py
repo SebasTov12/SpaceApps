@@ -1,57 +1,88 @@
 import xarray as xr
-import sys
+import pandas as pd
 
-# Variables que nos interesan
-CANDIDATE_VARS = [
-    # TROPOMI
-    "PRODUCT/nitrogendioxide_tropospheric_column",
-    "PRODUCT/nitrogendioxide_tropospheric_column_precision",
-    "PRODUCT/qa_value",
-
-    # TEMPO
-    "product/cloud_fraction",
-    "product/cloud_pressure",
-    "support_data/fitted_slant_column",
-    "support_data/fitted_slant_column_uncertainty",
-    "support_data/surface_pressure",
-    "support_data/terrain_height",
-]
-
-def check_vars(file_path):
-    print(f"📂 Abriendo {file_path} ...")
+def process_tropomi_l2(file_path: str, qa_threshold: float = 0.75,
+                       lat_bounds=None, lon_bounds=None) -> list:
+    """
+    Procesa archivo Sentinel-5P TROPOMI L2 (NO2 troposférico).
+    Extrae lat, lon, NO2 troposférico y filtra por QA + bounding box opcional.
+    Devuelve lista de diccionarios listos para DB.
+    """
     try:
-        ds = xr.open_dataset(file_path, decode_cf=False, mask_and_scale=False)
+        ds = xr.open_dataset(file_path, group="PRODUCT")
+
+        lat = ds["latitude"].values.flatten()
+        lon = ds["longitude"].values.flatten()
+        no2 = ds["nitrogendioxide_tropospheric_column"].values.flatten()
+        qa = ds["qa_value"].values.flatten()
+
+        df = pd.DataFrame({
+            "latitude": lat,
+            "longitude": lon,
+            "no2_tropospheric_column": no2,
+            "qa_value": qa
+        })
+
+        # Filtro QA
+        df = df[df["qa_value"] >= qa_threshold]
+
+        # Bounding box si aplica
+        if lat_bounds and lon_bounds:
+            df = df[
+                (df["latitude"] >= lat_bounds[0]) & (df["latitude"] <= lat_bounds[1]) &
+                (df["longitude"] >= lon_bounds[0]) & (df["longitude"] <= lon_bounds[1])
+            ]
+
+        return df.to_dict(orient="records")
+
     except Exception as e:
-        print(f"❌ Error abriendo {file_path}: {e}")
-        return
-    
-    found = []
-    missing = []
-    for var in CANDIDATE_VARS:
-        if var in ds.variables:
-            found.append(var)
-        else:
-            missing.append(var)
+        print(f"⚠ Error procesando TROPOMI L2: {e}")
+        return []
 
-    print("\n✅ Variables encontradas:")
-    for v in found:
-        print("  -", v)
 
-    print("\n⚠ Variables faltantes:")
-    for v in missing:
-        print("  -", v)
+def process_tempo(file_path: str,
+                  lat_bounds=None, lon_bounds=None) -> list:
+    """
+    Procesa archivo TEMPO L2 CLDO4 (geoloc + nubes).
+    Extrae lat, lon y cloud_fraction si está disponible.
+    Devuelve lista de diccionarios listos para DB.
+    """
+    try:
+        ds = xr.open_dataset(file_path, group="geolocation")
 
-    print("\n📌 Dimensiones del archivo:")
-    print(ds.dims)
+        lat = ds["latitude"].values.flatten()
+        lon = ds["longitude"].values.flatten()
 
-    print("\n📌 Atributos globales:")
-    for k, v in list(ds.attrs.items())[:10]:  # solo los primeros 10 para no saturar
-        print(f"  {k}: {v}")
+        # Buscar cloud_fraction (si existe)
+        cloud_fraction = None
+        for var in ds.variables:
+            if "cloud" in var.lower() and "fraction" in var.lower():
+                cloud_fraction = ds[var].values.flatten()
+                break
 
-    ds.close()
+        df = pd.DataFrame({
+            "latitude": lat,
+            "longitude": lon,
+            "cloud_fraction": cloud_fraction if cloud_fraction is not None else None
+        })
 
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Uso: python check_vars.py archivo.nc")
-    else:
-        check_vars(sys.argv[1])
+        # Bounding box si aplica
+        if lat_bounds and lon_bounds:
+            df = df[
+                (df["latitude"] >= lat_bounds[0]) & (df["latitude"] <= lat_bounds[1]) &
+                (df["longitude"] >= lon_bounds[0]) & (df["longitude"] <= lon_bounds[1])
+            ]
+
+        return df.to_dict(orient="records")
+
+    except Exception as e:
+        print(f"⚠ Error procesando TEMPO L2 Clouds: {e}")
+        return []
+
+rows_tropomi = process_tropomi_l2("tropomi_sample.nc")
+df_tropomi = pd.DataFrame(rows_tropomi)
+print(df_tropomi.head())
+
+rows_tempo = process_tempo("tempo_sample.nc")
+df_tempo = pd.DataFrame(rows_tempo)
+print(df_tempo.head())
