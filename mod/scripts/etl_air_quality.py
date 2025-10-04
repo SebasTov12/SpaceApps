@@ -8,6 +8,7 @@ from datetime import datetime, timedelta, timezone
 import xarray as xr
 import numpy as np
 import pandas as pd
+import psycopg2.extras
 
 # ============== CONFIG ==============
 DB_CONFIG = {
@@ -116,30 +117,57 @@ def process_netcdf_to_rows(path, product_name, pollutant_var, lat_bounds=None, l
     return rows
 
 
+import os
+import gdown
+
 def fetch_tempo_and_tropomi():
-    # ⚠ Usa URLs de ejemplo. En producción, deberías buscar el archivo más reciente vía API Earthdata.
-    TEMPO_URL = "https://asdc.larc.nasa.gov/data/TEMPO/TEMPO_L2_NO2.001/2025/275/TEMPO_L2_NO2_20251002T1500Z_001.nc"
-    TROPOMI_URL = "https://data.gesdisc.earthdata.nasa.gov/data/S5P_NRTI_L2/NO2/2025/275/S5P_NRTI_L2__NO2____20251002T143110_20251002T161240.nc"
+    """
+    Descarga los archivos TEMPO y TROPOMI desde Google Drive
+    y los procesa con las funciones existentes del ETL.
+    """
+
+    # IDs de tus archivos en Google Drive (cambia por los tuyos reales)
+    TEMPO_ID = "1rAR9MURN6eBG64sFbKvS8plC5yBB_rjo"   # <- pega aquí el ID real de TEMPO.nc
+    TROPOMI_ID = "1ovmXJ01FCreF06z8qMyECoXDhuMyOS2A" # <- pega aquí el ID real de TROPOMI.nc
+
+    # Nombres locales
+    TEMPO_FILE = "tempo_sample.nc"
+    TROPOMI_FILE = "tropomi_sample.nc"
 
     try:
-        tempo_file = download_file(TEMPO_URL, "tempo_sample.nc")
-        tempo_rows = process_netcdf_to_rows(tempo_file, "TEMPO", "nitrogendioxide_tropospheric_column")
+        # Descargar TEMPO si no existe localmente
+        if not os.path.exists(TEMPO_FILE):
+            print("⬇ Descargando TEMPO desde Google Drive...")
+            gdown.download(f"https://drive.google.com/uc?id={TEMPO_ID}", TEMPO_FILE, quiet=False)
+
+        tempo_rows = process_netcdf_to_rows(
+            TEMPO_FILE,
+            "TEMPO",
+            "nitrogendioxide_tropospheric_column"
+        )
         insert_satellite_rows(tempo_rows)
+        print("✅ TEMPO procesado con éxito.")
     except Exception as e:
         print("⚠ TEMPO failed:", e)
 
     try:
-        trop_file = download_file(TROPOMI_URL, "tropomi_sample.nc")
+        # Descargar TROPOMI si no existe localmente
+        if not os.path.exists(TROPOMI_FILE):
+            print("⬇ Descargando TROPOMI desde Google Drive...")
+            gdown.download(f"https://drive.google.com/uc?id={TROPOMI_ID}", TROPOMI_FILE, quiet=False)
+
         trop_rows = process_netcdf_to_rows(
-            trop_file,
+            TROPOMI_FILE,
             "TROPOMI",
             "nitrogendioxide_tropospheric_column",
             lat_bounds=(4.0, 6.0),
             lon_bounds=(-75.0, -73.0)
         )
         insert_satellite_rows(trop_rows)
+        print("✅ TROPOMI procesado con éxito.")
     except Exception as e:
         print("⚠ TROPOMI failed:", e)
+
 
 
 def request_with_retries(url, params=None, headers=None, max_retries=3, backoff=1.5):

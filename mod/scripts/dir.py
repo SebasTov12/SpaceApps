@@ -1,9 +1,13 @@
-import os
-from dotenv import load_dotenv
+import h5py
+import xarray as xr
 
-print("📂 Directorio actual:", os.getcwd())
+def open_tropomi_nc(path):
+    try:
+        ds = xr.open_dataset(path, group="PRODUCT")
+        print("Variables TROPOMI:", list(ds.data_vars.keys()))
+        return ds
+    except Exception as e:
+        print("❌ No se pudo abrir TROPOMI:", e)
+        return None
 
-load_dotenv()
-
-print("Usuario:", os.getenv("EARTHDATA_USER"))
-print("Pass:", os.getenv("EARTHDATA_PASS"))
+open_tropomi_nc()
