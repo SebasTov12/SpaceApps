@@ -1,192 +1,253 @@
 """
-climate_model_train.py
+air_quality_model.py
 
-Entrena un modelo predictivo usando la tabla 'model_features'
-de tu base de datos PostgreSQL (dump air_quality_db.sql).
+Conecta los scripts ETL y utilidades que subiste y construye un pipeline
+para: 1) crear dataset desde la DB (tabla model_features), 2) entrenar un modelo
+por parámetro (ej. pm25), 3) guardar el modelo y 4) hacer predicciones por
+ubicación y tiempo.
 
-Predice valores futuros de variables ambientales (pm25, no2, o3, etc.)
-en función de fecha, ubicación (lat/lon) y otras condiciones.
+Requisitos:
+- Python 3.9+
+- pandas, numpy, scikit-learn, joblib, psycopg2, sqlalchemy
+- Los scripts originales en el mismo directorio: etl_air_quality.py, check_vars.py, databaseConnect.py
+
+Uso básico:
+    python air_quality_model.py --train --param pm25
+    python air_quality_model.py --predict --param pm25 --lat 4.7 --lon -74.07 --datetime "2025-10-05T12:00:00Z"
+
 """
 
 import os
+import argparse
+from datetime import datetime, timezone, timedelta
+import math
 import joblib
-from datetime import datetime
-from dateutil import parser
-import pandas as pd
 import numpy as np
-from sqlalchemy import create_engine, text
-
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from sklearn.compose import ColumnTransformer
-from sklearn.pipeline import Pipeline
-from sklearn.multioutput import MultiOutputRegressor
+import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import mean_squared_error, mean_absolute_error
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error, r2_score
 
-# Intentamos importar LightGBM (si no está, usamos RandomForest)
+# Conexión a DB (usa la configuración de databaseConnect.py)
 try:
-    import lightgbm as lgb
-    HAS_LGB = True
-except ImportError:
-    HAS_LGB = False
-
-# -----------------------
-# Función para obtener estación
-# -----------------------
-def month_to_season(month, hemisphere='north'):
-    mapping_north = {
-        12: 'invierno', 1: 'invierno', 2: 'invierno',
-        3: 'primavera', 4: 'primavera', 5: 'primavera',
-        6: 'verano', 7: 'verano', 8: 'verano',
-        9: 'otoño', 10: 'otoño', 11: 'otoño'
+    from databaseConnect import DB_CONFIG
+except Exception:
+    DB_CONFIG = {
+        "dbname": "air_quality_db",
+        "user": "airbyter",
+        "password": "AirBytes2025",
+        "host": "192.168.2.8",
+        "port": 5432
     }
-    mapping_south = {
-        12: 'verano', 1: 'verano', 2: 'verano',
-        3: 'otoño', 4: 'otoño', 5: 'otoño',
-        6: 'invierno', 7: 'invierno', 8: 'invierno',
-        9: 'primavera', 10: 'primavera', 11: 'primavera'
-    }
-    return mapping_south.get(month, 'desconocido') if hemisphere == 'south' else mapping_north.get(month, 'desconocido')
 
-# -----------------------
-# Conexión a la base de datos
-# -----------------------
-def load_data_from_db(connection_string, table_name):
-    """Carga la tabla desde la base de datos."""
-    engine = create_engine(connection_string)
-    query = f"SELECT * FROM {table_name};"
-    with engine.connect() as conn:
-        df = pd.read_sql(text(query), conn)
-    df["datetime_utc"] = pd.to_datetime(df["datetime_utc"])
+import psycopg2
+
+MODEL_DIR = "models"
+os.makedirs(MODEL_DIR, exist_ok=True)
+
+# ------------------ UTIL: conexión ------------------
+
+def get_conn():
+    return psycopg2.connect(**DB_CONFIG)
+
+# ------------------ Construcción del dataset ------------------
+
+def fetch_model_features(start_dt=None, end_dt=None, bbox=None, limit=None):
+    """Carga filas desde la tabla model_features. Devuelve DataFrame.
+
+    - start_dt, end_dt: datetimes (timezone-aware) o strings ISO.
+    - bbox: (lat_min, lat_max, lon_min, lon_max)
+    - limit: número máximo de filas a traer
+    """
+    q = "SELECT * FROM model_features"
+    clauses = []
+    params = []
+    if start_dt:
+        clauses.append("datetime_utc >= %s")
+        params.append(start_dt if isinstance(start_dt, str) else start_dt.isoformat())
+    if end_dt:
+        clauses.append("datetime_utc <= %s")
+        params.append(end_dt if isinstance(end_dt, str) else end_dt.isoformat())
+    if bbox:
+        lat_min, lat_max, lon_min, lon_max = bbox
+        clauses.append("lat BETWEEN %s AND %s")
+        clauses.append("lon BETWEEN %s AND %s")
+        params.extend([lat_min, lat_max, lon_min, lon_max])
+    if clauses:
+        q += " WHERE " + " AND ".join(clauses)
+    if limit:
+        q += f" LIMIT {int(limit)}"
+
+    conn = get_conn()
+    df = pd.read_sql(q, conn, params=params)
+    conn.close()
     return df
 
-# -----------------------
-# Preprocesamiento
-# -----------------------
-def preprocess_df(df):
-    """Crea variables de tiempo y prepara features/targets."""
-    df = df.copy()
-    df["year"] = df["datetime_utc"].dt.year
-    df["month"] = df["datetime_utc"].dt.month
-    df["day"] = df["datetime_utc"].dt.day
-    df["dayofweek"] = df["datetime_utc"].dt.dayofweek
-    df["dayofyear"] = df["datetime_utc"].dt.dayofyear
-    df["season"] = df["month"].apply(month_to_season)
+# ------------------ Preprocesado simple ------------------
 
-    # Features numéricas base
-    feature_cols = ["lat", "lon", "year", "month", "day", "dayofweek", "dayofyear"]
+def prepare_X_y(df, target="pm25"):
+    """Prepara X (features) e y (target) desde model_features.
+    Usa columnas numéricas conocidas. Devuelve X, y, feature_names.
+    """
+    # columnas candidatas (ajusta si tu tabla tiene otras)
+    candidate_cols = [
+        "temp", "wind_speed", "no2", "o3", "pm25", "lat", "lon"
+    ]
+    # conservar solo las que existen
+    cols = [c for c in candidate_cols if c in df.columns]
+    if target not in cols:
+        # si target no está presente en cols pero existe en la tabla, añadir
+        if target in df.columns:
+            cols.append(target)
+        else:
+            raise ValueError(f"Target {target} no está en el dataframe")
 
-    # Targets: variables ambientales
-    target_cols = ["pm25", "no2", "o3", "temp", "wind_speed", "pm10", "humidity", "wind_dir", "pressure"]
+    # eliminar filas con NA en target
+    df = df.dropna(subset=[target])
 
-    # Filtramos solo las columnas existentes (por si alguna falta)
-    target_cols = [c for c in target_cols if c in df.columns]
+    # features: todas menos target y datetime_utc
+    feature_cols = [c for c in cols if c != target]
 
-    # Eliminamos filas con NaN en las columnas objetivo
-    df = df.dropna(subset=target_cols)
+    # Si no hay features numéricas suficientes, usar lat/lon y time-of-day
+    if not feature_cols:
+        df = df.copy()
+        df['hour'] = pd.to_datetime(df['datetime_utc']).dt.hour
+        feature_cols = ['lat', 'lon', 'hour']
 
-    X = df[feature_cols + ["season"]]
-    y = df[target_cols]
+    X = df[feature_cols].copy()
+    # rellenar NA con mediana
+    for c in X.columns:
+        if X[c].isna().any():
+            X[c] = X[c].fillna(X[c].median())
 
-    preprocessor = ColumnTransformer([
-        ("cat", OneHotEncoder(handle_unknown="ignore", sparse=False), ["season"]),
-        ("num", StandardScaler(), feature_cols)
-    ])
+    y = df[target].astype(float)
+    return X, y, feature_cols
 
-    return X, y, preprocessor, target_cols
+# ------------------ Entrenamiento ------------------
 
-# -----------------------
-# Construcción del modelo
-# -----------------------
-def build_model(use_lightgbm=True):
-    if use_lightgbm and HAS_LGB:
-        base_model = lgb.LGBMRegressor(n_estimators=150, learning_rate=0.05, random_state=42)
-    else:
-        base_model = RandomForestRegressor(n_estimators=150, n_jobs=-1, random_state=42)
-    model = MultiOutputRegressor(base_model)
-    return model
+def train_model_for(target='pm25', days_history=180, bbox=None, test_size=0.2, random_state=42):
+    """Entrena un RandomForestRegressor sobre model_features para el target elegido.
+    Guarda el modelo y devuelve métricas.
+    """
+    end_dt = datetime.now(timezone.utc)
+    start_dt = end_dt - timedelta(days=days_history)
 
-# -----------------------
-# Entrenamiento
-# -----------------------
-def train_model(df, model_save_path="models", use_lightgbm=True):
-    X, y, preprocessor, target_cols = preprocess_df(df)
+    print(f"🔎 Cargando datos {start_dt.isoformat()} → {end_dt.isoformat()} para target={target}")
+    df = fetch_model_features(start_dt=start_dt.isoformat(), end_dt=end_dt.isoformat(), bbox=bbox)
+    if df.empty:
+        raise RuntimeError("No hay datos en model_features para el rango especificado")
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, shuffle=True)
+    X, y, feature_names = prepare_X_y(df, target=target)
 
-    X_train_prep = preprocessor.fit_transform(X_train)
-    X_test_prep = preprocessor.transform(X_test)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
 
-    model = build_model(use_lightgbm=use_lightgbm)
-    print(f"Entrenando modelo con {len(X_train)} muestras...")
-    model.fit(X_train_prep, y_train)
+    print(f"📦 Entrenando RandomForest (n={len(X_train)} train / {len(X_test)} test) ...")
+    model = RandomForestRegressor(n_estimators=200, max_depth=12, random_state=random_state)
+    model.fit(X_train, y_train)
 
-    y_pred = model.predict(X_test_prep)
+    y_pred = model.predict(X_test)
+    mse = mean_squared_error(y_test, y_pred)
+    rmse = math.sqrt(mse)
+    r2 = r2_score(y_test, y_pred)
 
-    metrics = {}
-    for i, col in enumerate(target_cols):
-        mse = mean_squared_error(y_test.iloc[:, i], y_pred[:, i])
-        rmse = np.sqrt(mse)
-        mae = mean_absolute_error(y_test.iloc[:, i], y_pred[:, i])
-        metrics[col] = {"RMSE": rmse, "MAE": mae}
-        print(f"{col}: RMSE={rmse:.4f}, MAE={mae:.4f}")
+    model_path = os.path.join(MODEL_DIR, f"{target}_rf.joblib")
+    joblib.dump({"model": model, "features": feature_names}, model_path)
 
-    os.makedirs(model_save_path, exist_ok=True)
-    pipeline = {"preprocessor": preprocessor, "model": model, "target_cols": target_cols}
-    joblib.dump(pipeline, os.path.join(model_save_path, "climate_pipeline.joblib"))
-    print(f"\n✅ Modelo guardado en {model_save_path}/climate_pipeline.joblib")
+    print(f"✅ Modelo guardado en {model_path}")
+    print(f"📊 RMSE={rmse:.4f}, R2={r2:.4f}")
 
-    return metrics
+    return {"model_path": model_path, "rmse": rmse, "r2": r2, "features": feature_names}
 
-# -----------------------
-# Predicción
-# -----------------------
-def load_pipeline(pipeline_path="models/climate_pipeline.joblib"):
-    pipeline = joblib.load(pipeline_path)
-    return pipeline["preprocessor"], pipeline["model"], pipeline["target_cols"]
+# ------------------ Cargar modelo ------------------
 
-def predict_for_date(pipeline_path, predict_date, lat, lon):
-    preprocessor, model, target_cols = load_pipeline(pipeline_path)
+def load_model(target='pm25'):
+    model_path = os.path.join(MODEL_DIR, f"{target}_rf.joblib")
+    if not os.path.exists(model_path):
+        raise FileNotFoundError(f"Modelo no encontrado: {model_path}")
+    obj = joblib.load(model_path)
+    return obj['model'], obj['features']
 
-    if isinstance(predict_date, str):
-        dt = parser.parse(predict_date)
-    else:
-        dt = predict_date
+# ------------------ Predicción por lat/lon/datetime ------------------
 
-    row = pd.DataFrame([{
-        "lat": lat,
-        "lon": lon,
-        "year": dt.year,
-        "month": dt.month,
-        "day": dt.day,
-        "dayofweek": dt.weekday(),
-        "dayofyear": dt.timetuple().tm_yday,
-        "season": month_to_season(dt.month)
-    }])
+def build_feature_row(lat, lon, dt, feature_names):
+    """Construye fila de features aproximada.
+    - Intenta obtener valores recientes de la DB (mediciones + weather).
+    - Si no hay datos, usa heurísticas (lat/lon, hour).
+    """
+    # intentamos traer el registro más cercano en time y space de model_features
+    conn = get_conn()
+    cur = conn.cursor()
+    q = """
+    SELECT datetime_utc, lat, lon, pm25, no2, o3, temp, wind_speed
+    FROM model_features
+    ORDER BY ((lat - %s)^2 + (lon - %s)^2) + EXTRACT(EPOCH FROM (ABS(datetime_utc - %s))) / 100000.0
+    LIMIT 1
+    """
+    cur.execute(q, (lat, lon, dt))
+    row = cur.fetchone()
+    cur.close()
+    conn.close()
 
-    X_prep = preprocessor.transform(row)
-    pred = model.predict(X_prep)[0]
+    features = {}
+    hour = pd.to_datetime(dt).hour if dt is not None else 12
+    for f in feature_names:
+        if f == 'lat':
+            features['lat'] = lat
+        elif f == 'lon':
+            features['lon'] = lon
+        elif f == 'hour':
+            features['hour'] = hour
+        else:
+            # usar valor del row si existe
+            if row is not None:
+                colmap = {"pm25":3, "no2":4, "o3":5, "temp":6, "wind_speed":7}
+                if f in colmap and row[colmap[f]] is not None:
+                    features[f] = float(row[colmap[f]])
+                else:
+                    features[f] = 0.0
+            else:
+                features[f] = 0.0
+    # convertir a DataFrame fila
+    return pd.DataFrame([features])
 
-    return {target_cols[i]: float(pred[i]) for i in range(len(target_cols))}
 
-# -----------------------
-# Main de ejemplo
-# -----------------------
-if __name__ == "__main__":
-    # Cambia esto por tu string real de conexión
-    # Ejemplo PostgreSQL:
-    CONNECTION_STRING = "postgresql://usuario:contraseña@localhost:5432/air_quality_db"
+def predict_for(lat, lon, dt_iso, target='pm25'):
+    model, feature_names = load_model(target)
+    X_row = build_feature_row(lat, lon, dt_iso, feature_names)
+    # asegurar columnas en el orden correcto
+    X_row = X_row.reindex(columns=feature_names, fill_value=0.0)
+    pred = model.predict(X_row)
+    return float(pred[0])
 
-    print("Cargando datos desde la base de datos...")
-    df = load_data_from_db(CONNECTION_STRING, "model_features")
-    print(f"Datos cargados: {len(df)} filas")
+# ------------------ CLI ------------------
 
-    metrics = train_model(df, model_save_path="models", use_lightgbm=True)
-    print("\nMétricas finales:", metrics)
+def parse_args():
+    p = argparse.ArgumentParser()
+    p.add_argument('--train', action='store_true')
+    p.add_argument('--predict', action='store_true')
+    p.add_argument('--param', type=str, default='pm25', help='Target parameter to predict (pm25, no2, etc)')
+    p.add_argument('--lat', type=float)
+    p.add_argument('--lon', type=float)
+    p.add_argument('--datetime', type=str)
+    p.add_argument('--days', type=int, default=180, help='History days to train on')
+    p.add_argument('--bbox', type=float, nargs=4, metavar=('lat_min','lat_max','lon_min','lon_max'))
+    return p.parse_args()
 
-    # Ejemplo de predicción
-    example = predict_for_date("models/climate_pipeline.joblib", "2026-01-15", lat=-33.45, lon=-70.66)
-    print("\nPredicción ejemplo para Santiago de Chile (2026-01-15):")
-    print(example)
+
+def main():
+    args = parse_args()
+    if args.train:
+        res = train_model_for(target=args.param, days_history=args.days, bbox=tuple(args.bbox) if args.bbox else None)
+        print(res)
+
+    if args.predict:
+        if args.lat is None or args.lon is None:
+            raise ValueError('Para predecir necesitas --lat y --lon')
+        dt = args.datetime or datetime.now(timezone.utc).isoformat()
+        val = predict_for(args.lat, args.lon, dt, target=args.param)
+        print(f"Predicción {args.param} @ {args.lat},{args.lon} {dt} => {val:.4f}")
+
+if __name__ == '__main__':
+    main()
+
 
