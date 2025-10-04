@@ -16,8 +16,8 @@ class AirBytesApp {
         this.airQualityBaseUrl = 'https://api.openweathermap.org/data/2.5';
         
         this.currentLocation = 'colombia';
-        this.updateInterval = 300000; // 5 minutes
-        this.agriculturalUpdateInterval = 600000; // 10 minutes for agricultural data
+        this.updateInterval = 600000; // 10 minutes
+        this.agriculturalUpdateInterval = 900000; // 15 minutes for agricultural data
         this.isLoading = false;
         this.useRealData = true;
         
@@ -26,7 +26,7 @@ class AirBytesApp {
         this.mapUpdateInterval = null;
         
         this.dataCache = new Map();
-        this.cacheTimeout = 60000;
+        this.cacheTimeout = 300000; // 5 minutes cache
         this.isMapLoaded = false;
         this.currentUserLocation = null;
         this.isUsingCurrentLocation = false;
@@ -441,6 +441,134 @@ class AirBytesApp {
         }
         
         return this.colombianCities[this.currentLocation];
+    }
+
+    getLocationDataByKey(locationKey) {
+        if (this.northAmericanRegions[locationKey]) {
+            return this.northAmericanRegions[locationKey];
+        }
+        
+        if (this.colombianCities[locationKey]) {
+            return this.colombianCities[locationKey];
+        }
+        
+        console.warn(`Ubicación no encontrada: ${locationKey}, usando Colombia por defecto`);
+        return this.colombianCities['colombia'];
+    }
+
+    async getWeatherDataForLocation(locationData) {
+        try {
+            const response = await fetch(`${this.weatherBaseUrl}/weather?lat=${locationData.lat}&lon=${locationData.lon}&appid=${this.weatherApiKey}&units=metric&lang=es`);
+            const data = await response.json();
+            
+            if (data.cod === 200) {
+                return {
+                    temperature: Math.round(data.main.temp),
+                    humidity: data.main.humidity,
+                    pressure: data.main.pressure,
+                    windSpeed: Math.round(data.wind.speed * 3.6),
+                    windDirection: this.getWindDirection(data.wind.deg),
+                    precipitation: data.rain ? (data.rain['1h'] || 0) : 0,
+                    description: data.weather[0].description,
+                    icon: data.weather[0].icon,
+                    visibility: data.visibility / 1000,
+                    uvIndex: data.uvi || 0,
+                    cloudiness: data.clouds.all,
+                    timestamp: new Date().toISOString(),
+                    source: 'OpenWeatherMap'
+                };
+            } else {
+                throw new Error('Error en la respuesta de la API');
+            }
+        } catch (error) {
+            console.error('Error fetching weather data for location:', error);
+            // Fallback to simulated data
+            return this.generateSimulatedWeatherData(locationData);
+        }
+    }
+
+    generateSimulatedWeatherData(locationData) {
+        const baseTemp = 25 - (locationData.elevation / 100) * 0.6;
+        const variation = 5;
+        const temp = baseTemp + (Math.random() - 0.5) * variation;
+        
+        return {
+            temperature: Math.round(temp),
+            humidity: Math.round(60 + Math.random() * 30),
+            pressure: Math.round(1013 + (Math.random() - 0.5) * 20),
+            windSpeed: Math.round(Math.random() * 20),
+            windDirection: this.getWindDirection(Math.random() * 360),
+            precipitation: Math.round(Math.random() * 10),
+            description: 'Parcialmente nublado',
+            icon: '02d',
+            visibility: 10,
+            uvIndex: Math.round(Math.random() * 8),
+            cloudiness: Math.round(Math.random() * 100),
+            timestamp: new Date().toISOString(),
+            source: 'Simulated Data'
+        };
+    }
+
+    getCropSpecificRecommendations(cropType, cropStage, weatherData, soilData, locationData) {
+        const recommendations = {
+            planting: [],
+            irrigation: [],
+            protection: [],
+            farming: []
+        };
+
+        const cropName = this.getCropDisplayName(cropType);
+
+        // Quick temperature check
+        if (weatherData.temperature < 10) {
+            recommendations.planting.push(`❄️ Temperatura baja para ${cropName}. Protege del frío.`);
+        } else if (weatherData.temperature > 30) {
+            recommendations.planting.push(`🌡️ Temperatura alta para ${cropName}. Riega más frecuentemente.`);
+        } else {
+            recommendations.planting.push(`✅ Temperatura adecuada para ${cropName}.`);
+        }
+
+        // Quick soil moisture check
+        if (soilData.moisture < 30) {
+            recommendations.irrigation.push(`💧 ${cropName} necesita riego urgente.`);
+        } else if (soilData.moisture > 80) {
+            recommendations.irrigation.push(`🌊 Reducir riego para ${cropName}.`);
+        } else {
+            recommendations.irrigation.push(`✅ Humedad adecuada para ${cropName}.`);
+        }
+
+        // Quick protection checks
+        if (weatherData.temperature < 5) {
+            recommendations.protection.push(`❄️ Protege ${cropName} de heladas.`);
+        }
+        if (weatherData.windSpeed > 30) {
+            recommendations.protection.push(`💨 Protege ${cropName} del viento.`);
+        }
+
+        // Quick location-based recommendations
+        if (locationData.elevation > 2000) {
+            recommendations.farming.push(`🏔️ ${cropName} en zona alta.`);
+        } else if (locationData.elevation < 500) {
+            recommendations.farming.push(`🌊 ${cropName} en zona baja.`);
+        }
+
+        return recommendations;
+    }
+
+    getCropDisplayName(cropType) {
+        const cropNames = {
+            'general': 'cultivo general',
+            'maiz': 'maíz',
+            'arroz': 'arroz',
+            'cafe': 'café',
+            'papa': 'papa',
+            'tomate': 'tomate',
+            'lechuga': 'lechuga',
+            'frijol': 'frijol',
+            'trigo': 'trigo',
+            'soya': 'soya'
+        };
+        return cropNames[cropType] || 'cultivo';
     }
 
     async getCurrentLocation() {
@@ -865,13 +993,36 @@ class AirBytesApp {
     // Agricultural Functions
     async loadFarmersData() {
         try {
+            // Load configuration first (fast)
+            this.setupCropConfiguration();
+            
+            // Show loading state
+            this.showAgriculturalLoadingState();
+            
+            // Load data with error handling
+            let weatherData, soilData;
+            try {
+                weatherData = await this.getCurrentWeatherData();
+                soilData = await this.getEnhancedSoilData(weatherData);
+            } catch (dataError) {
+                console.error('Error loading weather/soil data:', dataError);
+                // Use fallback data
+                weatherData = this.generateSimulatedWeatherData(this.getCurrentLocationData());
+                soilData = this.generateSoilData(weatherData);
+            }
+            
+            // Update all sections with the data
             await this.updateAgriculturalWeatherData();
             await this.updateAgriculturalAlerts();
             await this.updateAgriculturalRecommendations();
             await this.loadAgriculturalForecast();
-            this.setupCropConfiguration();
+            
+            // Hide loading state
+            this.hideAgriculturalLoadingState();
+            
         } catch (error) {
             console.error('Error loading farmers data:', error);
+            this.hideAgriculturalLoadingState();
             this.showNotification('Error al cargar datos agrícolas', 'error');
         }
     }
@@ -979,57 +1130,41 @@ class AirBytesApp {
 
     async getEnhancedSoilData(weatherData) {
         try {
-            // Get historical data for better soil temperature calculation
-            const locationData = this.getCurrentLocationData();
-            const response = await fetch(`${this.weatherBaseUrl}/onecall?lat=${locationData.lat}&lon=${locationData.lon}&appid=${this.weatherApiKey}&units=metric&exclude=minutely,alerts`);
-            const data = await response.json();
+            // Simple and fast soil data calculation
+            const airTemp = weatherData.temperature;
+            const humidity = weatherData.humidity;
+            const precipitation = weatherData.precipitation || 0;
+            const cloudiness = weatherData.cloudiness || 50;
             
-            if (data.current) {
-                // More accurate soil temperature calculation using real data
-                const airTemp = weatherData.temperature;
-                const humidity = weatherData.humidity;
-                const cloudiness = weatherData.cloudiness || 50;
-                
-                // Soil temperature is typically 2-4°C lower than air temp, adjusted for humidity and cloudiness
-                const soilTemp = airTemp - (3 + (humidity / 100) * 1.5) + (cloudiness / 100) * 0.5;
-                
-                // Enhanced soil moisture calculation using real precipitation data
-                let totalPrecipitation = weatherData.precipitation;
-                if (data.hourly) {
-                    // Sum precipitation from last 24 hours
-                    for (let i = 0; i < 24; i++) {
-                        if (data.hourly[i] && data.hourly[i].rain) {
-                            totalPrecipitation += data.hourly[i].rain['1h'] || 0;
-                        }
-                    }
-                }
-                
-                const baseMoisture = 40 + (humidity * 0.3) + (totalPrecipitation * 1.5);
-                const soilMoisture = Math.min(95, Math.max(10, baseMoisture + (Math.random() * 5 - 2.5)));
-                
-                // Enhanced solar radiation calculation using real UV index and cloudiness
-                const hour = new Date().getHours();
-                let solarRadiation = 0;
-                if (hour >= 6 && hour <= 18) {
-                    const uvIndex = weatherData.uvIndex || 5;
-                    solarRadiation = 200 + (uvIndex * 50) + (Math.sin((hour - 6) * Math.PI / 12) * 400);
-                    solarRadiation *= (1 - cloudiness / 200); // Reduce based on cloudiness
-                    if (weatherData.precipitation > 5) solarRadiation *= 0.3;
-                    if (humidity > 80) solarRadiation *= 0.7;
-                }
-                
-                return {
-                    temperature: Math.round(soilTemp * 10) / 10,
-                    moisture: Math.round(soilMoisture),
-                    solarRadiation: Math.round(solarRadiation)
-                };
+            // Soil temperature calculation
+            const soilTemp = airTemp - 2 + (Math.random() - 0.5) * 2;
+            
+            // Soil moisture calculation
+            const baseMoisture = 40 + (humidity * 0.3) + (precipitation * 2);
+            const soilMoisture = Math.min(95, Math.max(10, baseMoisture + (Math.random() * 10 - 5)));
+            
+            // Solar radiation calculation
+            const hour = new Date().getHours();
+            let solarRadiation = 0;
+            if (hour >= 6 && hour <= 18) {
+                solarRadiation = 200 + (Math.sin((hour - 6) * Math.PI / 12) * 400);
+                solarRadiation *= (1 - cloudiness / 200);
+                if (precipitation > 5) solarRadiation *= 0.3;
+                if (humidity > 80) solarRadiation *= 0.7;
             }
+            
+            return {
+                temperature: Math.round(soilTemp * 10) / 10,
+                moisture: Math.round(soilMoisture),
+                solarRadiation: Math.round(solarRadiation),
+                timestamp: new Date().toISOString(),
+                source: 'Enhanced Data'
+            };
         } catch (error) {
-            console.error('Error fetching enhanced soil data:', error);
+            console.error('Error generating enhanced soil data:', error);
+            // Fallback to basic calculation
+            return this.generateSoilData(weatherData);
         }
-        
-        // Fallback to basic calculation
-        return this.generateSoilData(weatherData);
     }
 
     generateSoilData(weatherData) {
@@ -1178,13 +1313,10 @@ class AirBytesApp {
             document.getElementById('droughtRisk').textContent = droughtRisk;
         } catch (error) {
             console.error('Error updating agricultural alerts:', error);
-            // Fallback to basic assessment
-            const weatherData = this.getCurrentWeatherData();
-            const soilData = this.generateSoilData(weatherData);
-            
-            document.getElementById('frostRisk').textContent = this.assessFrostRisk(weatherData, soilData);
-            document.getElementById('stormRisk').textContent = this.assessStormRisk(weatherData);
-            document.getElementById('droughtRisk').textContent = this.assessDroughtRisk(weatherData, soilData);
+            // Show basic alerts
+            document.getElementById('frostRisk').textContent = 'Evaluando condiciones...';
+            document.getElementById('stormRisk').textContent = 'Evaluando condiciones...';
+            document.getElementById('droughtRisk').textContent = 'Evaluando condiciones...';
         }
     }
 
@@ -1236,35 +1368,57 @@ class AirBytesApp {
         }
     }
 
-    async updateAgriculturalRecommendations() {
+    async updateAgriculturalRecommendations(weatherData = null, soilData = null) {
         try {
-            const weatherData = await this.getCurrentWeatherData();
-            const soilData = await this.getEnhancedSoilData(weatherData);
+            // Use provided data or get current data
+            if (!weatherData) {
+                weatherData = await this.getCurrentWeatherData();
+            }
+            if (!soilData) {
+                soilData = await this.getEnhancedSoilData(weatherData);
+            }
+            
             const cropType = document.getElementById('cropType').value;
             const cropStage = document.getElementById('cropStage').value;
+            const farmCity = document.getElementById('farmCitySelect').value;
+            const farmLocationData = this.getLocationDataByKey(farmCity);
             
-            this.updatePlantingRecommendations(weatherData, soilData, cropType, cropStage);
-            this.updateIrrigationRecommendations(weatherData, soilData, cropType, cropStage);
-            this.updateProtectionRecommendations(weatherData, soilData, cropType, cropStage);
-            this.updateFarmingRecommendations(weatherData, soilData, cropType, cropStage);
+            // Update location display
+            document.getElementById('farmLocation').textContent = farmLocationData.name;
+            
+            // Generate recommendations quickly
+            this.updatePlantingRecommendations(weatherData, soilData, cropType, cropStage, farmLocationData);
+            this.updateIrrigationRecommendations(weatherData, soilData, cropType, cropStage, farmLocationData);
+            this.updateProtectionRecommendations(weatherData, soilData, cropType, cropStage, farmLocationData);
+            this.updateFarmingRecommendations(weatherData, soilData, cropType, cropStage, farmLocationData);
         } catch (error) {
             console.error('Error updating agricultural recommendations:', error);
-            // Fallback to basic recommendations
-            const weatherData = this.getCurrentWeatherData();
-            const soilData = this.generateSoilData(weatherData);
-            const cropType = document.getElementById('cropType').value;
-            const cropStage = document.getElementById('cropStage').value;
-            
-            this.updatePlantingRecommendations(weatherData, soilData, cropType, cropStage);
-            this.updateIrrigationRecommendations(weatherData, soilData, cropType, cropStage);
-            this.updateProtectionRecommendations(weatherData, soilData, cropType, cropStage);
-            this.updateFarmingRecommendations(weatherData, soilData, cropType, cropStage);
+            // Show basic recommendations
+            this.showBasicRecommendations();
         }
     }
 
-    updatePlantingRecommendations(weatherData, soilData, cropType, cropStage) {
+    showBasicRecommendations() {
+        const basicRecommendations = [
+            '🌱 Mantén el suelo húmedo pero no encharcado',
+            '🌡️ Monitorea la temperatura regularmente',
+            '💨 Protege de vientos fuertes si es necesario',
+            '☀️ Ajusta la exposición solar según el cultivo'
+        ];
+        
+        document.getElementById('plantingRecommendations').innerHTML = `<ul>${basicRecommendations.map(rec => `<li>${rec}</li>`).join('')}</ul>`;
+        document.getElementById('irrigationRecommendations').innerHTML = '<p>Revisa la humedad del suelo regularmente</p>';
+        document.getElementById('protectionRecommendations').innerHTML = '<p>Monitorea las condiciones climáticas</p>';
+        document.getElementById('farmingRecommendations').innerHTML = '<p>Mantén un calendario de labores agrícolas</p>';
+    }
+
+    updatePlantingRecommendations(weatherData, soilData, cropType, cropStage, locationData) {
         const element = document.getElementById('plantingRecommendations');
         let recommendations = [];
+        
+        // Get crop-specific recommendations based on type and stage
+        const cropRecommendations = this.getCropSpecificRecommendations(cropType, cropStage, weatherData, soilData, locationData);
+        recommendations = recommendations.concat(cropRecommendations.planting);
         
         if (cropStage === 'germinacion') {
             if (soilData.temperature >= 15 && soilData.temperature <= 25) {
@@ -1290,9 +1444,13 @@ class AirBytesApp {
             : '<p>No hay recomendaciones específicas para esta etapa.</p>';
     }
 
-    updateIrrigationRecommendations(weatherData, soilData, cropType, cropStage) {
+    updateIrrigationRecommendations(weatherData, soilData, cropType, cropStage, locationData) {
         const element = document.getElementById('irrigationRecommendations');
         let recommendations = [];
+        
+        // Get crop-specific recommendations
+        const cropRecommendations = this.getCropSpecificRecommendations(cropType, cropStage, weatherData, soilData, locationData);
+        recommendations = recommendations.concat(cropRecommendations.irrigation);
         
         if (soilData.moisture < 30) {
             recommendations.push('RIEGO URGENTE - Humedad del suelo muy baja');
@@ -1315,9 +1473,13 @@ class AirBytesApp {
         element.innerHTML = `<ul>${recommendations.map(rec => `<li>${rec}</li>`).join('')}</ul>`;
     }
 
-    updateProtectionRecommendations(weatherData, soilData, cropType, cropStage) {
+    updateProtectionRecommendations(weatherData, soilData, cropType, cropStage, locationData) {
         const element = document.getElementById('protectionRecommendations');
         let recommendations = [];
+        
+        // Get crop-specific recommendations
+        const cropRecommendations = this.getCropSpecificRecommendations(cropType, cropStage, weatherData, soilData, locationData);
+        recommendations = recommendations.concat(cropRecommendations.protection);
         
         // Frost protection
         if (weatherData.temperature <= 5) {
@@ -1350,9 +1512,13 @@ class AirBytesApp {
         element.innerHTML = `<ul>${recommendations.map(rec => `<li>${rec}</li>`).join('')}</ul>`;
     }
 
-    updateFarmingRecommendations(weatherData, soilData, cropType, cropStage) {
+    updateFarmingRecommendations(weatherData, soilData, cropType, cropStage, locationData) {
         const element = document.getElementById('farmingRecommendations');
         let recommendations = [];
+        
+        // Get crop-specific recommendations
+        const cropRecommendations = this.getCropSpecificRecommendations(cropType, cropStage, weatherData, soilData, locationData);
+        recommendations = recommendations.concat(cropRecommendations.farming);
         
         // Soil work recommendations
         if (soilData.moisture >= 40 && soilData.moisture <= 70) {
@@ -1390,30 +1556,45 @@ class AirBytesApp {
         const container = document.getElementById('agriculturalForecast');
         
         try {
-            const forecast = await this.getRealAgriculturalForecast();
+            // Use cached data if available
+            const cacheKey = 'agricultural_forecast';
+            const cachedData = this.getCachedData(cacheKey);
+            if (cachedData) {
+                this.displayForecast(cachedData, container);
+                return;
+            }
             
-            container.innerHTML = forecast.map(day => `
-                <div class="forecast-day">
-                    <div class="forecast-day-name">${day.name}</div>
-                    <div class="forecast-day-temp">${day.temp}°C</div>
-                    <div class="forecast-day-rain">${day.rain}mm</div>
-                    <div class="forecast-day-wind">${day.wind} km/h</div>
-                </div>
-            `).join('');
+            const forecast = await this.getRealAgriculturalForecast();
+            this.setCachedData(cacheKey, forecast);
+            this.displayForecast(forecast, container);
         } catch (error) {
             console.error('Error loading agricultural forecast:', error);
-            // Fallback to generated forecast
-            const forecast = this.generateAgriculturalForecast();
-            
-            container.innerHTML = forecast.map(day => `
-                <div class="forecast-day">
-                    <div class="forecast-day-name">${day.name}</div>
-                    <div class="forecast-day-temp">${day.temp}°C</div>
-                    <div class="forecast-day-rain">${day.rain}mm</div>
-                    <div class="forecast-day-wind">${day.wind} km/h</div>
-                </div>
-            `).join('');
+            // Show basic forecast
+            this.showBasicForecast(container);
         }
+    }
+
+    displayForecast(forecast, container) {
+        container.innerHTML = forecast.map(day => `
+            <div class="forecast-day">
+                <div class="forecast-day-name">${day.name}</div>
+                <div class="forecast-day-temp">${day.temp}°C</div>
+                <div class="forecast-day-rain">${day.rain}mm</div>
+                <div class="forecast-day-wind">${day.wind} km/h</div>
+            </div>
+        `).join('');
+    }
+
+    showBasicForecast(container) {
+        const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+        container.innerHTML = days.map(day => `
+            <div class="forecast-day">
+                <div class="forecast-day-name">${day}</div>
+                <div class="forecast-day-temp">--°C</div>
+                <div class="forecast-day-rain">--mm</div>
+                <div class="forecast-day-wind">-- km/h</div>
+            </div>
+        `).join('');
     }
 
     async getRealAgriculturalForecast() {
@@ -1473,19 +1654,29 @@ class AirBytesApp {
         if (config.cropStage) {
             document.getElementById('cropStage').value = config.cropStage;
         }
+        if (config.farmCity) {
+            document.getElementById('farmCitySelect').value = config.farmCity;
+        }
         
         // Setup event listeners
         document.getElementById('updateRecommendationsBtn').addEventListener('click', () => {
             this.saveCropConfiguration();
             this.updateAgriculturalRecommendations();
-            this.showNotification('Recomendaciones actualizadas según tu cultivo', 'success');
+            this.showNotification('Recomendaciones actualizadas según tu cultivo y ubicación', 'success');
+        });
+
+        // Update recommendations when city changes
+        document.getElementById('farmCitySelect').addEventListener('change', () => {
+            this.saveCropConfiguration();
+            this.updateAgriculturalRecommendations();
         });
     }
 
     saveCropConfiguration() {
         const config = {
             cropType: document.getElementById('cropType').value,
-            cropStage: document.getElementById('cropStage').value
+            cropStage: document.getElementById('cropStage').value,
+            farmCity: document.getElementById('farmCitySelect').value
         };
         
         localStorage.setItem('cropConfiguration', JSON.stringify(config));
@@ -3151,6 +3342,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
  
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

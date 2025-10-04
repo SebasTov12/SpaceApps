@@ -38,6 +38,7 @@ class AirBytesApp {
             'mexico': { name: 'México', lat: 23.6345, lon: -102.5528, elevation: 500, useTempo: true }
         };
         this.colombianCities = {
+            // Capital y principales ciudades
             'colombia': { name: 'Colombia', lat: 4.5709, lon: -74.2973, elevation: 2640, useTempo: false },
             'bogota': { name: 'Bogotá', lat: 4.7110, lon: -74.0721, elevation: 2640, useTempo: false },
             'medellin': { name: 'Medellín', lat: 6.2442, lon: -75.5812, elevation: 1495, useTempo: false },
@@ -49,7 +50,246 @@ class AirBytesApp {
             'santa-marta': { name: 'Santa Marta', lat: 11.2408, lon: -74.2110, elevation: 6, useTempo: false },
             'ibague': { name: 'Ibagué', lat: 4.4378, lon: -75.2006, elevation: 1285, useTempo: false },
             'manizales': { name: 'Manizales', lat: 5.0689, lon: -75.5174, elevation: 2160, useTempo: false },
-            'neiva': { name: 'Neiva', lat: 2.9345, lon: -75.2809, elevation: 442, useTempo: false }
+            'neiva': { name: 'Neiva', lat: 2.9345, lon: -75.2809, elevation: 442, useTempo: false },
+            
+            // Amazonas
+            'leticia': { name: 'Leticia', lat: -4.2153, lon: -69.9406, elevation: 96, useTempo: false },
+            'puerto-narino': { name: 'Puerto Nariño', lat: -3.7703, lon: -70.3831, elevation: 100, useTempo: false },
+            
+            // Antioquia
+            'bello': { name: 'Bello', lat: 6.3389, lon: -75.5581, elevation: 1450, useTempo: false },
+            'itagui': { name: 'Itagüí', lat: 6.1719, lon: -75.6114, elevation: 1550, useTempo: false },
+            'envigado': { name: 'Envigado', lat: 6.1719, lon: -75.5861, elevation: 1675, useTempo: false },
+            'copacabana': { name: 'Copacabana', lat: 6.3464, lon: -75.5089, elevation: 1450, useTempo: false },
+            'girardota': { name: 'Girardota', lat: 6.3769, lon: -75.4447, elevation: 1400, useTempo: false },
+            'barbosa': { name: 'Barbosa', lat: 6.4381, lon: -75.3314, elevation: 1300, useTempo: false },
+            'sabaneta': { name: 'Sabaneta', lat: 6.1519, lon: -75.6169, elevation: 1550, useTempo: false },
+            'rionegro': { name: 'Rionegro', lat: 6.1550, lon: -75.3731, elevation: 2125, useTempo: false },
+            'marinilla': { name: 'Marinilla', lat: 6.1739, lon: -75.3381, elevation: 2100, useTempo: false },
+            'el-retiro': { name: 'El Retiro', lat: 6.0619, lon: -75.5031, elevation: 2150, useTempo: false },
+            'guarne': { name: 'Guarne', lat: 6.2806, lon: -75.4419, elevation: 2150, useTempo: false },
+            'guatape': { name: 'Guatapé', lat: 6.2319, lon: -75.1581, elevation: 1925, useTempo: false },
+            'san-rafael': { name: 'San Rafael', lat: 6.2931, lon: -75.0269, elevation: 2000, useTempo: false },
+            'granada': { name: 'Granada', lat: 6.1431, lon: -75.1856, elevation: 2100, useTempo: false },
+            'concepcion': { name: 'Concepción', lat: 6.3956, lon: -75.2581, elevation: 1800, useTempo: false },
+            'alejandria': { name: 'Alejandría', lat: 6.3769, lon: -75.1419, elevation: 1750, useTempo: false },
+            'argelia': { name: 'Argelia', lat: 5.7319, lon: -75.1419, elevation: 1800, useTempo: false },
+            'cocorna': { name: 'Cocorná', lat: 6.0619, lon: -75.1856, elevation: 1200, useTempo: false },
+            'el-penol': { name: 'El Peñol', lat: 6.2181, lon: -75.1731, elevation: 2000, useTempo: false },
+            'el-santuario': { name: 'El Santuario', lat: 6.1381, lon: -75.2631, elevation: 2150, useTempo: false },
+            'guadalupe': { name: 'Guadalupe', lat: 6.2456, lon: -75.2406, elevation: 2000, useTempo: false },
+            'la-ceja': { name: 'La Ceja', lat: 6.0269, lon: -75.4281, elevation: 2200, useTempo: false },
+            'la-union': { name: 'La Unión', lat: 5.9731, lon: -75.3619, elevation: 2500, useTempo: false },
+            'nariño': { name: 'Nariño', lat: 5.6081, lon: -75.1769, elevation: 1400, useTempo: false },
+            'puerto-berrio': { name: 'Puerto Berrío', lat: 6.4919, lon: -74.4031, elevation: 125, useTempo: false },
+            'puerto-nare': { name: 'Puerto Nare', lat: 6.1919, lon: -74.5831, elevation: 150, useTempo: false },
+            'puerto-triunfo': { name: 'Puerto Triunfo', lat: 5.8719, lon: -74.6419, elevation: 200, useTempo: false },
+            'yolombo': { name: 'Yolombó', lat: 6.5956, lon: -75.0119, elevation: 1800, useTempo: false },
+            'yondo': { name: 'Yondó', lat: 7.0069, lon: -73.9131, elevation: 50, useTempo: false },
+            'zaragoza': { name: 'Zaragoza', lat: 7.4881, lon: -74.8681, elevation: 25, useTempo: false },
+            
+            // Atlántico
+            'soledad': { name: 'Soledad', lat: 10.9169, lon: -74.7650, elevation: 5, useTempo: false },
+            'malambo': { name: 'Malambo', lat: 10.8581, lon: -74.7731, elevation: 10, useTempo: false },
+            'sabanalarga': { name: 'Sabanalarga', lat: 10.6306, lon: -74.9219, elevation: 100, useTempo: false },
+            'baranoa': { name: 'Baranoa', lat: 10.7931, lon: -74.9169, elevation: 150, useTempo: false },
+            'galapa': { name: 'Galapa', lat: 10.8969, lon: -74.8869, elevation: 100, useTempo: false },
+            'tubara': { name: 'Tubará', lat: 10.8750, lon: -75.0269, elevation: 50, useTempo: false },
+            'usiacuri': { name: 'Usiacurí', lat: 10.7431, lon: -74.9550, elevation: 100, useTempo: false },
+            'piojo': { name: 'Piojó', lat: 10.7481, lon: -75.1081, elevation: 200, useTempo: false },
+            'luruaco': { name: 'Luruaco', lat: 10.6081, lon: -75.1419, elevation: 50, useTempo: false },
+            'repelon': { name: 'Repelón', lat: 10.4931, lon: -75.1269, elevation: 10, useTempo: false },
+            'manati': { name: 'Manatí', lat: 10.4469, lon: -75.1569, elevation: 5, useTempo: false },
+            'candelaria': { name: 'Candelaria', lat: 10.4581, lon: -74.8806, elevation: 10, useTempo: false },
+            'ponedera': { name: 'Ponedera', lat: 10.6419, lon: -74.7531, elevation: 10, useTempo: false },
+            'palmar-de-varela': { name: 'Palmar de Varela', lat: 10.7469, lon: -74.7550, elevation: 10, useTempo: false },
+            'campo-de-la-cruz': { name: 'Campo de la Cruz', lat: 10.3769, lon: -74.8819, elevation: 5, useTempo: false },
+            'suan': { name: 'Suán', lat: 10.3331, lon: -74.8806, elevation: 5, useTempo: false },
+            'santo-tomas': { name: 'Santo Tomás', lat: 10.7581, lon: -74.7169, elevation: 10, useTempo: false },
+            'sabanagrande': { name: 'Sabanagrande', lat: 10.7919, lon: -74.9219, elevation: 10, useTempo: false },
+            'polonuevo': { name: 'Polonuevo', lat: 10.7769, lon: -74.8531, elevation: 10, useTempo: false },
+            'pueblo-viejo': { name: 'Pueblo Viejo', lat: 10.9931, lon: -74.2869, elevation: 5, useTempo: false },
+            'piojo': { name: 'Piojó', lat: 10.7481, lon: -75.1081, elevation: 200, useTempo: false },
+            'juan-de-acosta': { name: 'Juan de Acosta', lat: 10.8281, lon: -75.0369, elevation: 50, useTempo: false },
+            'hato': { name: 'Hato', lat: 10.4419, lon: -75.1669, elevation: 10, useTempo: false },
+            'galapa': { name: 'Galapa', lat: 10.8969, lon: -74.8869, elevation: 100, useTempo: false },
+            'candelaria': { name: 'Candelaria', lat: 10.4581, lon: -74.8806, elevation: 10, useTempo: false },
+            'baranoa': { name: 'Baranoa', lat: 10.7931, lon: -74.9169, elevation: 150, useTempo: false },
+            'sabanalarga': { name: 'Sabanalarga', lat: 10.6306, lon: -74.9219, elevation: 100, useTempo: false },
+            'malambo': { name: 'Malambo', lat: 10.8581, lon: -74.7731, elevation: 10, useTempo: false },
+            'soledad': { name: 'Soledad', lat: 10.9169, lon: -74.7650, elevation: 5, useTempo: false },
+            
+            // Bolívar
+            'mompox': { name: 'Mompós', lat: 9.2419, lon: -74.4269, elevation: 20, useTempo: false },
+            'magangue': { name: 'Magangué', lat: 9.2419, lon: -74.7419, elevation: 20, useTempo: false },
+            'turbaco': { name: 'Turbaco', lat: 10.3331, lon: -75.4081, elevation: 100, useTempo: false },
+            'turbana': { name: 'Turbaná', lat: 10.2806, lon: -75.4419, elevation: 150, useTempo: false },
+            'villa-nueva': { name: 'Villa Nueva', lat: 10.6081, lon: -75.2731, elevation: 50, useTempo: false },
+            'santa-rosa': { name: 'Santa Rosa', lat: 10.4456, lon: -75.3619, elevation: 100, useTempo: false },
+            'santa-catalina': { name: 'Santa Catalina', lat: 10.6031, lon: -75.2919, elevation: 50, useTempo: false },
+            'san-pablo': { name: 'San Pablo', lat: 8.9519, lon: -73.9269, elevation: 100, useTempo: false },
+            'san-juan-nepomuceno': { name: 'San Juan Nepomuceno', lat: 9.9519, lon: -75.0819, elevation: 200, useTempo: false },
+            'san-jacinto': { name: 'San Jacinto', lat: 9.8269, lon: -75.1219, elevation: 150, useTempo: false },
+            'san-estanislao': { name: 'San Estanislao', lat: 10.3981, lon: -75.1519, elevation: 100, useTempo: false },
+            'san-cristobal': { name: 'San Cristóbal', lat: 10.3931, lon: -75.0631, elevation: 100, useTempo: false },
+            'san-fernando': { name: 'San Fernando', lat: 9.2781, lon: -74.5331, elevation: 20, useTempo: false },
+            'rio-viejo': { name: 'Río Viejo', lat: 8.5881, lon: -73.8406, elevation: 50, useTempo: false },
+            'regidor': { name: 'Regidor', lat: 8.6669, lon: -73.8269, elevation: 50, useTempo: false },
+            'pinillos': { name: 'Pinillos', lat: 8.9919, lon: -74.4719, elevation: 20, useTempo: false },
+            'pijiño-del-carmen': { name: 'Pijiño del Carmen', lat: 9.3319, lon: -74.4519, elevation: 20, useTempo: false },
+            'norosi': { name: 'Norosí', lat: 8.5269, lon: -74.0406, elevation: 100, useTempo: false },
+            'morales': { name: 'Morales', lat: 8.2750, lon: -73.8681, elevation: 50, useTempo: false },
+            'montecristo': { name: 'Montecristo', lat: 8.2956, lon: -74.4731, elevation: 20, useTempo: false },
+            'maria-la-baja': { name: 'María la Baja', lat: 9.9819, lon: -75.3019, elevation: 50, useTempo: false },
+            'mahates': { name: 'Mahates', lat: 10.2319, lon: -75.1919, elevation: 50, useTempo: false },
+            'hatillo-de-loba': { name: 'Hatillo de Loba', lat: 8.9569, lon: -74.0781, elevation: 20, useTempo: false },
+            'guamal-bolivar': { name: 'Guamal (Bolívar)', lat: 9.1431, lon: -74.2231, elevation: 20, useTempo: false },
+            'el-carmen-de-bolivar': { name: 'El Carmen de Bolívar', lat: 9.7219, lon: -75.1219, elevation: 150, useTempo: false },
+            'el-guamo': { name: 'El Guamo', lat: 10.0319, lon: -74.9619, elevation: 50, useTempo: false },
+            'cicuco': { name: 'Cicuco', lat: 9.2769, lon: -74.6456, elevation: 20, useTempo: false },
+            'calamar': { name: 'Calamar', lat: 10.2519, lon: -74.9119, elevation: 50, useTempo: false },
+            
+            // Boyacá
+            'tunja': { name: 'Tunja', lat: 5.5353, lon: -73.3678, elevation: 2820, useTempo: false },
+            'duitama': { name: 'Duitama', lat: 5.8247, lon: -73.0344, elevation: 2590, useTempo: false },
+            'sogamoso': { name: 'Sogamoso', lat: 5.7147, lon: -72.9339, elevation: 2569, useTempo: false },
+            'chiquinquira': { name: 'Chiquinquirá', lat: 5.6169, lon: -73.8181, elevation: 2556, useTempo: false },
+            'paipa': { name: 'Paipa', lat: 5.7806, lon: -73.1169, elevation: 2525, useTempo: false },
+            'villa-de-leyva': { name: 'Villa de Leyva', lat: 5.6331, lon: -73.5269, elevation: 2149, useTempo: false },
+            'barbosa-boyaca': { name: 'Barbosa (Boyacá)', lat: 5.9331, lon: -73.6169, elevation: 2000, useTempo: false },
+            'moniquira': { name: 'Moniquirá', lat: 5.8750, lon: -73.5731, elevation: 2100, useTempo: false },
+            'raquira': { name: 'Ráquira', lat: 5.5381, lon: -73.6331, elevation: 2150, useTempo: false },
+            'sutamarchan': { name: 'Sutamarchán', lat: 5.6169, lon: -73.6169, elevation: 2200, useTempo: false },
+            'tinjaca': { name: 'Tinjacá', lat: 5.5750, lon: -73.6469, elevation: 2250, useTempo: false },
+            'sachica': { name: 'Sáchica', lat: 5.5831, lon: -73.5419, elevation: 2200, useTempo: false },
+            'sutatenza': { name: 'Sutatenza', lat: 5.0169, lon: -73.4519, elevation: 1800, useTempo: false },
+            'tenza': { name: 'Tenza', lat: 5.0750, lon: -73.4219, elevation: 1850, useTempo: false },
+            'garagoa': { name: 'Garagoa', lat: 5.0831, lon: -73.3631, elevation: 1700, useTempo: false },
+            'miraflores': { name: 'Miraflores', lat: 5.1969, lon: -73.1450, elevation: 1600, useTempo: false },
+            'paez': { name: 'Páez', lat: 5.1000, lon: -73.0500, elevation: 1500, useTempo: false },
+            'campohermoso': { name: 'Campohermoso', lat: 5.0331, lon: -73.1169, elevation: 1400, useTempo: false },
+            'pajarito': { name: 'Pajarito', lat: 5.2919, lon: -72.7019, elevation: 1200, useTempo: false },
+            'paya': { name: 'Paya', lat: 5.6250, lon: -72.4250, elevation: 1000, useTempo: false },
+            'pisba': { name: 'Pisba', lat: 5.7169, lon: -72.4831, elevation: 1100, useTempo: false },
+            'puerto-boyaca': { name: 'Puerto Boyacá', lat: 5.9750, lon: -74.5919, elevation: 200, useTempo: false },
+            'quipama': { name: 'Quípama', lat: 5.5169, lon: -74.1831, elevation: 800, useTempo: false },
+            'ramiriqui': { name: 'Ramiriquí', lat: 5.4000, lon: -73.3331, elevation: 2000, useTempo: false },
+            'rondon': { name: 'Rondón', lat: 5.3569, lon: -73.2081, elevation: 1800, useTempo: false },
+            'saboya': { name: 'Saboyá', lat: 5.7000, lon: -73.7669, elevation: 2400, useTempo: false },
+            'sachica': { name: 'Sáchica', lat: 5.5831, lon: -73.5419, elevation: 2200, useTempo: false },
+            'samaca': { name: 'Samacá', lat: 5.4919, lon: -73.4831, elevation: 2600, useTempo: false },
+            'san-eduardo': { name: 'San Eduardo', lat: 5.2250, lon: -73.0750, elevation: 1600, useTempo: false },
+            'san-jose-de-pare': { name: 'San José de Pare', lat: 6.0169, lon: -73.5331, elevation: 2000, useTempo: false },
+            'san-luis-de-gaceno': { name: 'San Luis de Gaceno', lat: 4.8206, lon: -73.1681, elevation: 1200, useTempo: false },
+            'san-mateo': { name: 'San Mateo', lat: 6.4000, lon: -72.5500, elevation: 1800, useTempo: false },
+            'san-miguel-de-sema': { name: 'San Miguel de Sema', lat: 5.5169, lon: -73.7169, elevation: 2500, useTempo: false },
+            'san-pablo-de-borbur': { name: 'San Pablo de Borbur', lat: 5.6669, lon: -74.0669, elevation: 600, useTempo: false },
+            'santana': { name: 'Santana', lat: 6.0569, lon: -73.4831, elevation: 2000, useTempo: false },
+            'santa-maria': { name: 'Santa María', lat: 4.8581, lon: -73.2625, elevation: 1000, useTempo: false },
+            'santa-rosa-de-viterbo': { name: 'Santa Rosa de Viterbo', lat: 5.8750, lon: -72.9831, elevation: 2500, useTempo: false },
+            'santa-sofia': { name: 'Santa Sofía', lat: 5.7169, lon: -73.6000, elevation: 2400, useTempo: false },
+            'sativanorte': { name: 'Sativanorte', lat: 6.1331, lon: -72.7000, elevation: 2000, useTempo: false },
+            'sativasur': { name: 'Sativasur', lat: 6.0919, lon: -72.7081, elevation: 2000, useTempo: false },
+            'siachoque': { name: 'Siachoque', lat: 5.5081, lon: -73.2419, elevation: 2200, useTempo: false },
+            'soata': { name: 'Soatá', lat: 6.3331, lon: -72.6831, elevation: 2000, useTempo: false },
+            'socota': { name: 'Socotá', lat: 6.0419, lon: -72.6331, elevation: 1800, useTempo: false },
+            'socha': { name: 'Socha', lat: 5.9919, lon: -72.6919, elevation: 1900, useTempo: false },
+            'sogamoso': { name: 'Sogamoso', lat: 5.7147, lon: -72.9339, elevation: 2569, useTempo: false },
+            'somondoco': { name: 'Somondoco', lat: 4.9831, lon: -73.4331, elevation: 1800, useTempo: false },
+            'sora': { name: 'Sora', lat: 5.5669, lon: -73.4500, elevation: 2400, useTempo: false },
+            'sotaquira': { name: 'Sotaquirá', lat: 5.7669, lon: -73.2500, elevation: 2600, useTempo: false },
+            'soraca': { name: 'Soracá', lat: 5.5000, lon: -73.3331, elevation: 2400, useTempo: false },
+            'susacon': { name: 'Susacón', lat: 6.2331, lon: -72.6831, elevation: 2000, useTempo: false },
+            'sutamarchan': { name: 'Sutamarchán', lat: 5.6169, lon: -73.6169, elevation: 2200, useTempo: false },
+            'sutatenza': { name: 'Sutatenza', lat: 5.0169, lon: -73.4519, elevation: 1800, useTempo: false },
+            'tasco': { name: 'Tasco', lat: 5.9081, lon: -72.7831, elevation: 2000, useTempo: false },
+            'tenza': { name: 'Tenza', lat: 5.0750, lon: -73.4219, elevation: 1850, useTempo: false },
+            'tibana': { name: 'Tibaná', lat: 5.3169, lon: -73.4000, elevation: 2200, useTempo: false },
+            'tibasosa': { name: 'Tibasosa', lat: 5.7500, lon: -73.0000, elevation: 2500, useTempo: false },
+            'tinjaca': { name: 'Tinjacá', lat: 5.5750, lon: -73.6469, elevation: 2250, useTempo: false },
+            'tipacoque': { name: 'Tipacoque', lat: 6.4169, lon: -72.7000, elevation: 2000, useTempo: false },
+            'toca': { name: 'Toca', lat: 5.5669, lon: -73.1831, elevation: 2400, useTempo: false },
+            'togui': { name: 'Togüí', lat: 5.9331, lon: -73.5169, elevation: 2000, useTempo: false },
+            'topaga': { name: 'Tópaga', lat: 5.7669, lon: -72.8331, elevation: 2500, useTempo: false },
+            'tota': { name: 'Tota', lat: 5.5581, lon: -72.9831, elevation: 3000, useTempo: false },
+            'tunja': { name: 'Tunja', lat: 5.5353, lon: -73.3678, elevation: 2820, useTempo: false },
+            'tunungua': { name: 'Tununguá', lat: 5.7331, lon: -73.9331, elevation: 1800, useTempo: false },
+            'turmeque': { name: 'Turmequé', lat: 5.3250, lon: -73.4919, elevation: 2000, useTempo: false },
+            'tuta': { name: 'Tuta', lat: 5.6919, lon: -73.2331, elevation: 2400, useTempo: false },
+            'tutaza': { name: 'Tutazá', lat: 6.0331, lon: -72.8500, elevation: 2000, useTempo: false },
+            'umbita': { name: 'Úmbita', lat: 5.2169, lon: -73.4581, elevation: 2000, useTempo: false },
+            'ventaquemada': { name: 'Ventaquemada', lat: 5.3669, lon: -73.5169, elevation: 2000, useTempo: false },
+            'viracacha': { name: 'Viracachá', lat: 5.4331, lon: -73.3000, elevation: 2400, useTempo: false },
+            'zetaquira': { name: 'Zetaquira', lat: 5.2831, lon: -73.1750, elevation: 1800, useTempo: false },
+            
+            // Caldas
+            'manizales': { name: 'Manizales', lat: 5.0689, lon: -75.5174, elevation: 2160, useTempo: false },
+            'la-dorada': { name: 'La Dorada', lat: 5.4500, lon: -74.6669, elevation: 150, useTempo: false },
+            'chinchina': { name: 'Chinchiná', lat: 4.9831, lon: -75.6169, elevation: 1400, useTempo: false },
+            'risaralda-caldas': { name: 'Risaralda (Caldas)', lat: 5.1669, lon: -75.7669, elevation: 1800, useTempo: false },
+            'palestina': { name: 'Palestina', lat: 5.0331, lon: -75.6169, elevation: 1500, useTempo: false },
+            'viterbo': { name: 'Viterbo', lat: 5.0669, lon: -75.8669, elevation: 1200, useTempo: false },
+            'supia': { name: 'Supía', lat: 5.4500, lon: -75.6500, elevation: 1000, useTempo: false },
+            'samana': { name: 'Samaná', lat: 5.4169, lon: -75.0331, elevation: 1800, useTempo: false },
+            'salamina': { name: 'Salamina', lat: 5.4081, lon: -75.4831, elevation: 2000, useTempo: false },
+            'pensilvania': { name: 'Pensilvania', lat: 5.3831, lon: -75.1669, elevation: 1800, useTempo: false },
+            'pacifico': { name: 'Pacífico', lat: 5.1331, lon: -75.4669, elevation: 1600, useTempo: false },
+            'norcasia': { name: 'Norcasia', lat: 5.5669, lon: -74.8831, elevation: 200, useTempo: false },
+            'neira': { name: 'Neira', lat: 5.1669, lon: -75.5169, elevation: 1800, useTempo: false },
+            'marquetalia': { name: 'Marquetalia', lat: 5.3000, lon: -75.0500, elevation: 2000, useTempo: false },
+            'marulanda': { name: 'Marulanda', lat: 5.2831, lon: -75.2669, elevation: 2200, useTempo: false },
+            'la-merced': { name: 'La Merced', lat: 5.4000, lon: -75.5500, elevation: 1200, useTempo: false },
+            'la-celestina': { name: 'La Celestina', lat: 5.2500, lon: -75.6500, elevation: 1000, useTempo: false },
+            'filadelfia': { name: 'Filadelfia', lat: 5.3000, lon: -75.7000, elevation: 800, useTempo: false },
+            'anserma': { name: 'Anserma', lat: 5.3331, lon: -75.7831, elevation: 1000, useTempo: false },
+            'aguadas': { name: 'Aguadas', lat: 5.6169, lon: -75.4669, elevation: 2000, useTempo: false },
+            'aranzazu': { name: 'Aranzazu', lat: 5.2669, lon: -75.4831, elevation: 1800, useTempo: false },
+            'belalcazar': { name: 'Belalcázar', lat: 5.0169, lon: -75.8169, elevation: 800, useTempo: false },
+            'victoria': { name: 'Victoria', lat: 5.3169, lon: -74.9169, elevation: 1000, useTempo: false },
+            'villamaria': { name: 'Villamaría', lat: 5.0331, lon: -75.5169, elevation: 2000, useTempo: false },
+            'viterbo': { name: 'Viterbo', lat: 5.0669, lon: -75.8669, elevation: 1200, useTempo: false },
+            'manzanares': { name: 'Manzanares', lat: 5.2500, lon: -75.1500, elevation: 1800, useTempo: false },
+            'marmato': { name: 'Marmato', lat: 5.4831, lon: -75.6000, elevation: 1200, useTempo: false },
+            'marquetalia': { name: 'Marquetalia', lat: 5.3000, lon: -75.0500, elevation: 2000, useTempo: false },
+            'marulanda': { name: 'Marulanda', lat: 5.2831, lon: -75.2669, elevation: 2200, useTempo: false },
+            'neira': { name: 'Neira', lat: 5.1669, lon: -75.5169, elevation: 1800, useTempo: false },
+            'norcasia': { name: 'Norcasia', lat: 5.5669, lon: -74.8831, elevation: 200, useTempo: false },
+            'pacifico': { name: 'Pacífico', lat: 5.1331, lon: -75.4669, elevation: 1600, useTempo: false },
+            'palestina': { name: 'Palestina', lat: 5.0331, lon: -75.6169, elevation: 1500, useTempo: false },
+            'pensilvania': { name: 'Pensilvania', lat: 5.3831, lon: -75.1669, elevation: 1800, useTempo: false },
+            'pueblo-rico': { name: 'Pueblo Rico', lat: 5.2169, lon: -75.8331, elevation: 800, useTempo: false },
+            'quinchia': { name: 'Quinchía', lat: 5.3331, lon: -75.7331, elevation: 1000, useTempo: false },
+            'risaralda-caldas': { name: 'Risaralda (Caldas)', lat: 5.1669, lon: -75.7669, elevation: 1800, useTempo: false },
+            'roldanillo': { name: 'Roldanillo', lat: 4.4169, lon: -76.2169, elevation: 1000, useTempo: false },
+            'salamina': { name: 'Salamina', lat: 5.4081, lon: -75.4831, elevation: 2000, useTempo: false },
+            'samana': { name: 'Samaná', lat: 5.4169, lon: -75.0331, elevation: 1800, useTempo: false },
+            'san-jose': { name: 'San José', lat: 5.0831, lon: -75.7331, elevation: 1200, useTempo: false },
+            'supia': { name: 'Supía', lat: 5.4500, lon: -75.6500, elevation: 1000, useTempo: false },
+            'victoria': { name: 'Victoria', lat: 5.3169, lon: -74.9169, elevation: 1000, useTempo: false },
+            'villamaria': { name: 'Villamaría', lat: 5.0331, lon: -75.5169, elevation: 2000, useTempo: false },
+            'viterbo': { name: 'Viterbo', lat: 5.0669, lon: -75.8669, elevation: 1200, useTempo: false },
+            
+            // Caquetá
+            'florencia': { name: 'Florencia', lat: 1.6169, lon: -75.6169, elevation: 242, useTempo: false },
+            'san-vicente-del-caguan': { name: 'San Vicente del Caguán', lat: 2.1169, lon: -74.7669, elevation: 300, useTempo: false },
+            'cartagena-del-chaira': { name: 'Cartagena del Chairá', lat: 1.3331, lon: -74.8331, elevation: 200, useTempo: false },
+            'el-doncello': { name: 'El Doncello', lat: 1.6831, lon: -75.2831, elevation: 400, useTempo: false },
+            'el-paujil': { name: 'El Paujíl', lat: 1.5669, lon: -75.3331, elevation: 300, useTempo: false },
+            'la-montanita': { name: 'La Montañita', lat: 1.4669, lon: -75.4331, elevation: 350, useTempo: false },
+            'milan': { name: 'Milán', lat: 1.2831, lon: -75.5169, elevation: 250, useTempo: false },
+            'morelia': { name: 'Morelia', lat: 1.4831, lon: -75.7331, elevation: 200, useTempo: false },
+            'puerto-rico-caqueta': { name: 'Puerto Rico (Caquetá)', lat: 1.9169, lon: -75.1669, elevation: 400, useTempo: false },
+            'san-jose-del-fragua': { name: 'San José del Fragua', lat: 1.3331, lon: -75.9831, elevation: 300, useTempo: false },
+            'valparaiso': { name: 'Valparaíso', lat: 1.1831, lon: -75.7000, elevation: 200, useTempo: false },
+            'albania-caqueta': { name: 'Albania (Caquetá)', lat: 1.3331, lon: -75.8831, elevation: 250, useTempo: false },
+            'belen-de-los-andaquies': { name: 'Belén de los Andaquíes', lat: 1.4169, lon: -75.8669, elevation: 300, useTempo: false },
+            'curillo': { name: 'Curillo', lat: 1.0331, lon: -75.9169, elevation: 200, useTempo: false },
+            'el-retorno': { name: 'El Retorno', lat: 1.2169, lon: -75.7500, elevation: 250, useTempo: false },
+            'la-paz-caqueta': { name: 'La Paz (Caquetá)', lat: 1.1669, lon: -75.6331, elevation: 200, useTempo: false },
+            'puerto-santander': { name: 'Puerto Santander', lat: 1.0831, lon: -75.8000, elevation: 200, useTempo: false },
+            'solano': { name: 'Solano', lat: 0.7000, lon: -75.2500, elevation: 100, useTempo: false },
+            'solita': { name: 'Solita', lat: 0.8831, lon: -75.6169, elevation: 150, useTempo: false },
+            'valparaiso-caqueta': { name: 'Valparaíso (Caquetá)', lat: 1.1831, lon: -75.7000, elevation: 200, useTempo: false }
         };
         
         this.init();
@@ -137,10 +377,12 @@ class AirBytesApp {
     }
 
     async loadLocationData() {
-        
+        console.log('Cargando datos para ubicación:', this.currentLocation);
         const locationData = this.getCurrentLocationData();
+        console.log('Datos de ubicación:', locationData);
         
         try {
+            console.log('Iniciando carga de datos...');
             
             const [tempoData, groundData, weatherData] = await Promise.all([
                 this.loadTempoDataForLocation(locationData),
@@ -148,13 +390,12 @@ class AirBytesApp {
                 this.loadWeatherDataForLocation(locationData)
             ]);
             
+            console.log('Datos cargados exitosamente:', { tempoData, groundData, weatherData });
             
             this.updateDisplayData(tempoData, groundData, weatherData);
             
-            
             const aqi = this.calculateAQI(tempoData, groundData);
             this.updateAQIDisplay(aqi);
-            
             
             if (this.isMapLoaded) {
                 this.focusMapOnLocation(locationData);
@@ -164,7 +405,8 @@ class AirBytesApp {
             
         } catch (error) {
             console.error('Error loading location data:', error);
-            this.showNotification('Error al cargar datos de la ubicación', 'error');
+            console.error('Error details:', error.message, error.stack);
+            this.showNotification(`Error al cargar datos de la ubicación: ${error.message}`, 'error');
         }
     }
 
@@ -433,7 +675,12 @@ class AirBytesApp {
             return this.northAmericanRegions[this.currentLocation];
         }
         
-        return this.colombianCities[this.currentLocation];
+        if (this.colombianCities[this.currentLocation]) {
+            return this.colombianCities[this.currentLocation];
+        }
+        
+        console.warn(`Ubicación no encontrada: ${this.currentLocation}, usando Colombia por defecto`);
+        return this.colombianCities['colombia'];
     }
 
     async getCurrentLocation() {
@@ -2050,4 +2297,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const app = new AirBytesApp();
     window.airBytesApp = app;
 });
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
 

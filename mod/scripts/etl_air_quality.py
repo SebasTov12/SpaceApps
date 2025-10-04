@@ -339,14 +339,14 @@ def request_with_retries(url, params=None, headers=None, max_retries=3, backoff=
                 raise
             time.sleep(backoff * attempt)
 
-def fetch_locations_by_city(city=CITY, country=COUNTRY, limit=100, max_pages=5):
+def fetch_locations_by_country(country=COUNTRY, limit=100, max_pages=5):
     """Intenta listar locations por city/country. Devuelve lista de locations (dicts)."""
-    print(f"🔎 Buscando estaciones por city={city}, country={country} ...")
+    print(f"🔎 Buscando estaciones por country={country} ...")
     results = []
     page = 1
     headers = {"x-api-key": OPENAQ_KEY} if OPENAQ_KEY else {}
     while page <= max_pages:
-        params = {"city": city, "country": country, "limit": limit, "page": page}
+        params = {"country": country, "limit": limit, "page": page}
         try:
             data = request_with_retries(OPENAQ_LOCATIONS, params=params, headers=headers)
         except requests.exceptions.HTTPError as e:
@@ -456,7 +456,7 @@ def insert_station(conn, loc_id, name, city, country, lat, lon):
 # ================================
 def populate_openaq_historical(days=60):
     print(f"📌 Iniciando ETL OpenAQ histórico (últimos {days} días)...")
-    locs = fetch_locations_by_city()
+    locs = fetch_locations_by_country()
     print(f"→ Encontradas {len(locs)} estaciones por city.")
 
     # 🚀 Filtrar solo las vivas
