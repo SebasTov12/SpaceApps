@@ -2140,3 +2140,1570 @@ input, select, textarea {
     }
 }
 
+/* Chatbot Styles */
+.chatbot-container {
+    position: fixed;
+    bottom: 100px;
+    right: 20px;
+    width: 400px;
+    height: 600px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    display: none;
+    flex-direction: column;
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+.chatbot-container.active {
+    display: flex;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.chatbot-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem;
+    border-bottom: 1px solid #e1e5e9;
+    background: linear-gradient(135deg, #3f4d39, #2a3327);
+    color: white;
+    border-radius: 20px 20px 0 0;
+}
+
+.chatbot-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.chatbot-title i {
+    font-size: 1.3rem;
+    color: #8BC34A;
+}
+
+.chatbot-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 35px;
+    height: 35px;
+}
+
+.chatbot-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+.chatbot-messages {
+    flex: 1;
+    padding: 1rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    -webkit-overflow-scrolling: touch;
+}
+
+.chatbot-message {
+    display: flex;
+    gap: 0.75rem;
+    animation: messageSlide 0.3s ease;
+}
+
+@keyframes messageSlide {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.bot-message {
+    align-items: flex-start;
+}
+
+.user-message {
+    flex-direction: row-reverse;
+    align-items: flex-start;
+}
+
+.message-avatar {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1rem;
+}
+
+.bot-message .message-avatar {
+    background: linear-gradient(135deg, #3f4d39, #4a5c44);
+    color: white;
+}
+
+.user-message .message-avatar {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+}
+
+.message-content {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 15px;
+    max-width: 80%;
+    line-height: 1.5;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.user-message .message-content {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+}
+
+.message-content p {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.95rem;
+}
+
+.message-content p:last-child {
+    margin-bottom: 0;
+}
+
+.message-content ul {
+    margin: 0.5rem 0;
+    padding-left: 1.2rem;
+}
+
+.message-content li {
+    margin-bottom: 0.25rem;
+    font-size: 0.9rem;
+}
+
+.chatbot-input-container {
+    padding: 1rem;
+    border-top: 1px solid #e1e5e9;
+    background: white;
+    border-radius: 0 0 20px 20px;
+}
+
+.chatbot-input-wrapper {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.chatbot-input-wrapper input {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: 2px solid #e1e5e9;
+    border-radius: 25px;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.3s ease;
+    background: #f8f9fa;
+}
+
+.chatbot-input-wrapper input:focus {
+    border-color: #3f4d39;
+    background: white;
+}
+
+.chatbot-send-btn {
+    background: linear-gradient(135deg, #3f4d39, #2a3327);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+}
+
+.chatbot-send-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(63, 77, 57, 0.3);
+}
+
+.chatbot-send-btn:active {
+    transform: scale(0.95);
+}
+
+.chatbot-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.suggestion-btn {
+    background: #f8f9fa;
+    border: 1px solid #e1e5e9;
+    color: #3f4d39;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.suggestion-btn:hover {
+    background: #3f4d39;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(63, 77, 57, 0.2);
+}
+
+.chatbot-toggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #3f4d39, #2a3327);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: 0 8px 25px rgba(63, 77, 57, 0.3);
+    transition: all 0.3s ease;
+    z-index: 999;
+}
+
+.chatbot-toggle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 12px 35px rgba(63, 77, 57, 0.4);
+}
+
+.chatbot-toggle:active {
+    transform: scale(0.95);
+}
+
+.chatbot-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ff4444;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 600;
+    min-width: 20px;
+}
+
+.chatbot-badge.hidden {
+    display: none;
+}
+
+/* Typing indicator */
+.typing-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 15px;
+    max-width: 80px;
+}
+
+.typing-dot {
+    width: 8px;
+    height: 8px;
+    background: #3f4d39;
+    border-radius: 50%;
+    animation: typing 1.4s infinite ease-in-out;
+}
+
+.typing-dot:nth-child(1) { animation-delay: -0.32s; }
+.typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes typing {
+    0%, 80%, 100% {
+        transform: scale(0.8);
+        opacity: 0.5;
+    }
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Mobile Responsive for Chatbot */
+@media (max-width: 768px) {
+    .chatbot-container {
+        bottom: 80px;
+        right: 10px;
+        left: 10px;
+        width: auto;
+        height: 70vh;
+        max-height: 500px;
+    }
+    
+    .chatbot-toggle {
+        bottom: 10px;
+        right: 10px;
+        width: 55px;
+        height: 55px;
+        font-size: 1.3rem;
+    }
+    
+    .chatbot-suggestions {
+        flex-direction: column;
+    }
+    
+    .suggestion-btn {
+        text-align: center;
+        white-space: normal;
+    }
+}
+
+@media (max-width: 480px) {
+    .chatbot-container {
+        height: 75vh;
+        max-height: 450px;
+        bottom: 70px;
+    }
+    
+    .chatbot-header {
+        padding: 1rem;
+    }
+    
+    .chatbot-title {
+        font-size: 1rem;
+    }
+    
+    .chatbot-messages {
+        padding: 0.75rem;
+    }
+    
+    .message-content {
+        padding: 0.75rem;
+        font-size: 0.9rem;
+    }
+    
+    .chatbot-input-container {
+        padding: 0.75rem;
+    }
+    
+    .chatbot-input-wrapper input {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.9rem;
+    }
+    
+    .chatbot-send-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 0.9rem;
+    }
+}
+
+/* Chatbot Tips Styles */
+.chatbot-tips {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.chatbot-tips .tip-item {
+    background: rgba(63, 77, 57, 0.1);
+    padding: 0.75rem;
+    border-radius: 10px;
+    border-left: 3px solid #3f4d39;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    transition: all 0.3s ease;
+}
+
+.chatbot-tips .tip-item:hover {
+    background: rgba(63, 77, 57, 0.15);
+    transform: translateX(3px);
+}
+
+/* Chatbot Welcome Animation */
+@keyframes welcomePulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.chatbot-toggle.new-message {
+    animation: welcomePulse 0.6s ease-in-out;
+}
+
+/* Chatbot Message Animations */
+@keyframes messageSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.chatbot-message {
+    animation: messageSlideIn 0.3s ease;
+}
+
+/* Chatbot Responsive Improvements */
+@media (max-width: 480px) {
+    .chatbot-tips .tip-item {
+        padding: 0.6rem;
+        font-size: 0.85rem;
+    }
+    
+    .message-content ul {
+        padding-left: 1rem;
+    }
+    
+    .message-content li {
+        font-size: 0.85rem;
+        margin-bottom: 0.2rem;
+    }
+}
+
+/* User Guide Section Styles */
+.guide-section {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.guide-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.guide-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+}
+
+.guide-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.guide-header i {
+    font-size: 1.5rem;
+    color: #3f4d39;
+    background: linear-gradient(135deg, #3f4d39, #4a5c44);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.guide-header h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #2a3327;
+    margin: 0;
+}
+
+.guide-content {
+    line-height: 1.6;
+}
+
+.guide-content p {
+    color: #666;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+}
+
+/* AQI Levels */
+.aqi-levels {
+    margin-top: 1.5rem;
+}
+
+.aqi-levels h4 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2a3327;
+    margin-bottom: 1rem;
+}
+
+.level-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    border-radius: 12px;
+    background: #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.level-item:hover {
+    background: #e9ecef;
+    transform: translateX(5px);
+}
+
+.level-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    flex-shrink: 0;
+}
+
+.level-color.good { background-color: #4CAF50; }
+.level-color.moderate { background-color: #FFEB3B; }
+.level-color.unhealthy-sensitive { background-color: #FF9800; }
+.level-color.unhealthy { background-color: #F44336; }
+.level-color.very-unhealthy { background-color: #9C27B0; }
+.level-color.hazardous { background-color: #795548; }
+
+.level-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.level-info strong {
+    color: #2a3327;
+    font-size: 1rem;
+}
+
+.level-info span {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+/* Recommendations Container */
+.recommendations-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.recommendation-card {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-radius: 15px;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.recommendation-card:hover {
+    transform: translateY(-5px);
+    border-color: #3f4d39;
+    box-shadow: 0 10px 25px rgba(63, 77, 57, 0.1);
+}
+
+.recommendation-card i {
+    font-size: 2rem;
+    color: #3f4d39;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.recommendation-card h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2a3327;
+    margin-bottom: 0.75rem;
+}
+
+.recommendation-card p {
+    color: #666;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Pollutants Grid */
+.pollutants-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.pollutant-item {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    border-left: 4px solid #3f4d39;
+}
+
+.pollutant-item:hover {
+    background: #e9ecef;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.pollutant-item h4 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2a3327;
+    margin-bottom: 0.75rem;
+}
+
+.pollutant-item p {
+    color: #666;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Tips Grid */
+.tips-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.tip-item {
+    background: linear-gradient(135deg, #fff, #f8f9fa);
+    border-radius: 15px;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
+}
+
+.tip-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    border-color: #3f4d39;
+}
+
+.tip-item i {
+    font-size: 2rem;
+    color: #3f4d39;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.tip-item h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2a3327;
+    margin-bottom: 0.75rem;
+}
+
+.tip-item p {
+    color: #666;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Alert Settings */
+.alert-settings {
+    margin-top: 1rem;
+}
+
+.alert-settings h4 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2a3327;
+    margin-bottom: 1.5rem;
+}
+
+.alert-options {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.alert-option {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.alert-option:hover {
+    background: #e9ecef;
+    border-color: #3f4d39;
+}
+
+.alert-option input[type="checkbox"] {
+    display: none;
+}
+
+.checkmark {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #3f4d39;
+    border-radius: 4px;
+    position: relative;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.alert-option input[type="checkbox"]:checked + .checkmark {
+    background: #3f4d39;
+}
+
+.alert-option input[type="checkbox"]:checked + .checkmark::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.alert-option span:last-child {
+    color: #2a3327;
+    font-weight: 500;
+}
+
+.save-alerts-btn {
+    background: linear-gradient(135deg, #3f4d39, #2a3327);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 15px rgba(63, 77, 57, 0.2);
+}
+
+.save-alerts-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(63, 77, 57, 0.3);
+}
+
+.save-alerts-btn:active {
+    transform: translateY(0);
+}
+
+.save-alerts-btn i {
+    font-size: 1rem;
+}
+
+/* Responsive Design for User Guide */
+@media (max-width: 768px) {
+    .guide-section {
+        padding: 0 0.5rem;
+    }
+    
+    .guide-card {
+        padding: 1.5rem;
+    }
+    
+    .guide-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+    }
+    
+    .guide-header h3 {
+        font-size: 1.3rem;
+    }
+    
+    .level-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+    }
+    
+    .recommendations-container {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .pollutants-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .tips-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .alert-options {
+        gap: 0.75rem;
+    }
+    
+    .alert-option {
+        padding: 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .guide-card {
+        padding: 1rem;
+    }
+    
+    .guide-header h3 {
+        font-size: 1.2rem;
+    }
+    
+    .level-item {
+        padding: 0.75rem;
+    }
+    
+    .recommendation-card,
+    .pollutant-item,
+    .tip-item {
+        padding: 1rem;
+    }
+    
+    .alert-option {
+        padding: 0.5rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* Agricultural Section Styles */
+.agricultural-summary {
+    margin-bottom: 2rem;
+}
+
+.weather-overview-card {
+    background: linear-gradient(135deg, #2d5016, #3f4d39);
+    border-radius: 20px;
+    padding: 2rem;
+    color: white;
+    box-shadow: 0 20px 40px rgba(45, 80, 22, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.weather-overview-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="30" r="1.5" fill="rgba(255,255,255,0.1)"/><circle cx="40" cy="60" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="70" cy="70" r="2.5" fill="rgba(255,255,255,0.1)"/></svg>');
+    opacity: 0.3;
+}
+
+.weather-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    position: relative;
+    z-index: 1;
+}
+
+.weather-header i {
+    font-size: 2rem;
+    color: #8BC34A;
+}
+
+.weather-header h3 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin: 0;
+    flex: 1;
+}
+
+.weather-location {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.realtime-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    opacity: 0.8;
+    background: rgba(139, 195, 74, 0.2);
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    border: 1px solid rgba(139, 195, 74, 0.3);
+}
+
+.realtime-indicator i {
+    color: #8BC34A;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.weather-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    position: relative;
+    z-index: 1;
+}
+
+.summary-item {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.summary-item:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+}
+
+.summary-icon {
+    width: 50px;
+    height: 50px;
+    background: rgba(139, 195, 74, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.summary-icon i {
+    font-size: 1.5rem;
+    color: #8BC34A;
+}
+
+.summary-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.summary-label {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.summary-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+}
+
+/* Agricultural Data Grid */
+.agricultural-data-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.data-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.data-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+}
+
+.data-card .card-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.data-card .card-header i {
+    font-size: 1.5rem;
+    color: #3f4d39;
+}
+
+.data-card .card-header h3 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #2a3327;
+    margin: 0;
+}
+
+.data-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.data-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.data-item:hover {
+    background: #e9ecef;
+    transform: translateX(5px);
+}
+
+.data-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+}
+
+.data-label i {
+    font-size: 1.2rem;
+    color: #3f4d39;
+    width: 20px;
+}
+
+.data-label span {
+    font-weight: 500;
+    color: #2a3327;
+}
+
+.data-value {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #3f4d39;
+    margin-right: 1rem;
+}
+
+.data-trend {
+    font-size: 0.9rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    font-weight: 500;
+    min-width: 60px;
+    text-align: center;
+}
+
+.data-trend.rising {
+    background: #d4edda;
+    color: #155724;
+}
+
+.data-trend.falling {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.data-trend.stable {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+/* Agricultural Alerts */
+.agricultural-alerts {
+    margin-bottom: 2rem;
+}
+
+.alert-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.alert-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.alert-header i {
+    font-size: 1.5rem;
+    color: #ff9800;
+}
+
+.alert-header h3 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #2a3327;
+    margin: 0;
+}
+
+.alert-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.alert-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: 12px;
+    background: #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.alert-item:hover {
+    background: #e9ecef;
+    transform: translateX(5px);
+}
+
+.alert-item i {
+    font-size: 1.5rem;
+    width: 30px;
+    text-align: center;
+}
+
+.alert-item i.fa-snowflake {
+    color: #17a2b8;
+}
+
+.alert-item i.fa-bolt {
+    color: #ffc107;
+}
+
+.alert-item i.fa-sun {
+    color: #fd7e14;
+}
+
+.alert-info h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2a3327;
+    margin: 0 0 0.25rem 0;
+}
+
+.alert-info p {
+    color: #666;
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+/* Agricultural Recommendations */
+.agricultural-recommendations {
+    margin-bottom: 2rem;
+}
+
+.recommendations-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.recommendations-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.recommendations-header i {
+    font-size: 1.5rem;
+    color: #3f4d39;
+}
+
+.recommendations-header h3 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #2a3327;
+    margin: 0;
+}
+
+.recommendations-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.recommendation-category {
+    background: #f8f9fa;
+    border-radius: 15px;
+    padding: 1.5rem;
+    border-left: 4px solid #3f4d39;
+    transition: all 0.3s ease;
+}
+
+.recommendation-category:hover {
+    background: #e9ecef;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.recommendation-category h4 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2a3327;
+    margin: 0 0 1rem 0;
+}
+
+.recommendation-category h4 i {
+    color: #3f4d39;
+}
+
+.recommendation-list {
+    color: #666;
+    line-height: 1.6;
+}
+
+.recommendation-list ul {
+    margin: 0;
+    padding-left: 1.5rem;
+}
+
+.recommendation-list li {
+    margin-bottom: 0.5rem;
+}
+
+/* Agricultural Forecast */
+.agricultural-forecast {
+    margin-bottom: 2rem;
+}
+
+.forecast-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.forecast-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.forecast-header i {
+    font-size: 1.5rem;
+    color: #3f4d39;
+}
+
+.forecast-header h3 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #2a3327;
+    margin: 0;
+}
+
+.forecast-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.forecast-day {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 1rem;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.forecast-day:hover {
+    background: #e9ecef;
+    transform: translateY(-2px);
+}
+
+.forecast-day-name {
+    font-weight: 600;
+    color: #2a3327;
+    margin-bottom: 0.5rem;
+}
+
+.forecast-day-temp {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #3f4d39;
+    margin-bottom: 0.25rem;
+}
+
+.forecast-day-rain {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 0.25rem;
+}
+
+.forecast-day-wind {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+/* Crop Configuration */
+.crop-configuration {
+    margin-bottom: 2rem;
+}
+
+.config-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.config-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.config-header i {
+    font-size: 1.5rem;
+    color: #3f4d39;
+}
+
+.config-header h3 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #2a3327;
+    margin: 0;
+}
+
+.config-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    align-items: end;
+}
+
+.config-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.config-section h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #2a3327;
+    margin: 0;
+}
+
+.crop-selector {
+    padding: 0.75rem 1rem;
+    border: 2px solid #e1e5e9;
+    border-radius: 10px;
+    background: white;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+}
+
+.crop-selector:focus {
+    outline: none;
+    border-color: #3f4d39;
+}
+
+.update-recommendations-btn {
+    background: linear-gradient(135deg, #3f4d39, #2a3327);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 15px rgba(63, 77, 57, 0.2);
+    justify-self: start;
+}
+
+.update-recommendations-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(63, 77, 57, 0.3);
+}
+
+.update-recommendations-btn:active {
+    transform: translateY(0);
+}
+
+.update-recommendations-btn i {
+    font-size: 1rem;
+}
+
+/* Responsive Design for Agricultural Section */
+@media (max-width: 768px) {
+    .weather-summary-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .agricultural-data-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .recommendations-content {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .config-content {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .forecast-content {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    }
+    
+    .weather-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+    }
+    
+    .weather-header h3 {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .weather-overview-card {
+        padding: 1.5rem;
+    }
+    
+    .data-card,
+    .alert-card,
+    .recommendations-card,
+    .forecast-card,
+    .config-card {
+        padding: 1.5rem;
+    }
+    
+    .summary-item {
+        padding: 1rem;
+    }
+    
+    .summary-icon {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .summary-icon i {
+        font-size: 1.2rem;
+    }
+    
+    .summary-value {
+        font-size: 1.3rem;
+    }
+    
+    .data-item {
+        padding: 0.75rem;
+    }
+    
+    .data-label span {
+        font-size: 0.9rem;
+    }
+    
+    .data-value {
+        font-size: 1.1rem;
+    }
+    
+    .forecast-content {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+

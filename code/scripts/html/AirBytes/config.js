@@ -1,5 +1,3 @@
-
-
 const AIRBYTES_CONFIG = {
     // NASA TEMPO API Configuration
     nasa: {
@@ -12,7 +10,7 @@ const AIRBYTES_CONFIG = {
         }
     },
 
-
+  
     weather: {
         apiKey: '147e23d2ab0429fc6473a00033041c0d', 
         baseUrl: 'https://api.openweathermap.org/data/2.5',
@@ -29,22 +27,6 @@ const AIRBYTES_CONFIG = {
         endpoints: {
             current: '/weather',
             forecast: '/forecast'
-        }
-    },
-
-
-    openaq: {
-        baseUrl: 'https://api.openaq.org/v2',
-        endpoints: {
-            latest: '/latest'
-        }
-    },
-
-    
-    nasaFirms: {
-        baseUrl: 'https://firms.modaps.eosdis.nasa.gov',
-        endpoints: {
-            global: '/mapserver/wfs?service=WFS&version=1.0.0&request=GetFeature&typeName=fires_viirs&outputFormat=application/json'
         }
     },
 

@@ -16,7 +16,8 @@ class AirBytesApp {
         this.airQualityBaseUrl = 'https://api.openweathermap.org/data/2.5';
         
         this.currentLocation = 'colombia';
-        this.updateInterval = 300000;
+        this.updateInterval = 300000; // 5 minutes
+        this.agriculturalUpdateInterval = 600000; // 10 minutes for agricultural data
         this.isLoading = false;
         this.useRealData = true;
         
@@ -59,6 +60,7 @@ class AirBytesApp {
         this.setupEventListeners();
         this.loadInitialData();
         this.startAutoUpdate();
+        this.startAgriculturalAutoUpdate();
         
         setTimeout(() => {
             this.initializeMap();
@@ -291,6 +293,11 @@ class AirBytesApp {
                 ${aqiInfo.recommendations.map(rec => `<li>${rec}</li>`).join('')}
             </ul>
         `;
+        
+        // Actualizar recomendaciones personalizadas si la guía de usuario está activa
+        if (this.currentSection === 'user-guide') {
+            this.updatePersonalizedRecommendations();
+        }
     }
 
     getAQIInfo(aqi) {
@@ -587,6 +594,12 @@ class AirBytesApp {
             case 'air-quality':
                 this.loadAirQualityDetails();
                 break;
+            case 'user-guide':
+                this.loadUserGuideData();
+                break;
+            case 'farmers':
+                this.loadFarmersData();
+                break;
         }
     }
 
@@ -702,6 +715,780 @@ class AirBytesApp {
                 <div class="pollutant-description">${pollutant.description}</div>
             </div>
         `).join('');
+    }
+
+    loadUserGuideData() {
+        this.updatePersonalizedRecommendations();
+        this.setupAlertSettings();
+    }
+
+    updatePersonalizedRecommendations() {
+        const currentAqi = this.getCurrentAqiValue();
+        const aqiLevel = this.getAqiLevel(currentAqi);
+        
+        // Actualizar recomendaciones basadas en el AQI actual
+        this.updateOutdoorActivityRecommendation(aqiLevel, currentAqi);
+        this.updatePersonalProtectionRecommendation(aqiLevel);
+        this.updateHomeRecommendations(aqiLevel);
+        this.updateTransportRecommendations(aqiLevel);
+    }
+
+    getCurrentAqiValue() {
+        const aqiElement = document.getElementById('aqiValue');
+        if (aqiElement && aqiElement.textContent !== '--') {
+            return parseInt(aqiElement.textContent);
+        }
+        return 75; // Valor por defecto si no hay datos
+    }
+
+    getAqiLevel(aqi) {
+        if (aqi <= 50) return 'good';
+        if (aqi <= 100) return 'moderate';
+        if (aqi <= 150) return 'unhealthy-sensitive';
+        if (aqi <= 200) return 'unhealthy';
+        if (aqi <= 300) return 'very-unhealthy';
+        return 'hazardous';
+    }
+
+    updateOutdoorActivityRecommendation(level, aqi) {
+        const element = document.getElementById('outdoorActivity');
+        const recommendations = {
+            'good': `¡Excelente! Con un AQI de ${aqi}, puedes disfrutar de todas las actividades al aire libre sin restricciones. Es un día perfecto para caminar, correr, andar en bicicleta o hacer deportes.`,
+            'moderate': `Con un AQI de ${aqi}, las actividades al aire libre están bien para la mayoría de personas. Sin embargo, si eres sensible a la contaminación del aire, considera reducir la intensidad de tus actividades.`,
+            'unhealthy-sensitive': `Con un AQI de ${aqi}, se recomienda que los niños, adultos mayores y personas con problemas respiratorios limiten las actividades al aire libre. Los demás pueden continuar con precaución.`,
+            'unhealthy': `Con un AQI de ${aqi}, todos deberían evitar actividades extenuantes al aire libre. Si debes salir, hazlo por períodos cortos y evita las horas pico de contaminación.`,
+            'very-unhealthy': `Con un AQI de ${aqi}, se recomienda evitar todas las actividades al aire libre. Si es absolutamente necesario salir, usa mascarilla y limita el tiempo al mínimo.`,
+            'hazardous': `Con un AQI de ${aqi}, es peligroso estar al aire libre. Permanece en interiores con las ventanas cerradas y evita cualquier actividad exterior.`
+        };
+        
+        element.textContent = recommendations[level] || recommendations['moderate'];
+    }
+
+    updatePersonalProtectionRecommendation(level) {
+        const element = document.getElementById('personalProtection');
+        const recommendations = {
+            'good': 'No se requieren medidas especiales de protección. Disfruta del aire limpio y mantén tu rutina normal.',
+            'moderate': 'Considera usar una mascarilla si eres sensible a la contaminación. Mantente hidratado y evita fumar.',
+            'unhealthy-sensitive': 'Usa mascarilla N95 si sales al exterior. Evita el ejercicio intenso y mantén las ventanas cerradas en casa.',
+            'unhealthy': 'Usa mascarilla N95 o superior. Evita salir durante las horas pico de contaminación (6-10 AM y 6-8 PM).',
+            'very-unhealthy': 'Usa mascarilla N95 o superior en todo momento al salir. Considera usar purificadores de aire en interiores.',
+            'hazardous': 'Usa mascarilla N95 o superior y limita al máximo el tiempo al aire libre. Usa purificadores de aire en interiores.'
+        };
+        
+        element.textContent = recommendations[level] || recommendations['moderate'];
+    }
+
+    updateHomeRecommendations(level) {
+        const element = document.getElementById('homeRecommendations');
+        const recommendations = {
+            'good': 'Mantén las ventanas abiertas para una buena ventilación. Es un buen momento para limpiar y ventilar tu hogar.',
+            'moderate': 'Puedes ventilar tu hogar, pero evita las horas pico de contaminación. Considera usar purificadores de aire si tienes problemas respiratorios.',
+            'unhealthy-sensitive': 'Mantén las ventanas cerradas durante las horas pico. Usa purificadores de aire y evita actividades que generen contaminación interior.',
+            'unhealthy': 'Mantén las ventanas cerradas y usa purificadores de aire. Evita fumar, cocinar con aceite o usar productos químicos fuertes.',
+            'very-unhealthy': 'Mantén todas las ventanas cerradas y usa purificadores de aire de alta eficiencia. Evita cualquier actividad que genere contaminación interior.',
+            'hazardous': 'Mantén todas las ventanas cerradas y usa purificadores de aire de alta eficiencia. Considera sellar las aberturas y usar sistemas de filtración avanzados.'
+        };
+        
+        element.textContent = recommendations[level] || recommendations['moderate'];
+    }
+
+    updateTransportRecommendations(level) {
+        const element = document.getElementById('transportRecommendations');
+        const recommendations = {
+            'good': 'Puedes usar cualquier medio de transporte. Es un buen día para caminar o andar en bicicleta si las distancias lo permiten.',
+            'moderate': 'Evita caminar o andar en bicicleta en calles muy transitadas. Usa transporte público o vehículo con aire acondicionado.',
+            'unhealthy-sensitive': 'Evita caminar o andar en bicicleta. Usa transporte público o vehículo con aire acondicionado y filtros de aire.',
+            'unhealthy': 'Usa solo vehículo con aire acondicionado y filtros de aire. Evita el transporte público si no tiene filtración adecuada.',
+            'very-unhealthy': 'Evita salir en vehículo si no es absolutamente necesario. Si debes hacerlo, usa vehículo con filtros de aire de alta eficiencia.',
+            'hazardous': 'Evita salir en vehículo. Si es absolutamente necesario, usa vehículo con filtros de aire de alta eficiencia y mantén las ventanas cerradas.'
+        };
+        
+        element.textContent = recommendations[level] || recommendations['moderate'];
+    }
+
+    setupAlertSettings() {
+        // Cargar configuraciones guardadas
+        this.loadAlertSettings();
+        
+        // Configurar evento para guardar alertas
+        document.getElementById('saveAlertsBtn').addEventListener('click', () => {
+            this.saveAlertSettings();
+        });
+    }
+
+    loadAlertSettings() {
+        const settings = JSON.parse(localStorage.getItem('airQualityAlerts') || '{}');
+        
+        document.getElementById('alertUnhealthy').checked = settings.alertUnhealthy !== false;
+        document.getElementById('alertSensitive').checked = settings.alertSensitive !== false;
+        document.getElementById('alertDaily').checked = settings.alertDaily === true;
+    }
+
+    saveAlertSettings() {
+        const settings = {
+            alertUnhealthy: document.getElementById('alertUnhealthy').checked,
+            alertSensitive: document.getElementById('alertSensitive').checked,
+            alertDaily: document.getElementById('alertDaily').checked
+        };
+        
+        localStorage.setItem('airQualityAlerts', JSON.stringify(settings));
+        
+        // Mostrar notificación de confirmación
+        this.showNotification('Configuración de alertas guardada correctamente', 'success');
+        
+        // Configurar alertas basadas en las nuevas configuraciones
+        this.setupAlertSystem(settings);
+    }
+
+    setupAlertSystem(settings) {
+        // Limpiar alertas existentes
+        if (this.alertInterval) {
+            clearInterval(this.alertInterval);
+        }
+        
+        // Configurar verificación periódica de alertas
+        this.alertInterval = setInterval(() => {
+            this.checkAlertConditions(settings);
+        }, 300000); // Verificar cada 5 minutos
+    }
+
+    checkAlertConditions(settings) {
+        const currentAqi = this.getCurrentAqiValue();
+        
+        if (settings.alertUnhealthy && currentAqi >= 151) {
+            this.showNotification(`Alerta: AQI insalubre (${currentAqi}). Evita actividades al aire libre.`, 'danger');
+        } else if (settings.alertSensitive && currentAqi >= 101) {
+            this.showNotification(`Alerta: AQI insalubre para grupos sensibles (${currentAqi}). Toma precauciones.`, 'warning');
+        }
+    }
+
+    // Agricultural Functions
+    async loadFarmersData() {
+        try {
+            await this.updateAgriculturalWeatherData();
+            await this.updateAgriculturalAlerts();
+            await this.updateAgriculturalRecommendations();
+            await this.loadAgriculturalForecast();
+            this.setupCropConfiguration();
+        } catch (error) {
+            console.error('Error loading farmers data:', error);
+            this.showNotification('Error al cargar datos agrícolas', 'error');
+        }
+    }
+
+    async updateAgriculturalWeatherData() {
+        const locationData = this.getCurrentLocationData();
+        
+        // Update location
+        document.getElementById('farmLocation').textContent = locationData.name;
+        
+        // Show loading state
+        this.showAgriculturalLoadingState();
+        
+        try {
+            // Get current weather data from real API
+            const weatherData = await this.getCurrentWeatherData();
+            
+            // Update summary data
+            document.getElementById('airTemp').textContent = `${weatherData.temperature}°C`;
+            document.getElementById('precipitation').textContent = `${weatherData.precipitation} mm`;
+            document.getElementById('windSpeed').textContent = `${weatherData.windSpeed} km/h`;
+            document.getElementById('windDirection').textContent = weatherData.windDirection;
+            
+            // Update detailed data
+            document.getElementById('detailedAirTemp').textContent = `${weatherData.temperature}°C`;
+            document.getElementById('humidity').textContent = `${weatherData.humidity}%`;
+            document.getElementById('pressure').textContent = `${weatherData.pressure} hPa`;
+            
+            // Get enhanced soil data based on real weather
+            const soilData = await this.getEnhancedSoilData(weatherData);
+            document.getElementById('soilTemp').textContent = `${soilData.temperature}°C`;
+            document.getElementById('soilMoisture').textContent = `${soilData.moisture}%`;
+            document.getElementById('solarRadiation').textContent = `${soilData.solarRadiation} W/m²`;
+            
+            // Update precipitation and wind details
+            document.getElementById('detailedPrecipitation').textContent = `${weatherData.precipitation} mm`;
+            document.getElementById('detailedWindSpeed').textContent = `${weatherData.windSpeed} km/h`;
+            document.getElementById('detailedWindDirection').textContent = weatherData.windDirection;
+            
+            // Update additional real-time data
+            this.updateAdditionalWeatherData(weatherData);
+            
+            // Update trends based on real data
+            await this.updateRealDataTrends(weatherData);
+            
+            // Hide loading state
+            this.hideAgriculturalLoadingState();
+            
+        } catch (error) {
+            console.error('Error updating agricultural weather data:', error);
+            this.showNotification('Error al cargar datos meteorológicos en tiempo real', 'error');
+            this.hideAgriculturalLoadingState();
+        }
+    }
+
+    async getCurrentWeatherData() {
+        try {
+            const locationData = this.getCurrentLocationData();
+            const response = await fetch(`${this.weatherBaseUrl}/weather?lat=${locationData.lat}&lon=${locationData.lon}&appid=${this.weatherApiKey}&units=metric&lang=es`);
+            const data = await response.json();
+            
+            if (data.cod === 200) {
+                return {
+                    temperature: Math.round(data.main.temp),
+                    humidity: data.main.humidity,
+                    pressure: data.main.pressure,
+                    windSpeed: Math.round(data.wind.speed * 3.6), // Convert m/s to km/h
+                    windDirection: this.getWindDirection(data.wind.deg),
+                    precipitation: data.rain ? (data.rain['1h'] || 0) : 0,
+                    description: data.weather[0].description,
+                    icon: data.weather[0].icon,
+                    visibility: data.visibility / 1000, // Convert to km
+                    uvIndex: data.uvi || 0,
+                    cloudiness: data.clouds.all,
+                    sunrise: new Date(data.sys.sunrise * 1000),
+                    sunset: new Date(data.sys.sunset * 1000)
+                };
+            } else {
+                throw new Error('Error en datos meteorológicos');
+            }
+        } catch (error) {
+            console.error('Error fetching weather data:', error);
+            // Fallback to existing data or generate realistic data
+            const tempElement = document.getElementById('weatherTemp');
+            const humidityElement = document.getElementById('weatherHumidity');
+            const windElement = document.getElementById('weatherWind');
+            
+            return {
+                temperature: tempElement ? parseInt(tempElement.textContent) : 22,
+                humidity: humidityElement ? parseInt(humidityElement.textContent) : 65,
+                pressure: 1013 + Math.floor(Math.random() * 20 - 10),
+                windSpeed: windElement ? parseInt(windElement.textContent) : 12,
+                windDirection: this.getWindDirection(Math.random() * 360),
+                precipitation: Math.floor(Math.random() * 15),
+                description: 'Datos no disponibles',
+                icon: '01d',
+                visibility: 10,
+                uvIndex: 5,
+                cloudiness: 50,
+                sunrise: new Date(),
+                sunset: new Date()
+            };
+        }
+    }
+
+    async getEnhancedSoilData(weatherData) {
+        try {
+            // Get historical data for better soil temperature calculation
+            const locationData = this.getCurrentLocationData();
+            const response = await fetch(`${this.weatherBaseUrl}/onecall?lat=${locationData.lat}&lon=${locationData.lon}&appid=${this.weatherApiKey}&units=metric&exclude=minutely,alerts`);
+            const data = await response.json();
+            
+            if (data.current) {
+                // More accurate soil temperature calculation using real data
+                const airTemp = weatherData.temperature;
+                const humidity = weatherData.humidity;
+                const cloudiness = weatherData.cloudiness || 50;
+                
+                // Soil temperature is typically 2-4°C lower than air temp, adjusted for humidity and cloudiness
+                const soilTemp = airTemp - (3 + (humidity / 100) * 1.5) + (cloudiness / 100) * 0.5;
+                
+                // Enhanced soil moisture calculation using real precipitation data
+                let totalPrecipitation = weatherData.precipitation;
+                if (data.hourly) {
+                    // Sum precipitation from last 24 hours
+                    for (let i = 0; i < 24; i++) {
+                        if (data.hourly[i] && data.hourly[i].rain) {
+                            totalPrecipitation += data.hourly[i].rain['1h'] || 0;
+                        }
+                    }
+                }
+                
+                const baseMoisture = 40 + (humidity * 0.3) + (totalPrecipitation * 1.5);
+                const soilMoisture = Math.min(95, Math.max(10, baseMoisture + (Math.random() * 5 - 2.5)));
+                
+                // Enhanced solar radiation calculation using real UV index and cloudiness
+                const hour = new Date().getHours();
+                let solarRadiation = 0;
+                if (hour >= 6 && hour <= 18) {
+                    const uvIndex = weatherData.uvIndex || 5;
+                    solarRadiation = 200 + (uvIndex * 50) + (Math.sin((hour - 6) * Math.PI / 12) * 400);
+                    solarRadiation *= (1 - cloudiness / 200); // Reduce based on cloudiness
+                    if (weatherData.precipitation > 5) solarRadiation *= 0.3;
+                    if (humidity > 80) solarRadiation *= 0.7;
+                }
+                
+                return {
+                    temperature: Math.round(soilTemp * 10) / 10,
+                    moisture: Math.round(soilMoisture),
+                    solarRadiation: Math.round(solarRadiation)
+                };
+            }
+        } catch (error) {
+            console.error('Error fetching enhanced soil data:', error);
+        }
+        
+        // Fallback to basic calculation
+        return this.generateSoilData(weatherData);
+    }
+
+    generateSoilData(weatherData) {
+        // Simulate soil temperature (usually 2-4°C lower than air temp)
+        const soilTemp = weatherData.temperature - 3 + (Math.random() * 2 - 1);
+        
+        // Simulate soil moisture based on recent precipitation and humidity
+        const baseMoisture = 40 + (weatherData.humidity * 0.3) + (weatherData.precipitation * 2);
+        const soilMoisture = Math.min(95, Math.max(10, baseMoisture + (Math.random() * 10 - 5)));
+        
+        // Simulate solar radiation based on time of day and weather
+        const hour = new Date().getHours();
+        let solarRadiation = 0;
+        if (hour >= 6 && hour <= 18) {
+            solarRadiation = 200 + (Math.sin((hour - 6) * Math.PI / 12) * 600);
+            if (weatherData.precipitation > 5) solarRadiation *= 0.3;
+            if (weatherData.humidity > 80) solarRadiation *= 0.7;
+        }
+        
+        return {
+            temperature: Math.round(soilTemp * 10) / 10,
+            moisture: Math.round(soilMoisture),
+            solarRadiation: Math.round(solarRadiation)
+        };
+    }
+
+    getWindDirection(degrees) {
+        const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 
+                           'S', 'SSO', 'SO', 'OSO', 'O', 'ONO', 'NO', 'NNO'];
+        const index = Math.round(degrees / 22.5) % 16;
+        return directions[index];
+    }
+
+    updateDataTrends() {
+        // Simulate trend data
+        const trends = ['rising', 'falling', 'stable'];
+        const trendTexts = {
+            'rising': '↗',
+            'falling': '↘',
+            'stable': '→'
+        };
+        
+        const trendElements = document.querySelectorAll('.data-trend');
+        trendElements.forEach(element => {
+            const trend = trends[Math.floor(Math.random() * trends.length)];
+            element.className = `data-trend ${trend}`;
+            element.textContent = trendTexts[trend];
+        });
+    }
+
+    async updateRealDataTrends(weatherData) {
+        // Store previous data for trend calculation
+        const previousData = JSON.parse(localStorage.getItem('previousWeatherData') || '{}');
+        
+        // Calculate trends based on real data comparison
+        const trends = {};
+        
+        if (previousData.temperature) {
+            trends.temperature = weatherData.temperature > previousData.temperature ? 'rising' : 
+                                weatherData.temperature < previousData.temperature ? 'falling' : 'stable';
+        }
+        
+        if (previousData.humidity) {
+            trends.humidity = weatherData.humidity > previousData.humidity ? 'rising' : 
+                             weatherData.humidity < previousData.humidity ? 'falling' : 'stable';
+        }
+        
+        if (previousData.pressure) {
+            trends.pressure = weatherData.pressure > previousData.pressure ? 'rising' : 
+                             weatherData.pressure < previousData.pressure ? 'falling' : 'stable';
+        }
+        
+        if (previousData.windSpeed) {
+            trends.windSpeed = weatherData.windSpeed > previousData.windSpeed ? 'rising' : 
+                              weatherData.windSpeed < previousData.windSpeed ? 'falling' : 'stable';
+        }
+        
+        // Update trend displays
+        this.updateTrendDisplay('airTempTrend', trends.temperature);
+        this.updateTrendDisplay('humidityTrend', trends.humidity);
+        this.updateTrendDisplay('pressureTrend', trends.pressure);
+        this.updateTrendDisplay('windSpeedTrend', trends.windSpeed);
+        
+        // Store current data for next comparison
+        localStorage.setItem('previousWeatherData', JSON.stringify(weatherData));
+    }
+
+    updateTrendDisplay(elementId, trend) {
+        const element = document.getElementById(elementId);
+        if (element && trend) {
+            const trendTexts = {
+                'rising': '↗',
+                'falling': '↘',
+                'stable': '→'
+            };
+            element.className = `data-trend ${trend}`;
+            element.textContent = trendTexts[trend];
+        }
+    }
+
+    updateAdditionalWeatherData(weatherData) {
+        // Update additional weather information if elements exist
+        const additionalData = {
+            visibility: weatherData.visibility,
+            uvIndex: weatherData.uvIndex,
+            cloudiness: weatherData.cloudiness,
+            description: weatherData.description,
+            sunrise: weatherData.sunrise,
+            sunset: weatherData.sunset
+        };
+        
+        // Store additional data for use in recommendations
+        this.currentWeatherAdditional = additionalData;
+    }
+
+    showAgriculturalLoadingState() {
+        const loadingElements = document.querySelectorAll('#farmers-section .data-value, #farmers-section .summary-value');
+        loadingElements.forEach(element => {
+            element.textContent = '...';
+            element.style.opacity = '0.6';
+        });
+    }
+
+    hideAgriculturalLoadingState() {
+        const loadingElements = document.querySelectorAll('#farmers-section .data-value, #farmers-section .summary-value');
+        loadingElements.forEach(element => {
+            element.style.opacity = '1';
+        });
+    }
+
+    async updateAgriculturalAlerts() {
+        try {
+            const weatherData = await this.getCurrentWeatherData();
+            const soilData = await this.getEnhancedSoilData(weatherData);
+            
+            // Frost risk assessment
+            const frostRisk = this.assessFrostRisk(weatherData, soilData);
+            document.getElementById('frostRisk').textContent = frostRisk;
+            
+            // Storm risk assessment
+            const stormRisk = this.assessStormRisk(weatherData);
+            document.getElementById('stormRisk').textContent = stormRisk;
+            
+            // Drought risk assessment
+            const droughtRisk = this.assessDroughtRisk(weatherData, soilData);
+            document.getElementById('droughtRisk').textContent = droughtRisk;
+        } catch (error) {
+            console.error('Error updating agricultural alerts:', error);
+            // Fallback to basic assessment
+            const weatherData = this.getCurrentWeatherData();
+            const soilData = this.generateSoilData(weatherData);
+            
+            document.getElementById('frostRisk').textContent = this.assessFrostRisk(weatherData, soilData);
+            document.getElementById('stormRisk').textContent = this.assessStormRisk(weatherData);
+            document.getElementById('droughtRisk').textContent = this.assessDroughtRisk(weatherData, soilData);
+        }
+    }
+
+    assessFrostRisk(weatherData, soilData) {
+        const temp = weatherData.temperature;
+        const humidity = weatherData.humidity;
+        const windSpeed = weatherData.windSpeed;
+        
+        if (temp <= 2) {
+            return 'ALTO - Temperatura muy baja. Protege cultivos sensibles con cubiertas o invernaderos.';
+        } else if (temp <= 5 && humidity > 80 && windSpeed < 5) {
+            return 'MEDIO - Condiciones favorables para heladas. Monitorea durante la noche.';
+        } else if (temp <= 8 && humidity > 70) {
+            return 'BAJO - Posible riesgo de heladas leves. Mantén vigilancia.';
+        } else {
+            return 'MÍNIMO - Condiciones seguras para la mayoría de cultivos.';
+        }
+    }
+
+    assessStormRisk(weatherData) {
+        const pressure = weatherData.pressure;
+        const humidity = weatherData.humidity;
+        const windSpeed = weatherData.windSpeed;
+        
+        if (pressure < 1000 && humidity > 85 && windSpeed > 25) {
+            return 'ALTO - Tormenta severa probable. Protege cultivos y equipos.';
+        } else if (pressure < 1010 && humidity > 75 && windSpeed > 15) {
+            return 'MEDIO - Posible tormenta. Prepara medidas de protección.';
+        } else if (pressure < 1020 && humidity > 65) {
+            return 'BAJO - Condiciones inestables. Monitorea el pronóstico.';
+        } else {
+            return 'MÍNIMO - Condiciones estables. Buen momento para labores agrícolas.';
+        }
+    }
+
+    assessDroughtRisk(weatherData, soilData) {
+        const soilMoisture = soilData.moisture;
+        const precipitation = weatherData.precipitation;
+        const humidity = weatherData.humidity;
+        
+        if (soilMoisture < 20 && precipitation < 5 && humidity < 40) {
+            return 'ALTO - Estrés hídrico severo. Riego urgente necesario.';
+        } else if (soilMoisture < 35 && precipitation < 10) {
+            return 'MEDIO - Humedad del suelo baja. Considera riego suplementario.';
+        } else if (soilMoisture < 50) {
+            return 'BAJO - Monitorea la humedad del suelo.';
+        } else {
+            return 'MÍNIMO - Humedad del suelo adecuada.';
+        }
+    }
+
+    async updateAgriculturalRecommendations() {
+        try {
+            const weatherData = await this.getCurrentWeatherData();
+            const soilData = await this.getEnhancedSoilData(weatherData);
+            const cropType = document.getElementById('cropType').value;
+            const cropStage = document.getElementById('cropStage').value;
+            
+            this.updatePlantingRecommendations(weatherData, soilData, cropType, cropStage);
+            this.updateIrrigationRecommendations(weatherData, soilData, cropType, cropStage);
+            this.updateProtectionRecommendations(weatherData, soilData, cropType, cropStage);
+            this.updateFarmingRecommendations(weatherData, soilData, cropType, cropStage);
+        } catch (error) {
+            console.error('Error updating agricultural recommendations:', error);
+            // Fallback to basic recommendations
+            const weatherData = this.getCurrentWeatherData();
+            const soilData = this.generateSoilData(weatherData);
+            const cropType = document.getElementById('cropType').value;
+            const cropStage = document.getElementById('cropStage').value;
+            
+            this.updatePlantingRecommendations(weatherData, soilData, cropType, cropStage);
+            this.updateIrrigationRecommendations(weatherData, soilData, cropType, cropStage);
+            this.updateProtectionRecommendations(weatherData, soilData, cropType, cropStage);
+            this.updateFarmingRecommendations(weatherData, soilData, cropType, cropStage);
+        }
+    }
+
+    updatePlantingRecommendations(weatherData, soilData, cropType, cropStage) {
+        const element = document.getElementById('plantingRecommendations');
+        let recommendations = [];
+        
+        if (cropStage === 'germinacion') {
+            if (soilData.temperature >= 15 && soilData.temperature <= 25) {
+                recommendations.push('Condiciones ideales para la germinación');
+                recommendations.push('Mantén la humedad del suelo constante');
+            } else if (soilData.temperature < 15) {
+                recommendations.push('Temperatura del suelo muy baja para germinación');
+                recommendations.push('Considera usar semilleros protegidos');
+            } else {
+                recommendations.push('Temperatura del suelo alta, riega frecuentemente');
+            }
+        } else if (cropStage === 'desarrollo') {
+            if (weatherData.temperature >= 18 && weatherData.temperature <= 28) {
+                recommendations.push('Condiciones óptimas para el desarrollo vegetativo');
+                recommendations.push('Aplica fertilizante nitrogenado si es necesario');
+            } else {
+                recommendations.push('Monitorea el crecimiento y ajusta el riego');
+            }
+        }
+        
+        element.innerHTML = recommendations.length > 0 
+            ? `<ul>${recommendations.map(rec => `<li>${rec}</li>`).join('')}</ul>`
+            : '<p>No hay recomendaciones específicas para esta etapa.</p>';
+    }
+
+    updateIrrigationRecommendations(weatherData, soilData, cropType, cropStage) {
+        const element = document.getElementById('irrigationRecommendations');
+        let recommendations = [];
+        
+        if (soilData.moisture < 30) {
+            recommendations.push('RIEGO URGENTE - Humedad del suelo muy baja');
+            recommendations.push('Aplica riego profundo para humedecer la zona radicular');
+        } else if (soilData.moisture < 50) {
+            recommendations.push('Riego recomendado - Humedad del suelo baja');
+            recommendations.push('Riega temprano en la mañana para evitar pérdidas por evaporación');
+        } else if (soilData.moisture > 80) {
+            recommendations.push('Evita el riego - Suelo saturado');
+            recommendations.push('Mejora el drenaje si el problema persiste');
+        } else {
+            recommendations.push('Humedad del suelo adecuada');
+            recommendations.push('Monitorea diariamente y riega según necesidad');
+        }
+        
+        if (weatherData.precipitation > 10) {
+            recommendations.push('Precipitación reciente - Reduce o suspende el riego');
+        }
+        
+        element.innerHTML = `<ul>${recommendations.map(rec => `<li>${rec}</li>`).join('')}</ul>`;
+    }
+
+    updateProtectionRecommendations(weatherData, soilData, cropType, cropStage) {
+        const element = document.getElementById('protectionRecommendations');
+        let recommendations = [];
+        
+        // Frost protection
+        if (weatherData.temperature <= 5) {
+            recommendations.push('Protege cultivos sensibles con cubiertas');
+            recommendations.push('Considera usar calefactores o ventiladores');
+        }
+        
+        // Wind protection
+        if (weatherData.windSpeed > 20) {
+            recommendations.push('Instala cortavientos para proteger cultivos');
+            recommendations.push('Evita labores que puedan dañar las plantas');
+        }
+        
+        // Heat protection
+        if (weatherData.temperature > 30) {
+            recommendations.push('Proporciona sombra a cultivos sensibles');
+            recommendations.push('Aumenta la frecuencia de riego');
+        }
+        
+        // Disease prevention
+        if (weatherData.humidity > 80) {
+            recommendations.push('Alta humedad - Monitorea enfermedades fúngicas');
+            recommendations.push('Aplica fungicidas preventivos si es necesario');
+        }
+        
+        if (recommendations.length === 0) {
+            recommendations.push('Condiciones favorables - Mantén monitoreo regular');
+        }
+        
+        element.innerHTML = `<ul>${recommendations.map(rec => `<li>${rec}</li>`).join('')}</ul>`;
+    }
+
+    updateFarmingRecommendations(weatherData, soilData, cropType, cropStage) {
+        const element = document.getElementById('farmingRecommendations');
+        let recommendations = [];
+        
+        // Soil work recommendations
+        if (soilData.moisture >= 40 && soilData.moisture <= 70) {
+            recommendations.push('Condiciones ideales para labores del suelo');
+            recommendations.push('Puedes realizar arado, rastrillado o siembra');
+        } else if (soilData.moisture < 40) {
+            recommendations.push('Suelo muy seco - Riega antes de labores');
+            recommendations.push('Evita labores que compacten el suelo');
+        } else {
+            recommendations.push('Suelo muy húmedo - Espera a que seque');
+            recommendations.push('Evita labores que dañen la estructura del suelo');
+        }
+        
+        // Harvest recommendations
+        if (cropStage === 'cosecha') {
+            if (weatherData.precipitation < 5 && weatherData.humidity < 70) {
+                recommendations.push('Condiciones ideales para cosecha');
+                recommendations.push('Realiza la cosecha temprano en la mañana');
+            } else {
+                recommendations.push('Evita cosechar con humedad alta');
+                recommendations.push('Espera condiciones más secas');
+            }
+        }
+        
+        // Fertilization recommendations
+        if (weatherData.temperature >= 15 && weatherData.temperature <= 25) {
+            recommendations.push('Temperatura ideal para aplicación de fertilizantes');
+            recommendations.push('Aplica fertilizantes con humedad adecuada del suelo');
+        }
+        
+        element.innerHTML = `<ul>${recommendations.map(rec => `<li>${rec}</li>`).join('')}</ul>`;
+    }
+
+    async loadAgriculturalForecast() {
+        const container = document.getElementById('agriculturalForecast');
+        
+        try {
+            const forecast = await this.getRealAgriculturalForecast();
+            
+            container.innerHTML = forecast.map(day => `
+                <div class="forecast-day">
+                    <div class="forecast-day-name">${day.name}</div>
+                    <div class="forecast-day-temp">${day.temp}°C</div>
+                    <div class="forecast-day-rain">${day.rain}mm</div>
+                    <div class="forecast-day-wind">${day.wind} km/h</div>
+                </div>
+            `).join('');
+        } catch (error) {
+            console.error('Error loading agricultural forecast:', error);
+            // Fallback to generated forecast
+            const forecast = this.generateAgriculturalForecast();
+            
+            container.innerHTML = forecast.map(day => `
+                <div class="forecast-day">
+                    <div class="forecast-day-name">${day.name}</div>
+                    <div class="forecast-day-temp">${day.temp}°C</div>
+                    <div class="forecast-day-rain">${day.rain}mm</div>
+                    <div class="forecast-day-wind">${day.wind} km/h</div>
+                </div>
+            `).join('');
+        }
+    }
+
+    async getRealAgriculturalForecast() {
+        try {
+            const locationData = this.getCurrentLocationData();
+            const response = await fetch(`${this.weatherBaseUrl}/onecall?lat=${locationData.lat}&lon=${locationData.lon}&appid=${this.weatherApiKey}&units=metric&exclude=minutely,alerts`);
+            const data = await response.json();
+            
+            if (data.daily) {
+                return data.daily.slice(0, 7).map((day, index) => {
+                    const date = new Date(day.dt * 1000);
+                    return {
+                        name: date.toLocaleDateString('es-ES', { weekday: 'short' }),
+                        temp: Math.round(day.temp.day),
+                        rain: day.rain ? Math.round(day.rain) : 0,
+                        wind: Math.round(day.wind_speed * 3.6), // Convert m/s to km/h
+                        humidity: day.humidity,
+                        pressure: day.pressure,
+                        description: day.weather[0].description,
+                        icon: day.weather[0].icon
+                    };
+                });
+            }
+        } catch (error) {
+            console.error('Error fetching real forecast data:', error);
+            throw error;
+        }
+        
+        // Fallback to generated data
+        return this.generateAgriculturalForecast();
+    }
+
+    generateAgriculturalForecast() {
+        const days = [];
+        const today = new Date();
+        
+        for (let i = 0; i < 7; i++) {
+            const day = new Date(today.getTime() + (i * 24 * 60 * 60 * 1000));
+            days.push({
+                name: day.toLocaleDateString('es-ES', { weekday: 'short' }),
+                temp: Math.round(18 + Math.random() * 15),
+                rain: Math.round(Math.random() * 20),
+                wind: Math.round(5 + Math.random() * 20)
+            });
+        }
+        
+        return days;
+    }
+
+    setupCropConfiguration() {
+        // Load saved crop configuration
+        const config = JSON.parse(localStorage.getItem('cropConfiguration') || '{}');
+        
+        if (config.cropType) {
+            document.getElementById('cropType').value = config.cropType;
+        }
+        if (config.cropStage) {
+            document.getElementById('cropStage').value = config.cropStage;
+        }
+        
+        // Setup event listeners
+        document.getElementById('updateRecommendationsBtn').addEventListener('click', () => {
+            this.saveCropConfiguration();
+            this.updateAgriculturalRecommendations();
+            this.showNotification('Recomendaciones actualizadas según tu cultivo', 'success');
+        });
+    }
+
+    saveCropConfiguration() {
+        const config = {
+            cropType: document.getElementById('cropType').value,
+            cropStage: document.getElementById('cropStage').value
+        };
+        
+        localStorage.setItem('cropConfiguration', JSON.stringify(config));
     }
 
 
@@ -1111,78 +1898,6 @@ class AirBytesApp {
         return await this.fetchRealTempoDataForLocation(locationData);
     }
 
-// === OpenAQ (últimas mediciones por ciudad) ===
-    async loadGroundDataForLocation(location) {
-        try {
-            const url = `${AIRBYTES_CONFIG.openaq.baseUrl}${AIRBYTES_CONFIG.openaq.endpoints.latest}?coordinates=${location.lat},${location.lon}&radius=10000&limit=1`;
-            const res = await fetch(url);
-            const data = await res.json();
-            if (data.results && data.results.length > 0) {
-                const measurements = {};
-                data.results[0].measurements.forEach(m => {
-                    measurements[m.parameter] = m.value;
-                });
-                return {
-                    pm25: measurements.pm25 || 0,
-                    pm10: measurements.pm10 || 0,
-                    co: measurements.co || 0
-                };
-            }
-            return { pm25: 0, pm10: 0, co: 0 };
-        } catch (err) {
-            console.error("OpenAQ error:", err);
-            return { pm25: 12, pm10: 20, co: 0.5 }; // fallback
-        }
-    }
-
-    // === NASA FIRMS (incendios) ===
-    async loadFires() {
-        try {
-            const url = `${AIRBYTES_CONFIG.nasaFirms.baseUrl}${AIRBYTES_CONFIG.nasaFirms.endpoints.global}`;
-            const res = await fetch(url);
-            const data = await res.json();
-            return data.features.slice(0, 5).map(f => ({
-                lat: f.geometry.coordinates[1],
-                lon: f.geometry.coordinates[0],
-                brightness: f.properties.brightness,
-                date: f.properties.acq_date
-            }));
-        } catch (err) {
-            console.error("FIRMS error:", err);
-            return [];
-        }
-    }
-
-    async checkAlerts() {
-        // Antes generabas alertas simuladas, ahora puedes meter incendios reales
-        const fires = await this.loadFires();
-        const alertsContainer = document.getElementById('alertsContainer');
-        alertsContainer.innerHTML = '';
-
-        if (fires.length === 0) {
-            alertsContainer.innerHTML = '<p style="text-align: center; color: #666;">No hay alertas activas</p>';
-            return;
-        }
-
-        fires.forEach(fire => {
-            const alertCard = document.createElement('div');
-            alertCard.className = 'alert-card danger';
-            alertCard.innerHTML = `
-                <div class="alert-icon">
-                    <i class="fas fa-fire"></i>
-                </div>
-                <div class="alert-content">
-                    <h4>Incendio Detectado</h4>
-                    <p>Lat: ${fire.lat.toFixed(2)}, Lon: ${fire.lon.toFixed(2)} <br>
-                    Brillo: ${fire.brightness} <br>
-                    Fecha: ${fire.date}</p>
-                </div>
-            `;
-            alertsContainer.appendChild(alertCard);
-        });
-    }
-
-
     async loadGroundDataForLocation(locationData) {
         return await this.fetchOpenWeatherAirData(locationData);
     }
@@ -1340,6 +2055,16 @@ class AirBytesApp {
             this.clearExpiredCache();
             this.refreshData();
         }, this.updateInterval);
+    }
+
+    startAgriculturalAutoUpdate() {
+        setInterval(() => {
+            if (this.currentSection === 'farmers' && !this.isLoading) {
+                this.updateAgriculturalWeatherData();
+                this.updateAgriculturalAlerts();
+                this.updateAgriculturalRecommendations();
+            }
+        }, this.agriculturalUpdateInterval);
     }
 
     updateLastUpdateTime() {
@@ -2118,9 +2843,310 @@ class AirBytesApp {
 }
 
  
+class Chatbot {
+    constructor() {
+        this.isOpen = false;
+        this.messageCount = 0;
+        this.conversationHistory = [];
+        this.knowledgeBase = this.initializeKnowledgeBase();
+        this.initializeElements();
+        this.attachEventListeners();
+    }
+
+    initializeElements() {
+        this.container = document.getElementById('chatbotContainer');
+        this.toggle = document.getElementById('chatbotToggle');
+        this.close = document.getElementById('chatbotClose');
+        this.messages = document.getElementById('chatbotMessages');
+        this.input = document.getElementById('chatbotInput');
+        this.sendBtn = document.getElementById('chatbotSend');
+        this.suggestions = document.getElementById('chatbotSuggestions');
+        this.badge = document.getElementById('chatbotBadge');
+    }
+
+    attachEventListeners() {
+        this.toggle.addEventListener('click', () => this.toggleChat());
+        this.close.addEventListener('click', () => this.closeChat());
+        this.sendBtn.addEventListener('click', () => this.sendMessage());
+        this.input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.sendMessage();
+        });
+        
+        this.suggestions.addEventListener('click', (e) => {
+            if (e.target.classList.contains('suggestion-btn')) {
+                this.input.value = e.target.dataset.question;
+                this.sendMessage();
+            }
+        });
+    }
+
+    toggleChat() {
+        this.isOpen = !this.isOpen;
+        if (this.isOpen) {
+            this.container.classList.add('active');
+            this.input.focus();
+            this.hideBadge();
+        } else {
+            this.container.classList.remove('active');
+        }
+    }
+
+    closeChat() {
+        this.isOpen = false;
+        this.container.classList.remove('active');
+    }
+
+    showBadge() {
+        this.messageCount++;
+        this.badge.textContent = this.messageCount;
+        this.badge.classList.remove('hidden');
+    }
+
+    hideBadge() {
+        this.messageCount = 0;
+        this.badge.classList.add('hidden');
+    }
+
+    sendMessage() {
+        const message = this.input.value.trim();
+        if (!message) return;
+
+        this.addMessage(message, 'user');
+        this.input.value = '';
+        this.showTypingIndicator();
+        
+        setTimeout(() => {
+            this.hideTypingIndicator();
+            const response = this.generateResponse(message);
+            this.addMessage(response, 'bot');
+        }, 1000 + Math.random() * 1000);
+    }
+
+    addMessage(content, sender) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `chatbot-message ${sender}-message`;
+        
+        const avatar = document.createElement('div');
+        avatar.className = 'message-avatar';
+        avatar.innerHTML = sender === 'bot' ? '<i class="fas fa-robot"></i>' : '<i class="fas fa-user"></i>';
+        
+        const messageContent = document.createElement('div');
+        messageContent.className = 'message-content';
+        messageContent.innerHTML = this.formatMessage(content);
+        
+        messageDiv.appendChild(avatar);
+        messageDiv.appendChild(messageContent);
+        this.messages.appendChild(messageDiv);
+        
+        this.scrollToBottom();
+        this.conversationHistory.push({ sender, content });
+    }
+
+    formatMessage(content) {
+        if (typeof content === 'string') {
+            return `<p>${content}</p>`;
+        }
+        
+        let html = '';
+        if (content.text) html += `<p>${content.text}</p>`;
+        if (content.list) {
+            html += '<ul>';
+            content.list.forEach(item => html += `<li>${item}</li>`);
+            html += '</ul>';
+        }
+        if (content.tips) {
+            html += '<div class="chatbot-tips">';
+            content.tips.forEach(tip => html += `<div class="tip-item">${tip}</div>`);
+            html += '</div>';
+        }
+        
+        return html;
+    }
+
+    showTypingIndicator() {
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'chatbot-message bot-message typing-indicator';
+        typingDiv.id = 'typingIndicator';
+        
+        const avatar = document.createElement('div');
+        avatar.className = 'message-avatar';
+        avatar.innerHTML = '<i class="fas fa-robot"></i>';
+        
+        const typingContent = document.createElement('div');
+        typingContent.className = 'typing-indicator';
+        typingContent.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+        
+        typingDiv.appendChild(avatar);
+        typingDiv.appendChild(typingContent);
+        this.messages.appendChild(typingDiv);
+        this.scrollToBottom();
+    }
+
+    hideTypingIndicator() {
+        const typingIndicator = document.getElementById('typingIndicator');
+        if (typingIndicator) {
+            typingIndicator.remove();
+        }
+    }
+
+    scrollToBottom() {
+        this.messages.scrollTop = this.messages.scrollHeight;
+    }
+
+    generateResponse(userMessage) {
+        const message = userMessage.toLowerCase();
+        
+        if (message.includes('aqi') || message.includes('índice') || message.includes('calidad del aire')) {
+            return {
+                text: "El Índice de Calidad del Aire (AQI) es una medida que indica qué tan limpio o contaminado está el aire y qué efectos para la salud podría tener.",
+                list: [
+                    "🟢 0-50: Buena - El aire es satisfactorio",
+                    "🟡 51-100: Moderada - Aceptable para la mayoría",
+                    "🟠 101-150: Insalubre para grupos sensibles",
+                    "🔴 151-200: Insalubre - Todos pueden experimentar efectos",
+                    "🟣 201-300: Muy insalubre - Alerta de salud",
+                    "🟤 301-500: Peligroso - Alerta de emergencia"
+                ]
+            };
+        }
+        
+        if (message.includes('contaminante') || message.includes('partícula') || message.includes('pm2.5') || message.includes('pm10')) {
+            return {
+                text: "Los principales contaminantes que monitoreamos son:",
+                list: [
+                    "🌫️ PM2.5 - Partículas finas (diámetro < 2.5 μm)",
+                    "🌫️ PM10 - Partículas gruesas (diámetro < 10 μm)",
+                    "🌫️ O₃ - Ozono troposférico",
+                    "🌫️ NO₂ - Dióxido de nitrógeno",
+                    "🌫️ SO₂ - Dióxido de azufre",
+                    "🌫️ CO - Monóxido de carbono"
+                ]
+            };
+        }
+        
+        if (message.includes('salud') || message.includes('efecto') || message.includes('riesgo')) {
+            return {
+                text: "La calidad del aire afecta tu salud de diferentes maneras:",
+                list: [
+                    "👶 Niños y ancianos son más vulnerables",
+                    "🫁 Puede causar problemas respiratorios",
+                    "❤️ Afecta el sistema cardiovascular",
+                    "🧠 Puede impactar la función cognitiva",
+                    "🤧 Empeora alergias y asma",
+                    "⚠️ Exposición prolongada aumenta riesgos"
+                ],
+                tips: [
+                    "💡 Usa mascarilla en días de alta contaminación",
+                    "🏠 Mantén ventanas cerradas cuando el AQI es alto",
+                    "🚶 Evita ejercicio al aire libre en días insalubres",
+                    "🌿 Considera purificadores de aire en interiores"
+                ]
+            };
+        }
+        
+        if (message.includes('meteorológico') || message.includes('clima') || message.includes('temperatura') || message.includes('viento')) {
+            return {
+                text: "Los datos meteorológicos nos ayudan a entender la calidad del aire:",
+                list: [
+                    "🌡️ Temperatura - Afecta la formación de ozono",
+                    "💨 Viento - Dispersa o concentra contaminantes",
+                    "💧 Humedad - Influye en la formación de partículas",
+                    "☁️ Presión atmosférica - Afecta la circulación del aire",
+                    "🌧️ Lluvia - Limpia la atmósfera naturalmente"
+                ]
+            };
+        }
+        
+        if (message.includes('usar') || message.includes('aplicación') || message.includes('funciones') || message.includes('navegación')) {
+            return {
+                text: "AirBytes tiene varias secciones para explorar:",
+                list: [
+                    "📊 Hoy - Datos actuales de calidad del aire",
+                    "⏰ Cada Hora - Pronóstico horario",
+                    "📅 Diario - Pronóstico de 7 días",
+                    "📈 Mensual - Análisis de tendencias",
+                    "🌬️ Calidad del Aire - Detalles de contaminantes"
+                ],
+                tips: [
+                    "📍 Usa el botón de ubicación para datos de tu zona",
+                    "🌍 Cambia el país en el selector superior",
+                    "📱 La app es completamente responsive",
+                    "🔔 Recibe notificaciones de alertas importantes"
+                ]
+            };
+        }
+        
+        if (message.includes('recomendación') || message.includes('consejo') || message.includes('qué hacer')) {
+            return {
+                text: "Basándome en los datos actuales, te recomiendo:",
+                tips: [
+                    "✅ Revisa el AQI actual en la sección 'Hoy'",
+                    "📊 Consulta el pronóstico en 'Cada Hora' o 'Diario'",
+                    "🌱 Si el AQI es alto, evita actividades al aire libre",
+                    "🏠 Mantén ventanas cerradas en días contaminados",
+                    "🚗 Reduce el uso del vehículo si es posible",
+                    "🌿 Considera usar transporte público o caminar"
+                ]
+            };
+        }
+        
+        if (message.includes('gracias') || message.includes('thanks') || message.includes('perfecto')) {
+            return "¡De nada! 😊 Estoy aquí para ayudarte con cualquier pregunta sobre la calidad del aire y la aplicación AirBytes. ¿Hay algo más en lo que pueda asistirte?";
+        }
+        
+        if (message.includes('hola') || message.includes('hi') || message.includes('buenos días') || message.includes('buenas tardes')) {
+            return "¡Hola! 👋 Bienvenido a AirBytes. Soy tu asistente virtual y puedo ayudarte con información sobre calidad del aire, datos meteorológicos, recomendaciones de salud y cómo usar la aplicación. ¿En qué puedo ayudarte?";
+        }
+        
+        return {
+            text: "Interesante pregunta. Aunque no tengo información específica sobre eso, puedo ayudarte con:",
+            list: [
+                "📊 Información sobre calidad del aire y AQI",
+                "🌤️ Datos meteorológicos y su impacto",
+                "🌱 Recomendaciones de salud",
+                "📈 Cómo interpretar los gráficos y datos",
+                "❓ Cómo usar las diferentes secciones de la app"
+            ],
+            tips: [
+                "💡 Prueba preguntando sobre 'AQI' o 'contaminantes'",
+                "🔍 Explora las secciones de la app para más detalles",
+                "📱 Los datos se actualizan en tiempo real"
+            ]
+        };
+    }
+
+    initializeKnowledgeBase() {
+        return {
+            aqi: {
+                good: "0-50: Buena calidad del aire",
+                moderate: "51-100: Calidad moderada",
+                unhealthySensitive: "101-150: Insalubre para grupos sensibles",
+                unhealthy: "151-200: Insalubre para todos",
+                veryUnhealthy: "201-300: Muy insalubre",
+                hazardous: "301-500: Peligroso"
+            },
+            pollutants: {
+                pm25: "Partículas finas PM2.5",
+                pm10: "Partículas gruesas PM10",
+                o3: "Ozono troposférico",
+                no2: "Dióxido de nitrógeno",
+                so2: "Dióxido de azufre",
+                co: "Monóxido de carbono"
+            },
+            health: {
+                sensitive: "Grupos sensibles: niños, ancianos, personas con asma",
+                respiratory: "Problemas respiratorios y cardiovasculares",
+                longTerm: "Exposición prolongada aumenta riesgos de enfermedades"
+            }
+        };
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const app = new AirBytesApp();
     window.airBytesApp = app;
+    
+    const chatbot = new Chatbot();
 });
 
 

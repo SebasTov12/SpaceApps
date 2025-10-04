@@ -63,6 +63,14 @@
                     <i class="fas fa-wind"></i>
                     <span>Calidad del Aire</span>
                 </button>
+                <button class="nav-btn" data-section="user-guide">
+                    <i class="fas fa-user"></i>
+                    <span>Guía de Usuario</span>
+                </button>
+                <button class="nav-btn" data-section="farmers">
+                    <i class="fas fa-seedling"></i>
+                    <span>Agricultores</span>
+                </button>
             </div>
         </nav>
 
@@ -298,6 +306,497 @@
                 </div>
             </section>
 
+            <section class="content-section" id="user-guide-section">
+                <div class="section-header">
+                    <h2>Guía de Usuario</h2>
+                    <p>Información básica y recomendaciones para tu bienestar</p>
+                </div>
+
+                <!-- Información Básica de Calidad del Aire -->
+                <div class="guide-section">
+                    <div class="guide-card">
+                        <div class="guide-header">
+                            <i class="fas fa-info-circle"></i>
+                            <h3>¿Qué es la Calidad del Aire?</h3>
+                        </div>
+                        <div class="guide-content">
+                            <p>La calidad del aire se refiere a la condición del aire que respiramos y se mide mediante el Índice de Calidad del Aire (AQI). Este índice nos ayuda a entender qué tan limpio o contaminado está el aire y qué efectos puede tener en nuestra salud.</p>
+                            
+                            <div class="aqi-levels">
+                                <h4>Niveles de AQI:</h4>
+                                <div class="level-item good">
+                                    <div class="level-color"></div>
+                                    <div class="level-info">
+                                        <strong>0-50: Buena</strong>
+                                        <span>La calidad del aire es satisfactoria y presenta poco o ningún riesgo.</span>
+                                    </div>
+                                </div>
+                                <div class="level-item moderate">
+                                    <div class="level-color"></div>
+                                    <div class="level-info">
+                                        <strong>51-100: Moderada</strong>
+                                        <span>La calidad del aire es aceptable, pero puede ser un riesgo para personas sensibles.</span>
+                                    </div>
+                                </div>
+                                <div class="level-item unhealthy-sensitive">
+                                    <div class="level-color"></div>
+                                    <div class="level-info">
+                                        <strong>101-150: Insalubre para grupos sensibles</strong>
+                                        <span>Los niños, adultos mayores y personas con problemas respiratorios deben limitar actividades al aire libre.</span>
+                                    </div>
+                                </div>
+                                <div class="level-item unhealthy">
+                                    <div class="level-color"></div>
+                                    <div class="level-info">
+                                        <strong>151-200: Insalubre</strong>
+                                        <span>Todos pueden experimentar efectos en la salud; los grupos sensibles pueden tener efectos más graves.</span>
+                                    </div>
+                                </div>
+                                <div class="level-item very-unhealthy">
+                                    <div class="level-color"></div>
+                                    <div class="level-info">
+                                        <strong>201-300: Muy Insalubre</strong>
+                                        <span>Advertencia de salud: todos pueden experimentar efectos más graves en la salud.</span>
+                                    </div>
+                                </div>
+                                <div class="level-item hazardous">
+                                    <div class="level-color"></div>
+                                    <div class="level-info">
+                                        <strong>301+: Peligroso</strong>
+                                        <span>Alerta de salud: toda la población puede verse afectada.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recomendaciones Personalizadas -->
+                    <div class="guide-card">
+                        <div class="guide-header">
+                            <i class="fas fa-heart"></i>
+                            <h3>Recomendaciones de Salud</h3>
+                        </div>
+                        <div class="guide-content">
+                            <div class="recommendations-container" id="personalizedRecommendations">
+                                <div class="recommendation-card">
+                                    <i class="fas fa-running"></i>
+                                    <h4>Actividades al Aire Libre</h4>
+                                    <p id="outdoorActivity">Basado en la calidad del aire actual, se recomienda...</p>
+                                </div>
+                                <div class="recommendation-card">
+                                    <i class="fas fa-mask"></i>
+                                    <h4>Protección Personal</h4>
+                                    <p id="personalProtection">Para proteger tu salud...</p>
+                                </div>
+                                <div class="recommendation-card">
+                                    <i class="fas fa-home"></i>
+                                    <h4>En Casa</h4>
+                                    <p id="homeRecommendations">Mantén tu hogar seguro...</p>
+                                </div>
+                                <div class="recommendation-card">
+                                    <i class="fas fa-car"></i>
+                                    <h4>Transporte</h4>
+                                    <p id="transportRecommendations">Para tus desplazamientos...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contaminantes Principales -->
+                    <div class="guide-card">
+                        <div class="guide-header">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <h3>Contaminantes Principales</h3>
+                        </div>
+                        <div class="guide-content">
+                            <div class="pollutants-grid">
+                                <div class="pollutant-item">
+                                    <h4>PM2.5</h4>
+                                    <p>Partículas finas que pueden penetrar profundamente en los pulmones y causar problemas respiratorios.</p>
+                                </div>
+                                <div class="pollutant-item">
+                                    <h4>PM10</h4>
+                                    <p>Partículas más grandes que pueden irritar los ojos, nariz y garganta.</p>
+                                </div>
+                                <div class="pollutant-item">
+                                    <h4>NO₂</h4>
+                                    <p>Dióxido de nitrógeno que puede agravar el asma y otros problemas respiratorios.</p>
+                                </div>
+                                <div class="pollutant-item">
+                                    <h4>O₃</h4>
+                                    <p>Ozono que puede causar irritación pulmonar y reducir la función pulmonar.</p>
+                                </div>
+                                <div class="pollutant-item">
+                                    <h4>CO</h4>
+                                    <p>Monóxido de carbono que reduce la capacidad de la sangre para transportar oxígeno.</p>
+                                </div>
+                                <div class="pollutant-item">
+                                    <h4>HCHO</h4>
+                                    <p>Formaldehído que puede causar irritación de ojos, nariz y garganta.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Consejos Prácticos -->
+                    <div class="guide-card">
+                        <div class="guide-header">
+                            <i class="fas fa-lightbulb"></i>
+                            <h3>Consejos Prácticos</h3>
+                        </div>
+                        <div class="guide-content">
+                            <div class="tips-grid">
+                                <div class="tip-item">
+                                    <i class="fas fa-clock"></i>
+                                    <h4>Mejores Horarios</h4>
+                                    <p>Evita actividades al aire libre entre las 6-10 AM y 6-8 PM cuando la contaminación suele ser mayor.</p>
+                                </div>
+                                <div class="tip-item">
+                                    <i class="fas fa-thermometer-half"></i>
+                                    <h4>Condiciones Climáticas</h4>
+                                    <p>Los días calurosos y sin viento tienden a tener peor calidad del aire. Planifica tus actividades en consecuencia.</p>
+                                </div>
+                                <div class="tip-item">
+                                    <i class="fas fa-leaf"></i>
+                                    <h4>Plantas Purificadoras</h4>
+                                    <p>Considera tener plantas como la hiedra, el lirio de la paz o la palma de bambú en tu hogar.</p>
+                                </div>
+                                <div class="tip-item">
+                                    <i class="fas fa-window-maximize"></i>
+                                    <h4>Ventilación</h4>
+                                    <p>Ventila tu hogar en las horas de menor contaminación, generalmente temprano en la mañana.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Alertas y Notificaciones -->
+                    <div class="guide-card">
+                        <div class="guide-header">
+                            <i class="fas fa-bell"></i>
+                            <h3>Alertas y Notificaciones</h3>
+                        </div>
+                        <div class="guide-content">
+                            <div class="alert-settings">
+                                <h4>Configura tus Alertas</h4>
+                                <div class="alert-options">
+                                    <label class="alert-option">
+                                        <input type="checkbox" id="alertUnhealthy" checked>
+                                        <span class="checkmark"></span>
+                                        <span>Alertarme cuando el AQI sea insalubre (151+)</span>
+                                    </label>
+                                    <label class="alert-option">
+                                        <input type="checkbox" id="alertSensitive" checked>
+                                        <span class="checkmark"></span>
+                                        <span>Alertarme cuando sea insalubre para grupos sensibles (101+)</span>
+                                    </label>
+                                    <label class="alert-option">
+                                        <input type="checkbox" id="alertDaily">
+                                        <span class="checkmark"></span>
+                                        <span>Resumen diario de calidad del aire</span>
+                                    </label>
+                                </div>
+                                <button class="save-alerts-btn" id="saveAlertsBtn">
+                                    <i class="fas fa-save"></i>
+                                    Guardar Configuración
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="content-section" id="farmers-section">
+                <div class="section-header">
+                    <h2>Centro Agrícola</h2>
+                    <p>Datos meteorológicos especializados y recomendaciones para agricultores</p>
+                </div>
+
+                <!-- Resumen Meteorológico Agrícola -->
+                <div class="agricultural-summary">
+                    <div class="weather-overview-card">
+                        <div class="weather-header">
+                            <i class="fas fa-cloud-sun"></i>
+                            <h3>Resumen Meteorológico Agrícola</h3>
+                            <div class="weather-location">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span id="farmLocation">Cargando ubicación...</span>
+                            </div>
+                            <div class="realtime-indicator">
+                                <i class="fas fa-satellite-dish"></i>
+                                <span>Datos en Tiempo Real</span>
+                            </div>
+                        </div>
+                        <div class="weather-summary-grid">
+                            <div class="summary-item">
+                                <div class="summary-icon">
+                                    <i class="fas fa-thermometer-half"></i>
+                                </div>
+                                <div class="summary-content">
+                                    <span class="summary-label">Temperatura del Aire</span>
+                                    <span class="summary-value" id="airTemp">--°C</span>
+                                </div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-icon">
+                                    <i class="fas fa-cloud-rain"></i>
+                                </div>
+                                <div class="summary-content">
+                                    <span class="summary-label">Precipitación</span>
+                                    <span class="summary-value" id="precipitation">-- mm</span>
+                                </div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-icon">
+                                    <i class="fas fa-wind"></i>
+                                </div>
+                                <div class="summary-content">
+                                    <span class="summary-label">Viento</span>
+                                    <span class="summary-value" id="windSpeed">-- km/h</span>
+                                </div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-icon">
+                                    <i class="fas fa-compass"></i>
+                                </div>
+                                <div class="summary-content">
+                                    <span class="summary-label">Dirección</span>
+                                    <span class="summary-value" id="windDirection">--</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Datos Detallados -->
+                <div class="agricultural-data-grid">
+                    <!-- Condiciones Atmosféricas -->
+                    <div class="data-card">
+                        <div class="card-header">
+                            <i class="fas fa-cloud"></i>
+                            <h3>Condiciones Atmosféricas</h3>
+                        </div>
+                        <div class="data-content">
+                            <div class="data-item">
+                                <div class="data-label">
+                                    <i class="fas fa-thermometer-half"></i>
+                                    <span>Temperatura del Aire</span>
+                                </div>
+                                <div class="data-value" id="detailedAirTemp">--°C</div>
+                                <div class="data-trend" id="airTempTrend">--</div>
+                            </div>
+                            <div class="data-item">
+                                <div class="data-label">
+                                    <i class="fas fa-tint"></i>
+                                    <span>Humedad Relativa</span>
+                                </div>
+                                <div class="data-value" id="humidity">--%</div>
+                                <div class="data-trend" id="humidityTrend">--</div>
+                            </div>
+                            <div class="data-item">
+                                <div class="data-label">
+                                    <i class="fas fa-weight-hanging"></i>
+                                    <span>Presión Atmosférica</span>
+                                </div>
+                                <div class="data-value" id="pressure">-- hPa</div>
+                                <div class="data-trend" id="pressureTrend">--</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Condiciones del Suelo -->
+                    <div class="data-card">
+                        <div class="card-header">
+                            <i class="fas fa-seedling"></i>
+                            <h3>Condiciones del Suelo</h3>
+                        </div>
+                        <div class="data-content">
+                            <div class="data-item">
+                                <div class="data-label">
+                                    <i class="fas fa-thermometer-half"></i>
+                                    <span>Temperatura del Suelo</span>
+                                </div>
+                                <div class="data-value" id="soilTemp">--°C</div>
+                                <div class="data-trend" id="soilTempTrend">--</div>
+                            </div>
+                            <div class="data-item">
+                                <div class="data-label">
+                                    <i class="fas fa-tint"></i>
+                                    <span>Humedad del Suelo</span>
+                                </div>
+                                <div class="data-value" id="soilMoisture">--%</div>
+                                <div class="data-trend" id="soilMoistureTrend">--</div>
+                            </div>
+                            <div class="data-item">
+                                <div class="data-label">
+                                    <i class="fas fa-sun"></i>
+                                    <span>Radiación Solar</span>
+                                </div>
+                                <div class="data-value" id="solarRadiation">-- W/m²</div>
+                                <div class="data-trend" id="solarRadiationTrend">--</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Precipitación y Viento -->
+                    <div class="data-card">
+                        <div class="card-header">
+                            <i class="fas fa-cloud-rain"></i>
+                            <h3>Precipitación y Viento</h3>
+                        </div>
+                        <div class="data-content">
+                            <div class="data-item">
+                                <div class="data-label">
+                                    <i class="fas fa-cloud-rain"></i>
+                                    <span>Precipitación (24h)</span>
+                                </div>
+                                <div class="data-value" id="detailedPrecipitation">-- mm</div>
+                                <div class="data-trend" id="precipitationTrend">--</div>
+                            </div>
+                            <div class="data-item">
+                                <div class="data-label">
+                                    <i class="fas fa-wind"></i>
+                                    <span>Velocidad del Viento</span>
+                                </div>
+                                <div class="data-value" id="detailedWindSpeed">-- km/h</div>
+                                <div class="data-trend" id="windSpeedTrend">--</div>
+                            </div>
+                            <div class="data-item">
+                                <div class="data-label">
+                                    <i class="fas fa-compass"></i>
+                                    <span>Dirección del Viento</span>
+                                </div>
+                                <div class="data-value" id="detailedWindDirection">--</div>
+                                <div class="data-trend" id="windDirectionTrend">--</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alertas y Riesgos -->
+                <div class="agricultural-alerts">
+                    <div class="alert-card">
+                        <div class="alert-header">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <h3>Alertas Agrícolas</h3>
+                        </div>
+                        <div class="alert-content" id="agriculturalAlerts">
+                            <div class="alert-item">
+                                <i class="fas fa-snowflake"></i>
+                                <div class="alert-info">
+                                    <h4>Riesgo de Heladas</h4>
+                                    <p id="frostRisk">Evaluando condiciones...</p>
+                                </div>
+                            </div>
+                            <div class="alert-item">
+                                <i class="fas fa-bolt"></i>
+                                <div class="alert-info">
+                                    <h4>Riesgo de Tormentas</h4>
+                                    <p id="stormRisk">Evaluando condiciones...</p>
+                                </div>
+                            </div>
+                            <div class="alert-item">
+                                <i class="fas fa-sun"></i>
+                                <div class="alert-info">
+                                    <h4>Estrés Hídrico</h4>
+                                    <p id="droughtRisk">Evaluando condiciones...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recomendaciones Agrícolas -->
+                <div class="agricultural-recommendations">
+                    <div class="recommendations-card">
+                        <div class="recommendations-header">
+                            <i class="fas fa-lightbulb"></i>
+                            <h3>Recomendaciones Agrícolas</h3>
+                        </div>
+                        <div class="recommendations-content">
+                            <div class="recommendation-category">
+                                <h4><i class="fas fa-seedling"></i> Siembra y Plantación</h4>
+                                <div class="recommendation-list" id="plantingRecommendations">
+                                    <p>Cargando recomendaciones...</p>
+                                </div>
+                            </div>
+                            <div class="recommendation-category">
+                                <h4><i class="fas fa-tint"></i> Riego</h4>
+                                <div class="recommendation-list" id="irrigationRecommendations">
+                                    <p>Cargando recomendaciones...</p>
+                                </div>
+                            </div>
+                            <div class="recommendation-category">
+                                <h4><i class="fas fa-shield-alt"></i> Protección de Cultivos</h4>
+                                <div class="recommendation-list" id="protectionRecommendations">
+                                    <p>Cargando recomendaciones...</p>
+                                </div>
+                            </div>
+                            <div class="recommendation-category">
+                                <h4><i class="fas fa-tractor"></i> Labores Agrícolas</h4>
+                                <div class="recommendation-list" id="farmingRecommendations">
+                                    <p>Cargando recomendaciones...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pronóstico Agrícola -->
+                <div class="agricultural-forecast">
+                    <div class="forecast-card">
+                        <div class="forecast-header">
+                            <i class="fas fa-calendar-alt"></i>
+                            <h3>Pronóstico Agrícola (7 días)</h3>
+                        </div>
+                        <div class="forecast-content" id="agriculturalForecast">
+                            <p>Cargando pronóstico...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Configuración de Cultivos -->
+                <div class="crop-configuration">
+                    <div class="config-card">
+                        <div class="config-header">
+                            <i class="fas fa-cog"></i>
+                            <h3>Configuración de Cultivos</h3>
+                        </div>
+                        <div class="config-content">
+                            <div class="config-section">
+                                <h4>Selecciona tu cultivo principal:</h4>
+                                <select id="cropType" class="crop-selector">
+                                    <option value="general">Cultivo General</option>
+                                    <option value="maiz">Maíz</option>
+                                    <option value="arroz">Arroz</option>
+                                    <option value="cafe">Café</option>
+                                    <option value="papa">Papa</option>
+                                    <option value="tomate">Tomate</option>
+                                    <option value="lechuga">Lechuga</option>
+                                    <option value="frijol">Frijol</option>
+                                    <option value="trigo">Trigo</option>
+                                    <option value="soya">Soya</option>
+                                </select>
+                            </div>
+                            <div class="config-section">
+                                <h4>Etapa del cultivo:</h4>
+                                <select id="cropStage" class="crop-selector">
+                                    <option value="germinacion">Germinación</option>
+                                    <option value="desarrollo">Desarrollo Vegetativo</option>
+                                    <option value="floracion">Floración</option>
+                                    <option value="fructificacion">Fructificación</option>
+                                    <option value="maduracion">Maduración</option>
+                                    <option value="cosecha">Cosecha</option>
+                                </select>
+                            </div>
+                            <button class="update-recommendations-btn" id="updateRecommendationsBtn">
+                                <i class="fas fa-sync-alt"></i>
+                                Actualizar Recomendaciones
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
         </main>
 
@@ -333,6 +832,57 @@
                 <p>Obteniendo datos de AirBytes...</p>
             </div>
         </div>
+
+        <!-- Chatbot -->
+        <div class="chatbot-container" id="chatbotContainer">
+            <div class="chatbot-header">
+                <div class="chatbot-title">
+                    <i class="fas fa-robot"></i>
+                    <span>Asistente AirBytes</span>
+                </div>
+                <button class="chatbot-close" id="chatbotClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="chatbot-messages" id="chatbotMessages">
+                <div class="chatbot-message bot-message">
+                    <div class="message-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="message-content">
+                        <p>¡Hola! Soy tu asistente de AirBytes. Puedo ayudarte con información sobre:</p>
+                        <ul>
+                            <li>📊 Calidad del aire y contaminantes</li>
+                            <li>🌤️ Datos meteorológicos</li>
+                            <li>🌱 Recomendaciones de salud</li>
+                            <li>📈 Análisis de tendencias</li>
+                            <li>❓ Cómo usar la aplicación</li>
+                        </ul>
+                        <p>¿En qué puedo ayudarte hoy?</p>
+                    </div>
+                </div>
+            </div>
+            <div class="chatbot-input-container">
+                <div class="chatbot-input-wrapper">
+                    <input type="text" id="chatbotInput" placeholder="Escribe tu pregunta aquí..." autocomplete="off">
+                    <button id="chatbotSend" class="chatbot-send-btn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                <div class="chatbot-suggestions" id="chatbotSuggestions">
+                    <button class="suggestion-btn" data-question="¿Qué significa el índice AQI?">¿Qué significa el índice AQI?</button>
+                    <button class="suggestion-btn" data-question="¿Cómo afecta la calidad del aire a mi salud?">¿Cómo afecta la calidad del aire a mi salud?</button>
+                    <button class="suggestion-btn" data-question="¿Qué contaminantes mide la aplicación?">¿Qué contaminantes mide la aplicación?</button>
+                    <button class="suggestion-btn" data-question="¿Cómo interpretar los datos meteorológicos?">¿Cómo interpretar los datos meteorológicos?</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chatbot Toggle Button -->
+        <button class="chatbot-toggle" id="chatbotToggle">
+            <i class="fas fa-comments"></i>
+            <span class="chatbot-badge" id="chatbotBadge">0</span>
+        </button>
 
     </div>
 

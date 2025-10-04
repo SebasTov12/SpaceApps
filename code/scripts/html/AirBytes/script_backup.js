@@ -2,7 +2,7 @@ class AirBytesApp {
     constructor() {
     
         this.nasaApiKey = '8VFqhy83c3Ji3gbebKoLe3DfMO4UkothFZJElztB';
-        this.tempoBaseUrl = 'https://api.nasa.gov/planetary/earth/assets';
+        this.tempoBaseUrl = 'https://api.nasa.gov/insight_weather/';
         this.tempoEndpoints = {
             no2: `${this.tempoBaseUrl}`,
             o3: `${this.tempoBaseUrl}`,
@@ -2050,19 +2050,4 @@ document.addEventListener('DOMContentLoaded', () => {
     const app = new AirBytesApp();
     window.airBytesApp = app;
 });
-
-
- 
-
-
-
-
-
-
-
-
-
-
-
-
 
