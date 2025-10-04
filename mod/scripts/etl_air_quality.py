@@ -8,6 +8,7 @@ from datetime import datetime, timedelta, timezone
 import xarray as xr
 import numpy as np
 import pandas as pd
+import psycopg2.extras
 
 # ============== CONFIG ==============
 DB_CONFIG = {
@@ -59,81 +60,166 @@ def download_file(url, out_path):
             f.write(chunk)
     return out_path
 
+def insert_satellite_rows(rows, table="satellite_observations"):
+    if not rows:
+        print(f"⚠ No hay filas para insertar en {table}")
+        return
 
-def insert_satellite_rows(rows):
     conn = get_conn()
     cur = conn.cursor()
     try:
-        psycopg2.extras.execute_batch(cur, """
-            INSERT INTO satellite_observations
-            (datetime_utc, lat, lon, product, pollutant, value, unit, raw_path)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+        cur.executemany(
+            f"""
+            INSERT INTO {table} (satellite, parameter, lat, lon, value)
+            VALUES (%s, %s, %s, %s, %s)
             ON CONFLICT DO NOTHING
-        """, rows)
+            """,
+            rows
+        )
         conn.commit()
-        print(f"✅ Inserted {len(rows)} satellite rows")
+        print(f"✅ Insertadas {len(rows)} filas en {table}")
     except Exception as e:
-        print("❌ DB insert error:", e)
         conn.rollback()
+        print(f"❌ Error insertando en {table}: {e}")
     finally:
         cur.close()
         conn.close()
 
 
-def process_netcdf_to_rows(path, product_name, pollutant_var, lat_bounds=None, lon_bounds=None, limit=10):
-    ds = xr.open_dataset(path)
+def guess_pollutant_var(ds):
+    """
+    Intenta adivinar el nombre de la variable de NO₂ en el NetCDF.
+    """
+    candidates = [
+        "nitrogendioxide_tropospheric_column",
+        "nitrogendioxide_total_column",
+        "nitrogendioxide_slant_column",
+        "nitrogendioxide_column_number_density",  # otro nombre común
+        "NO2_column_number_density"              # a veces así
+    ]
+    for var in candidates:
+        if var in ds.variables:
+            return var
+    return None
+
+import xarray as xr
+import numpy as np
+
+def process_netcdf_to_rows(file_path, sat_name, lat_bounds=None, lon_bounds=None):
+    """
+    Lee un NetCDF (TROPOMI o TEMPO) y devuelve filas listas para insertar en la DB.
+    - Detecta automáticamente el satélite según los atributos globales.
+    - Extrae variables específicas dependiendo de TROPOMI o TEMPO.
+    """
+
+    ds = xr.open_dataset(file_path, engine="netcdf4")
     rows = []
 
-    if pollutant_var not in ds.variables:
-        print(f"⚠ {pollutant_var} not found in {path}")
-        return rows
+    # Detectar tipo de dataset
+    attrs = ds.attrs
+    is_tempo = "TEMPO" in str(attrs) or "Smithsonian" in str(attrs)
+    is_tropomi = not is_tempo and ("Sentinel 5 precursor" in str(attrs) or "TROPOMI" in str(attrs))
 
-    data = ds[pollutant_var].values.flatten()
-    lats = ds['latitude'].values.flatten() if 'latitude' in ds else np.zeros_like(data)
-    lons = ds['longitude'].values.flatten() if 'longitude' in ds else np.zeros_like(data)
-    time_var = ds['time'].values[0] if 'time' in ds else np.datetime64(datetime.utcnow())
+    print(f"📌 Procesando {file_path} detectado como {'TROPOMI' if is_tropomi else 'TEMPO' if is_tempo else 'DESCONOCIDO'}")
 
-    count = 0
-    for lat, lon, val in zip(lats, lons, data):
-        if np.isnan(val):
-            continue
-        if lat_bounds and not (lat_bounds[0] <= lat <= lat_bounds[1]):
-            continue
-        if lon_bounds and not (lon_bounds[0] <= lon <= lon_bounds[1]):
-            continue
-        rows.append((
-            pd.to_datetime(str(time_var)),
-            float(lat), float(lon),
-            product_name,
-            pollutant_var,
-            float(val),
-            "mol/m2",
-            path
-        ))
-        count += 1
-        if count >= limit:
-            break
+    if is_tropomi:
+        # Variables clave en TROPOMI
+        var_no2 = "nitrogendioxide_tropospheric_column"
+        var_qa = "qa_value"
+
+        # Algunos archivos tienen las variables dentro de PRODUCT/
+        for prefix in ["", "PRODUCT/"]:
+            if f"{prefix}{var_no2}" in ds.variables:
+                var_no2 = f"{prefix}{var_no2}"
+            if f"{prefix}{var_qa}" in ds.variables:
+                var_qa = f"{prefix}{var_qa}"
+
+        if var_no2 not in ds.variables:
+            print("⚠ NO₂ troposférico no encontrado en TROPOMI")
+            return []
+
+        lats = ds["latitude"].values
+        lons = ds["longitude"].values
+        no2 = ds[var_no2].values
+        qa = ds[var_qa].values if var_qa in ds.variables else np.ones_like(no2)
+
+        # Filtro geográfico (ejemplo Bogotá)
+        if lat_bounds and lon_bounds:
+            mask = (
+                (lats >= lat_bounds[0]) & (lats <= lat_bounds[1]) &
+                (lons >= lon_bounds[0]) & (lons <= lon_bounds[1])
+            )
+        else:
+            mask = np.ones_like(lats, dtype=bool)
+
+        for lat, lon, val, q in zip(lats[mask], lons[mask], no2[mask], qa[mask]):
+            rows.append({
+                "satellite": "TROPOMI",
+                "latitude": float(lat),
+                "longitude": float(lon),
+                "value": float(val),
+                "qa": float(q)
+            })
+
+    elif is_tempo:
+        # Variables clave en TEMPO (clima/atmósfera, no NO₂ directo)
+        vars_candidates = {
+            "cloud_fraction": "product/cloud_fraction",
+            "cloud_pressure": "product/cloud_pressure",
+            "surface_pressure": "support_data/surface_pressure",
+            "terrain_height": "support_data/terrain_height"
+        }
+
+        lats = ds["geolocation/latitude"].values if "geolocation/latitude" in ds.variables else None
+        lons = ds["geolocation/longitude"].values if "geolocation/longitude" in ds.variables else None
+
+        for key, var in vars_candidates.items():
+            if var in ds.variables:
+                vals = ds[var].values.flatten()
+                if lats is not None and lons is not None:
+                    for lat, lon, val in zip(lats.flatten(), lons.flatten(), vals):
+                        rows.append({
+                            "satellite": "TEMPO",
+                            "variable": key,
+                            "latitude": float(lat),
+                            "longitude": float(lon),
+                            "value": float(val)
+                        })
+                else:
+                    print(f"⚠ {key} encontrado, pero sin coordenadas")
+
+    else:
+        print("⚠ No se pudo identificar el tipo de NetCDF (ni TEMPO ni TROPOMI).")
+
+    ds.close()
     return rows
 
 
+def download_from_gdrive(file_id, output):
+    url = f"https://drive.google.com/uc?id={file_id}"
+    print(f"⬇ Descargando {output} desde Google Drive...")
+    gdown.download(url, output, quiet=False, fuzzy=True)
+    return output
+
+import os
+import gdown
+
 def fetch_tempo_and_tropomi():
-    # ⚠ Usa URLs de ejemplo. En producción, deberías buscar el archivo más reciente vía API Earthdata.
-    TEMPO_URL = "https://asdc.larc.nasa.gov/data/TEMPO/TEMPO_L2_NO2.001/2025/275/TEMPO_L2_NO2_20251002T1500Z_001.nc"
-    TROPOMI_URL = "https://data.gesdisc.earthdata.nasa.gov/data/S5P_NRTI_L2/NO2/2025/275/S5P_NRTI_L2__NO2____20251002T143110_20251002T161240.nc"
+    TEMPO_ID = "1rAR9MURN6eBG64sFbKvS8plC5yBB_rjo"
+    TROPOMI_ID = "1ovmXJ01FCreF06z8qMyECoXDhuMyOS2A"
 
     try:
-        tempo_file = download_file(TEMPO_URL, "tempo_sample.nc")
+        tempo_file = download_from_gdrive(TEMPO_ID, "tempo_sample.nc")
         tempo_rows = process_netcdf_to_rows(tempo_file, "TEMPO", "nitrogendioxide_tropospheric_column")
         insert_satellite_rows(tempo_rows)
     except Exception as e:
         print("⚠ TEMPO failed:", e)
 
     try:
-        trop_file = download_file(TROPOMI_URL, "tropomi_sample.nc")
+        trop_file = download_from_gdrive(TROPOMI_ID, "tropomi_sample.nc")
         trop_rows = process_netcdf_to_rows(
             trop_file,
             "TROPOMI",
-            "nitrogendioxide_tropospheric_column",
             lat_bounds=(4.0, 6.0),
             lon_bounds=(-75.0, -73.0)
         )
@@ -253,6 +339,7 @@ def save_locations_to_db(locations):
 # ======================
 def insert_station(conn, loc_id, name, city, country, lat, lon):
     """Inserta una estación en la DB, maneja rollback si hay error"""
+    conn = get_conn()
     cur = conn.cursor()
     try:
         cur.execute("""
@@ -483,57 +570,33 @@ def build_model_features():
     cur = conn.cursor()
     try:
         cur.execute("""
-            INSERT INTO model_features(datetime_utc, lat, lon, pm25, no2, o3, temp, wind_speed, other_features)
-            SELECT
-                g.datetime_utc,
-                s.lat,
-                s.lon,
-                g_pm25.value AS pm25,
-                g_no2.value  AS no2,
-                g_o3.value   AS o3,
-                w.temp,
-                w.wind_speed,
-                '{}'::jsonb
-            FROM measurements g
-            JOIN stations s ON g.station_id = s.id
-
-            -- PM2.5
-            LEFT JOIN measurements g_pm25
-              ON g_pm25.station_id = g.station_id
-             AND g_pm25.datetime_utc = g.datetime_utc
-             AND g_pm25.parameter = 'pm25'
-
-            -- NO2
-            LEFT JOIN measurements g_no2
-              ON g_no2.station_id = g.station_id
-             AND g_no2.datetime_utc = g.datetime_utc
-             AND g_no2.parameter = 'no2'
-
-            -- O3
-            LEFT JOIN measurements g_o3
-              ON g_o3.station_id = g.station_id
-             AND g_o3.datetime_utc = g.datetime_utc
-             AND g_o3.parameter = 'o3'
-
-            -- Weather
-            LEFT JOIN weather_observations w
-              ON w.lat = s.lat
-             AND w.lon = s.lon
-             AND w.datetime_utc = g.datetime_utc
-
-            ON CONFLICT (datetime_utc, lat, lon) DO UPDATE
-            SET pm25 = EXCLUDED.pm25,
-                no2 = EXCLUDED.no2,
-                o3 = EXCLUDED.o3,
-                temp = EXCLUDED.temp,
-                wind_speed = EXCLUDED.wind_speed,
-                other_features = EXCLUDED.other_features;
+        INSERT INTO model_features(datetime_utc, lat, lon, pm25, no2, o3, temp, wind_speed, other_features)
+        SELECT DISTINCT ON (g.datetime_utc, s.lat, s.lon)
+               g.datetime_utc, s.lat, s.lon,
+               g_pm25.value AS pm25,
+               g_no2.value AS no2,
+               g_o3.value AS o3,
+               w.temp,
+               w.wind_speed,
+               '{}'::jsonb
+        FROM measurements g
+        JOIN stations s ON g.station_id = s.id
+        LEFT JOIN measurements g_pm25 ON g_pm25.station_id = s.id AND g_pm25.parameter = 'pm25' AND g_pm25.datetime_utc = g.datetime_utc
+        LEFT JOIN measurements g_no2 ON g_no2.station_id = s.id AND g_no2.parameter = 'no2' AND g_no2.datetime_utc = g.datetime_utc
+        LEFT JOIN measurements g_o3 ON g_o3.station_id = s.id AND g_o3.parameter = 'o3' AND g_o3.datetime_utc = g.datetime_utc
+        LEFT JOIN weather w ON w.datetime_utc = g.datetime_utc
+        ON CONFLICT (datetime_utc, lat, lon) DO UPDATE
+        SET pm25 = EXCLUDED.pm25,
+            no2 = EXCLUDED.no2,
+            o3 = EXCLUDED.o3,
+            temp = EXCLUDED.temp,
+            wind_speed = EXCLUDED.wind_speed;
         """)
         conn.commit()
-        print("✅ model_features actualizado")
+        print("✅ Features construidas en model_features")
     except Exception as e:
-        print("❌ Error build_model_features:", e)
         conn.rollback()
+        print(f"❌ Error build_model_features: {e}")
     finally:
         cur.close()
         conn.close()
@@ -575,12 +638,6 @@ if __name__ == "__main__":
         fetch_openweather_air()
     except Exception as e:
         print("⚠ OpenWeather falló:", e)
-
-    # 3) Satélite CSV local (si lo tienes)
-    try:
-        insert_tropomi_from_csv("tropomi_sample.csv")
-    except Exception as e:
-        print("⚠ TROPOMI CSV no cargado:", e)
 
     # 4) Satélite NRT real (TEMPO + TROPOMI)
     fetch_tempo_and_tropomi()

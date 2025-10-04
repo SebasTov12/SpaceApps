@@ -1,9 +1,7 @@
-import os
-from dotenv import load_dotenv
+import h5py
 
-print("📂 Directorio actual:", os.getcwd())
-
-load_dotenv()
-
-print("Usuario:", os.getenv("EARTHDATA_USER"))
-print("Pass:", os.getenv("EARTHDATA_PASS"))
+with h5py.File("tempo_sample.nc", "r") as f:
+    print("Grupos principales:")
+    def print_structure(name, obj):
+        print(name)
+    f.visititems(print_structure)
