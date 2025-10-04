@@ -105,20 +105,24 @@ def guess_pollutant_var(ds):
 import xarray as xr
 import numpy as np
 
-def process_netcdf_to_rows(file_path, sat_name, lat_bounds=None, lon_bounds=None):
+def process_netcdf_to_rows(file_path, sat_name=None, lat_bounds=None, lon_bounds=None):
     """
     Lee un NetCDF (TROPOMI o TEMPO) y devuelve filas listas para insertar en la DB.
-    - Detecta automáticamente el satélite según los atributos globales.
-    - Extrae variables específicas dependiendo de TROPOMI o TEMPO.
+    - Detecta el satélite según 'sat_name' si viene forzado, o por atributos/variables en caso contrario.
     """
 
     ds = xr.open_dataset(file_path, engine="netcdf4")
     rows = []
 
-    # Detectar tipo de dataset
-    attrs = ds.attrs
-    is_tempo = "TEMPO" in str(attrs) or "Smithsonian" in str(attrs)
-    is_tropomi = not is_tempo and ("Sentinel 5 precursor" in str(attrs) or "TROPOMI" in str(attrs))
+    # 🔧 Detección forzada primero
+    if sat_name == "TROPOMI":
+        is_tropomi, is_tempo = True, False
+    elif sat_name == "TEMPO":
+        is_tempo, is_tropomi = True, False
+    else:
+        attrs = ds.attrs
+        is_tempo = "TEMPO" in str(attrs) or "Smithsonian" in str(attrs) or "TEMPO_SDPC" in str(attrs)
+        is_tropomi = not is_tempo and ("Sentinel 5 precursor" in str(attrs) or "TROPOMI" in str(attrs))
 
     print(f"📌 Procesando {file_path} detectado como {'TROPOMI' if is_tropomi else 'TEMPO' if is_tempo else 'DESCONOCIDO'}")
 
@@ -136,6 +140,7 @@ def process_netcdf_to_rows(file_path, sat_name, lat_bounds=None, lon_bounds=None
 
         if var_no2 not in ds.variables:
             print("⚠ NO₂ troposférico no encontrado en TROPOMI")
+            ds.close()
             return []
 
         lats = ds["latitude"].values
@@ -143,7 +148,7 @@ def process_netcdf_to_rows(file_path, sat_name, lat_bounds=None, lon_bounds=None
         no2 = ds[var_no2].values
         qa = ds[var_qa].values if var_qa in ds.variables else np.ones_like(no2)
 
-        # Filtro geográfico (ejemplo Bogotá)
+        # Filtro geográfico
         if lat_bounds and lon_bounds:
             mask = (
                 (lats >= lat_bounds[0]) & (lats <= lat_bounds[1]) &
@@ -162,7 +167,7 @@ def process_netcdf_to_rows(file_path, sat_name, lat_bounds=None, lon_bounds=None
             })
 
     elif is_tempo:
-        # Variables clave en TEMPO (clima/atmósfera, no NO₂ directo)
+        # Variables clave en TEMPO
         vars_candidates = {
             "cloud_fraction": "product/cloud_fraction",
             "cloud_pressure": "product/cloud_pressure",
@@ -193,7 +198,6 @@ def process_netcdf_to_rows(file_path, sat_name, lat_bounds=None, lon_bounds=None
 
     ds.close()
     return rows
-
 
 def download_from_gdrive(file_id, output):
     url = f"https://drive.google.com/uc?id={file_id}"
@@ -570,27 +574,27 @@ def build_model_features():
     cur = conn.cursor()
     try:
         cur.execute("""
-        INSERT INTO model_features(datetime_utc, lat, lon, pm25, no2, o3, temp, wind_speed, other_features)
-        SELECT DISTINCT ON (g.datetime_utc, s.lat, s.lon)
-               g.datetime_utc, s.lat, s.lon,
-               g_pm25.value AS pm25,
-               g_no2.value AS no2,
-               g_o3.value AS o3,
-               w.temp,
-               w.wind_speed,
-               '{}'::jsonb
-        FROM measurements g
-        JOIN stations s ON g.station_id = s.id
-        LEFT JOIN measurements g_pm25 ON g_pm25.station_id = s.id AND g_pm25.parameter = 'pm25' AND g_pm25.datetime_utc = g.datetime_utc
-        LEFT JOIN measurements g_no2 ON g_no2.station_id = s.id AND g_no2.parameter = 'no2' AND g_no2.datetime_utc = g.datetime_utc
-        LEFT JOIN measurements g_o3 ON g_o3.station_id = s.id AND g_o3.parameter = 'o3' AND g_o3.datetime_utc = g.datetime_utc
-        LEFT JOIN weather w ON w.datetime_utc = g.datetime_utc
-        ON CONFLICT (datetime_utc, lat, lon) DO UPDATE
-        SET pm25 = EXCLUDED.pm25,
-            no2 = EXCLUDED.no2,
-            o3 = EXCLUDED.o3,
-            temp = EXCLUDED.temp,
-            wind_speed = EXCLUDED.wind_speed;
+            INSERT INTO model_features(datetime_utc, lat, lon, pm25, no2, o3, temp, wind_speed, other_features)
+            SELECT DISTINCT ON (g.datetime_utc, s.lat, s.lon)
+                g.datetime_utc, s.lat, s.lon,
+                g_pm25.value AS pm25,
+                g_no2.value AS no2,
+                g_o3.value AS o3,
+                w.temp,
+                w.wind_speed,
+                '{}'::jsonb
+            FROM measurements g
+            JOIN stations s ON g.station_id = s.id
+            LEFT JOIN measurements g_pm25 ON g_pm25.station_id = s.id AND g_pm25.parameter = 'pm25' AND g_pm25.datetime_utc = g.datetime_utc
+            LEFT JOIN measurements g_no2 ON g_no2.station_id = s.id AND g_no2.parameter = 'no2' AND g_no2.datetime_utc = g.datetime_utc
+            LEFT JOIN measurements g_o3 ON g_o3.station_id = s.id AND g_o3.parameter = 'o3' AND g_o3.datetime_utc = g.datetime_utc
+            LEFT JOIN weather_observations w ON w.datetime_utc = g.datetime_utc
+            ON CONFLICT (datetime_utc, lat, lon) DO UPDATE
+            SET pm25 = EXCLUDED.pm25,
+                no2 = EXCLUDED.no2,
+                o3 = EXCLUDED.o3,
+                temp = EXCLUDED.temp,
+                wind_speed = EXCLUDED.wind_speed;
         """)
         conn.commit()
         print("✅ Features construidas en model_features")
