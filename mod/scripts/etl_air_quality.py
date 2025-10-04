@@ -27,7 +27,6 @@ OPENWEATHER_KEY = "851fc0b7aecc41c3eed4ceb24d129f82"
 OPENWEATHER_CURRENT = "https://api.openweathermap.org/data/2.5/weather"
 OPENWEATHER_AIR = "http://api.openweathermap.org/data/2.5/air_pollution"
 
-CITY = "Bogota"   # usa sin tilde para OpenAQ
 COUNTRY = "CO"
 LAT = 4.7110
 LON = -74.0721
