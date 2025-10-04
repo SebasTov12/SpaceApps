@@ -1571,6 +1571,8 @@ body {
     }
     
     .data-sources {
+        margin-bottom: 50px; /* espacio debajo de cada sección */
+        padding: 20px;
         grid-template-columns: 1fr;
         gap: 1rem;
         margin-bottom: 1rem;
