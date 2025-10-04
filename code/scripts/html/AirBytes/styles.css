@@ -199,8 +199,9 @@ body {
 
 .content-section {
     display: none;
-    padding: 2rem 0;
+    padding: 3rem 0;
     min-height: 60vh;
+    margin-bottom: 2rem;
 }
 
 .content-section.active {
@@ -474,7 +475,7 @@ body {
     padding: 2rem;
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: 4rem;
 }
 
 .current-aqi-card {
@@ -484,6 +485,7 @@ body {
     padding: 2rem;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
+    margin: 2rem 0;
 }
 
 .card-header {
@@ -672,7 +674,8 @@ body {
 .data-sources {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1.5rem;
+    gap: 2.5rem;
+    margin: 2rem 0;
 }
 
 .source-card {
@@ -683,6 +686,7 @@ body {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+    margin-bottom: 1rem;
 }
 
 .source-card:hover {
@@ -746,6 +750,7 @@ body {
     padding: 2rem;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
+    margin: 2rem 0;
 }
 
 .prediction-section h2 {
@@ -904,6 +909,7 @@ body {
     padding: 2rem;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
+    margin: 2rem 0;
 }
 
 .forecast-section h2 {
@@ -957,6 +963,7 @@ body {
     padding: 2rem;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
+    margin: 2rem 0;
 }
 
 .alerts-section h2 {
@@ -1018,6 +1025,7 @@ body {
     padding: 2rem;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
+    margin: 2rem 0;
 }
 
 .map-section h2 {
@@ -1571,8 +1579,6 @@ body {
     }
     
     .data-sources {
-        margin-bottom: 50px; /* espacio debajo de cada sección */
-        padding: 20px;
         grid-template-columns: 1fr;
         gap: 1rem;
         margin-bottom: 1rem;
