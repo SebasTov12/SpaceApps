@@ -60,30 +60,41 @@ def download_file(url, out_path):
             f.write(chunk)
     return out_path
 
-def insert_satellite_rows(rows, table="satellite_observations"):
+def insert_measurements(rows):
+    """Inserta filas satelitales como measurements."""
     if not rows:
-        print(f"⚠ No hay filas para insertar en {table}")
+        print("⚠ No hay filas satelitales para insertar en measurements")
         return
 
     conn = get_conn()
     cur = conn.cursor()
-    try:
-        cur.executemany(
-            f"""
-            INSERT INTO {table} (satellite, parameter, lat, lon, value)
-            VALUES (%s, %s, %s, %s, %s)
-            ON CONFLICT DO NOTHING
-            """,
-            rows
-        )
-        conn.commit()
-        print(f"✅ Insertadas {len(rows)} filas en {table}")
-    except Exception as e:
-        conn.rollback()
-        print(f"❌ Error insertando en {table}: {e}")
-    finally:
-        cur.close()
-        conn.close()
+    inserted = 0
+    for r in rows:
+        try:
+            # asegurar estación dummy (TROPOMI/TEMPO)
+            cur.execute("""
+                INSERT INTO stations (nombre, lat, lon, tipo, fuente)
+                VALUES (%s,%s,%s,%s,%s)
+                ON CONFLICT (nombre) DO NOTHING
+            """, (r["station_id"], r["latitude"], r["longitude"], "satellite", "NASA/ESA"))
+
+            cur.execute("""
+                INSERT INTO measurements (station_id, datetime_utc, parameter, value, unit, provider)
+                SELECT s.id, %s, %s, %s, %s, %s
+                FROM stations s WHERE s.nombre = %s
+                ON CONFLICT (station_id, datetime_utc, parameter) DO NOTHING
+            """, (
+                r["datetime"], r["parameter"], r["value"], "mol/m2", "Satellite",
+                r["station_id"]
+            ))
+            inserted += 1
+        except Exception as e:
+            print("  ❌ Error insertando sat measurement:", e)
+
+    conn.commit()
+    cur.close()
+    conn.close()
+    print(f"✅ Insertadas {inserted} mediciones satelitales en measurements")
 
 
 def guess_pollutant_var(ds):
@@ -102,14 +113,27 @@ def guess_pollutant_var(ds):
             return var
     return None
 
+import gdown
+from datetime import datetime
+
+# ==========================
+# Procesadores
+# ==========================
 def process_tropomi_l2(file_path: str, qa_threshold: float = 0.75,
                        lat_bounds=None, lon_bounds=None) -> list:
     """
-    Procesa archivo Sentinel-5P TROPOMI L2 (NO2 troposférico).
-    Devuelve registros compatibles con measurements.
+    Procesa Sentinel-5P TROPOMI L2 NO₂ troposférico y devuelve registros listos para measurements.
+    DEMO: siempre limita a 50 filas para no sobrecargar la DB.
     """
+    import xarray as xr
+    import pandas as pd
+    from datetime import datetime, timezone
+
     try:
         ds = xr.open_dataset(file_path, group="PRODUCT")
+
+        dt_str = ds.attrs.get("time_coverage_start")
+        now = datetime.fromisoformat(dt_str.replace("Z", "+00:00")) if dt_str else datetime.now(timezone.utc)
 
         lat = ds["latitude"].values.flatten()
         lon = ds["longitude"].values.flatten()
@@ -123,31 +147,27 @@ def process_tropomi_l2(file_path: str, qa_threshold: float = 0.75,
             "qa_value": qa
         })
 
-        # Filtro QA
         df = df[df["qa_value"] >= qa_threshold]
 
-        # Bounding box opcional
+        # bounding box opcional
         if lat_bounds and lon_bounds:
-            df = df[
+            filtered = df[
                 (df["latitude"] >= lat_bounds[0]) & (df["latitude"] <= lat_bounds[1]) &
                 (df["longitude"] >= lon_bounds[0]) & (df["longitude"] <= lon_bounds[1])
             ]
+            if not filtered.empty:
+                df = filtered
 
-        # Fecha desde metadata global
-        datetime_val = None
-        try:
-            datetime_val = ds.attrs.get("time_coverage_start")
-            datetime_val = datetime.fromisoformat(datetime_val.replace("Z", "+00:00"))
-        except:
-            datetime_val = datetime.utcnow()
+        # ⚡ DEMO: limitar a 50 filas
+        df = df.head(50)
 
         records = []
         for _, row in df.iterrows():
             records.append({
                 "station_id": "TROPOMI",
-                "parameter": "no2",
+                "parameter": "no2_tropospheric_column",
                 "value": float(row["value"]),
-                "datetime": datetime_val,
+                "datetime": now,
                 "latitude": float(row["latitude"]),
                 "longitude": float(row["longitude"])
             })
@@ -158,57 +178,78 @@ def process_tropomi_l2(file_path: str, qa_threshold: float = 0.75,
         print(f"⚠ Error procesando TROPOMI L2: {e}")
         return []
 
+def process_tempo(file_path: str,
+                  lat_bounds=None, lon_bounds=None) -> list:
+    """
+    Procesa TEMPO L3 y devuelve registros listos para measurements.
+    DEMO: siempre limita a 50 filas (dummy si no hay variables útiles).
+    """
+    import xarray as xr
+    import pandas as pd
+    from datetime import datetime, timezone
 
-def process_tempo(file_path: str, lat_bounds=None, lon_bounds=None) -> list:
-    """
-    Procesa archivo TEMPO L2 (clouds).
-    Devuelve registros compatibles con measurements.
-    """
     try:
-        ds = xr.open_dataset(file_path, group="geolocation")
+        try:
+            ds = xr.open_dataset(file_path, group="geolocation")
+        except Exception:
+            ds = xr.open_dataset(file_path)
 
-        lat = ds["latitude"].values.flatten()
-        lon = ds["longitude"].values.flatten()
+        dt_str = ds.attrs.get("time_coverage_start")
+        now = datetime.fromisoformat(dt_str.replace("Z", "+00:00")) if dt_str else datetime.now(timezone.utc)
 
-        # Buscar cloud_fraction
-        cloud_fraction = None
+        lat, lon = None, None
+        for v in ds.variables:
+            if "lat" in v.lower() and lat is None:
+                lat = ds[v].values.flatten()
+            if "lon" in v.lower() and lon is None:
+                lon = ds[v].values.flatten()
+
+        if lat is None or lon is None:
+            print("⚠ TEMPO sin lat/lon válidos")
+            return []
+
+        # Buscar variable
+        data = None
+        param = "cloud_fraction"
         for var in ds.variables:
             if "cloud" in var.lower() and "fraction" in var.lower():
-                cloud_fraction = ds[var].values.flatten()
+                data = ds[var].values.flatten()
                 break
-
-        if cloud_fraction is None:
-            print("⚠ TEMPO sin cloud_fraction")
-            return []
+        if data is None:
+            for var in ds.variables:
+                if "no2" in var.lower() and "column" in var.lower():
+                    data = ds[var].values.flatten()
+                    param = var
+                    break
+        if data is None:
+            data = [0.0] * len(lat)
+            param = "cloud_fraction_dummy"
 
         df = pd.DataFrame({
             "latitude": lat,
             "longitude": lon,
-            "value": cloud_fraction
+            "value": data
         })
 
-        # Bounding box opcional
+        # bounding box opcional
         if lat_bounds and lon_bounds:
-            df = df[
+            filtered = df[
                 (df["latitude"] >= lat_bounds[0]) & (df["latitude"] <= lat_bounds[1]) &
                 (df["longitude"] >= lon_bounds[0]) & (df["longitude"] <= lon_bounds[1])
             ]
+            if not filtered.empty:
+                df = filtered
 
-        # Fecha desde metadata
-        datetime_val = None
-        try:
-            datetime_val = ds.attrs.get("time_coverage_start")
-            datetime_val = datetime.fromisoformat(datetime_val.replace("Z", "+00:00"))
-        except:
-            datetime_val = datetime.utcnow()
+        # ⚡ DEMO: limitar a 50 filas
+        df = df.head(50)
 
         records = []
         for _, row in df.iterrows():
             records.append({
                 "station_id": "TEMPO",
-                "parameter": "cloud_fraction",
-                "value": float(row["value"]),
-                "datetime": datetime_val,
+                "parameter": param,
+                "value": float(row["value"]) if row["value"] is not None else 0.0,
+                "datetime": now,
                 "latitude": float(row["latitude"]),
                 "longitude": float(row["longitude"])
             })
@@ -218,15 +259,20 @@ def process_tempo(file_path: str, lat_bounds=None, lon_bounds=None) -> list:
     except Exception as e:
         print(f"⚠ Error procesando TEMPO: {e}")
         return []
-    
-import gdown
 
+# ==========================
+# Utilidad descarga
+# ==========================
 def download_from_gdrive(file_id, output):
     url = f"https://drive.google.com/uc?id={file_id}"
     print(f"⬇ Descargando {output} desde Google Drive...")
     gdown.download(url, output, quiet=False, fuzzy=True)
     return output
 
+
+# ==========================
+# Fetch principal
+# ==========================
 def fetch_tempo_and_tropomi():
     """Descarga y procesa archivos de TROPOMI (Sentinel-5P) y TEMPO (NASA)"""
     rows_all = []
@@ -253,14 +299,14 @@ def fetch_tempo_and_tropomi():
 
     try:
         # ==========================
-        # 🛰️ TEMPO (Gridded NO2 L3)
+        # 🛰️ TEMPO (NO2/Clouds)
         # ==========================
         print("⬇ Descargando archivo TEMPO desde Google Drive...")
         tempo_file = download_from_gdrive(
             "1w4aufwFEnBxqZso4B7wtTivDG96Yqb7r",  # ID de Drive
             "tempo_sample.nc"
         )
-        print(f"📌 Procesando {tempo_file} como TEMPO L3 NO₂...")
+        print(f"📌 Procesando {tempo_file} como TEMPO...")
         tempo_rows = process_tempo(
             tempo_file,
             lat_bounds=(4, 6),   # ajusta para tu región
@@ -275,10 +321,11 @@ def fetch_tempo_and_tropomi():
     # Guardar en DB
     # ==========================
     if rows_all:
-        insert_satellite_rows(rows_all)
-        print(f"✅ Insertadas {len(rows_all)} filas en satellite_observations")
+        insert_measurements(rows_all)  # usa tu función que mete a measurements
+        print(f"✅ Insertadas {len(rows_all)} filas en measurements")
     else:
         print("⚠ No se insertaron filas de satélites (TROPOMI/TEMPO)")
+
 
 def request_with_retries(url, params=None, headers=None, max_retries=3, backoff=1.5):
     headers = headers or {}
@@ -404,83 +451,6 @@ def insert_station(conn, loc_id, name, city, country, lat, lon):
     finally:
         cur.close()
 
-# =================================
-# FETCH measurements tolerante a 404
-# =================================
-def fetch_measurements_for_location(location_id, date_from, date_to, limit=100):
-    """Descarga measurements para una estación, ignora si no hay datos (404)."""
-    headers = {"x-api-key": OPENAQ_KEY} if OPENAQ_KEY else {}
-    page = 1
-    total = 0
-    while True:
-        params = {
-            "location_id": location_id,
-            "limit": limit,
-            "page": page,
-            "date_from": date_from,
-            "date_to": date_to,
-            "sort": "asc"
-        }
-        try:
-            data = request_with_retries(OPENAQ_MEASUREMENTS, params=params, headers=headers)
-        except requests.exceptions.HTTPError as e:
-            if e.response.status_code == 404:
-                print(f"  ⚠ No hay datos para location_id={location_id} → saltando.")
-                return 0
-            else:
-                raise
-        results = data.get("results", [])
-        if not results:
-            break
-        for r in results:
-            timestamp = r.get("date", {}).get("utc")
-            param = r.get("parameter")
-            value = r.get("value")
-            unit = r.get("unit")
-            station = r.get("location")
-            insert_measurement_safe(station, timestamp, param, value, unit, "OpenAQ")
-            total += 1
-        page += 1
-        time.sleep(1.5)
-    return total
-
-def insert_measurement_safe(station_openaq, timestamp, param, value, unit, source):
-    try:
-        conn = get_conn()
-        cur = conn.cursor()
-
-        # Buscar id interno en tabla stations por nombre
-        cur.execute("SELECT id FROM stations WHERE nombre = %s", (station_openaq,))
-        row = cur.fetchone()
-        if not row:
-            print(f"⚠ station {station_openaq} no encontrada en DB → skip")
-            return
-        station_id = row[0]
-
-        col_map = {
-            "pm25": "pm25",
-            "pm10": "pm10",
-            "co": "co2",
-            "o3": "o3",
-            "no2": "no2",
-            "so2": "so2"
-        }
-        col = col_map.get(param)
-        if not col:
-            print(f"⚠ param {param} no mapeado → skip")
-            return
-
-        cur.execute("""
-            INSERT INTO measurements (station_id, datetime_utc, parameter, value, unit, provider)
-            VALUES (%s,%s,%s,%s,%s,%s)
-            ON CONFLICT (station_id, datetime_utc, parameter) DO NOTHING
-        """, (station_id, timestamp, param, value, unit, source))
-
-        conn.commit()
-        cur.close()
-        conn.close()
-    except Exception as e:
-        print(f"❌ Error insert measurement: {e}")
 
 # ================================
 # MAIN OpenAQ con resumen debug
@@ -523,21 +493,6 @@ def populate_openaq_historical(days=60):
     with_data = 0
     empty = 0
 
-    for loc in locs:
-        lid = loc.get("id") or loc.get("locationId")
-        if not lid:
-            continue
-        try:
-            count = fetch_measurements_for_location(lid, df, dt)
-            if count > 0:
-                print(f"  📥 location {lid} → {count} registros")
-                with_data += 1
-            else:
-                empty += 1
-            total += count
-        except Exception as e:
-            print(f"  ❌ Error fetch measurements for {lid}: {e}")
-
     print(f"✅ OpenAQ: total records inserted = {total}")
     print(f"📊 Resumen estaciones → con datos: {with_data}, sin datos: {empty}")
 
@@ -554,17 +509,6 @@ def fetch_openweather_current():
                         data["main"].get("pressure"), "OpenWeather")
     print("✅ OpenWeather current saved:", ts)
 
-def fetch_openweather_air():
-    params = {"lat": LAT, "lon": LON, "appid": OPENWEATHER_KEY}
-    data = request_with_retries(OPENWEATHER_AIR, params=params)
-    # data structure: list of {'main':..., 'components': {...}, 'dt': ...}
-    for item in data.get("list", []):
-        ts = datetime.fromtimestamp(item.get("dt"), tz=timezone.utc)
-        components = item.get("components", {})
-        # insert into measurements as e.g. co, no2, o3 (note: adapt to your schema)
-        insert_measurement_safe("OpenWeather_air", ts, "co", components.get("co"), "µg/m3", "OpenWeather")
-        insert_measurement_safe("OpenWeather_air", ts, "no2", components.get("no2"), "µg/m3", "OpenWeather")
-    print("✅ OpenWeather air_pollution saved.")
 
 def insert_weather_safe(timestamp, temp, humidity, wind_speed, wind_dir, pressure, source="OpenWeather"):
     try:
@@ -678,7 +622,6 @@ if __name__ == "__main__":
     # 2) OpenWeather
     try:
         fetch_openweather_current()
-        fetch_openweather_air()
     except Exception as e:
         print("⚠ OpenWeather falló:", e)
 
