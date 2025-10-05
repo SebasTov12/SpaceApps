@@ -1,8 +1,4 @@
-Perfecto 🚀 Aquí tienes un **README.md** listo para tu repo del hackathon (AirBytes). Está escrito en inglés (lo esperan así en Devpost/GitHub), pero si quieres lo adapto a español. Incluye: visión, instalación, uso, datos, arquitectura, roadmap y créditos.
 
----
-
-```markdown
 # 🌍 AirBytes — AI-powered Air Quality Forecasting Assistant
 
 **AirBytes** is a prototype built for the **NASA International Space Apps Challenge 2025**.  
