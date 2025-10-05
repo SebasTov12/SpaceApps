@@ -41,9 +41,15 @@ def clean_str(value):
 
 #-------------- CONECT TO DB ------------
 def get_conn():
-    return psycopg2.connect(
-        **DB_CONFIG,
+    dsn = (
+        f"dbname={DB_CONFIG['dbname']} "
+        f"user={DB_CONFIG['user']} "
+        f"password={DB_CONFIG['password']} "
+        f"host={DB_CONFIG['host']} "
+        f"port={DB_CONFIG['port']} "
+        f"options='-c client_encoding=UTF8'"
     )
+    return psycopg2.connect(dsn)
 
 # ---------------- SATELLITE NRT (TEMPO + TROPOMI) ----------------
 
