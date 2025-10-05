@@ -19,6 +19,23 @@ DB_CONFIG = {
     "port": 5432,
 }
 
+from sqlalchemy import create_engine
+import psycopg2
+
+# Crea el engine de SQLAlchemy
+air_quality_engine = create_engine("postgresql://airbyter:AirBytes2025@localhost:5432/air_quality_db")
+
+# Obtiene la conexión psycopg2 desde el engine
+conn = air_quality_engine.raw_connection()
+cur = conn.cursor()
+
+cur.execute("SELECT NOW();")  # Ejemplo de prueba
+print(cur.fetchone())
+
+cur.close()
+conn.close()
+
+
 OPENAQ_KEY = "523eb1251f97abc8f75087ea19ba06a04b2e6c04f4d128ef68862bf3a5b93a92"
 OPENAQ_LOCATIONS = "https://api.openaq.org/v3/locations"
 OPENAQ_MEASUREMENTS = "https://api.openaq.org/v3/measurements"
@@ -41,21 +58,15 @@ def clean_str(value):
 
 #-------------- CONECT TO DB ------------
 def get_conn():
-    """Conexión robusta a PostgreSQL, forzando codificación UTF-8"""
     import psycopg2
-    import urllib.parse
-
-    dbname = DB_CONFIG["dbname"]
-    user = urllib.parse.quote(DB_CONFIG["user"])
-    password = urllib.parse.quote(DB_CONFIG["password"])
-    host = DB_CONFIG["host"]
-    port = DB_CONFIG["port"]
-
-    dsn = f"dbname={dbname} user={user} password={password} host={host} port={port} options='-c client_encoding=UTF8'"
-
-    return psycopg2.connect(dsn.encode("utf-8", errors="replace").decode("utf-8", errors="replace"))
-
-
+    return psycopg2.connect(
+        dbname=DB_CONFIG["dbname"],
+        user=DB_CONFIG["user"],
+        password=DB_CONFIG["password"],
+        host=DB_CONFIG["host"],
+        port=DB_CONFIG["port"],
+        options='-c client_encoding=UTF8'
+    )
 
 # ---------------- SATELLITE NRT (TEMPO + TROPOMI) ----------------
 
