@@ -15,7 +15,7 @@ DB_CONFIG = {
     "dbname": "air_quality_db",
     "user": "airbyter",
     "password": "AirBytes2025",
-    "host": "192.168.2.8",
+    "host": "localhost",
     "port": 5432
 }
 
