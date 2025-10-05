@@ -108,7 +108,7 @@ Built with 💙 for **NASA Space Apps Challenge 2025**
 * FullStack – Juan Sebastián Murcia Tovar
 * FullStack – Daniel Santiago Polanco Reyes
 * FullStack – Kevin David Rodriguez Hernandez
-* FullStack – Nicolás Salazar Tamayo
+* FullStack | Cybersecurity Analyst – Nicolás Salazar Tamayo
 * FullStack – Juan Angel Pacheco Valencia
 * FullStack – Carlos Rivera
 
