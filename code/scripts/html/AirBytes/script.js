@@ -1,23 +1,36 @@
 class AirBytesApp {
     constructor() {
-    
-        this.nasaApiKey = '8VFqhy83c3Ji3gbebKoLe3DfMO4UkothFZJElztB';
-        this.tempoBaseUrl = 'https://api.nasa.gov/planetary/earth/assets';
+        // Load configuration from config.js
+        this.config = window.AIRBYTES_CONFIG || {};
+        
+        this.nasaApiKey = this.config.nasa?.apiKey || '8VFqhy83c3Ji3gbebKoLe3DfMO4UkothFZJElztB';
+        this.tempoBaseUrl = this.config.nasa?.baseUrl || 'https://api.nasa.gov/planetary/earth/assets';
         this.tempoEndpoints = {
             no2: `${this.tempoBaseUrl}`,
             o3: `${this.tempoBaseUrl}`,
             hcho: `${this.tempoBaseUrl}`
         };
         
-        this.weatherApiKey = '147e23d2ab0429fc6473a00033041c0d';
-        this.weatherBaseUrl = 'https://api.openweathermap.org/data/2.5';
+        this.weatherApiKey = this.config.weather?.apiKey || '147e23d2ab0429fc6473a00033041c0d';
+        this.weatherBaseUrl = this.config.weather?.baseUrl || 'https://api.openweathermap.org/data/2.5';
         
-        this.airQualityApiKey = '147e23d2ab0429fc6473a00033041c0d';
-        this.airQualityBaseUrl = 'https://api.openweathermap.org/data/2.5';
+        this.airQualityApiKey = this.config.airQuality?.apiKey || '147e23d2ab0429fc6473a00033041c0d';
+        this.airQualityBaseUrl = this.config.airQuality?.baseUrl || 'https://api.openweathermap.org/data/2.5';
+        
+        // Use real data setting from config
+        this.useRealData = this.config.app?.useRealData !== false;
+        
+        // Debug logging
+        console.log('AirBytes Configuration Loaded:');
+        console.log('- Use Real Data:', this.useRealData);
+        console.log('- Weather API Key:', this.weatherApiKey);
+        console.log('- Air Quality API Key:', this.airQualityApiKey);
+        console.log('- Config Object:', this.config);
         
         this.currentLocation = 'colombia';
         this.updateInterval = 600000; // 10 minutes
         this.agriculturalUpdateInterval = 900000; // 15 minutes for agricultural data
+        this.notificationCheckInterval = 300000; // 5 minutes for notification checks
         this.isLoading = false;
         this.useRealData = true;
         
@@ -32,6 +45,20 @@ class AirBytesApp {
         this.isUsingCurrentLocation = false;
         
         this.currentSection = 'today';
+        
+        // Notification settings
+        this.notificationPermission = 'default';
+        this.pushSubscription = null;
+        this.notificationSettings = {
+            enabled: false,
+            aqiThreshold: 100,
+            respiratoryAlerts: true,
+            cardiacAlerts: true,
+            pediatricAlerts: true,
+            elderlyAlerts: true,
+            weatherAlerts: true
+        };
+        
         this.northAmericanRegions = {
             'north-america': { name: 'Norteamérica', lat: 45.0, lon: -100.0, elevation: 500, useTempo: true },
             'usa': { name: 'Estados Unidos', lat: 39.8283, lon: -98.5795, elevation: 500, useTempo: true },
@@ -728,6 +755,9 @@ class AirBytesApp {
             case 'farmers':
                 this.loadFarmersData();
                 break;
+            case 'health':
+                this.loadHealthData();
+                break;
         }
     }
 
@@ -990,6 +1020,1365 @@ class AirBytesApp {
         }
     }
 
+    // Health Functions
+    async loadHealthData() {
+        try {
+            // Load health configuration first
+            this.setupHealthConfiguration();
+            
+            // Setup notification settings
+            this.setupNotificationSettings();
+            
+            // Initialize notifications
+            this.initializeNotifications();
+            
+            // Show loading state
+            this.showHealthLoadingState();
+            
+            // Load data with error handling
+            let weatherData, aqiData;
+            try {
+                weatherData = await this.getCurrentWeatherData();
+                aqiData = await this.getCurrentAQIData();
+            } catch (dataError) {
+                console.error('Error loading health data:', dataError);
+                // Use fallback data
+                weatherData = this.generateSimulatedWeatherData(this.getCurrentLocationData());
+                aqiData = this.generateSimulatedAQIData();
+            }
+            
+            // Update all health sections
+            await this.updateHealthRiskAssessment(weatherData, aqiData);
+            await this.updateHealthAlerts(weatherData, aqiData);
+            await this.updateMedicalRecommendations(weatherData, aqiData);
+            await this.loadHealthForecast();
+            
+            // Update data source status
+            this.updateDataSourceStatus(weatherData, aqiData);
+            
+            // Check for air quality alerts
+            this.checkAirQualityAlerts();
+            
+            // Force test notification if enabled
+            if (this.notificationSettings.enabled) {
+                setTimeout(() => {
+                    this.sendTestAlert();
+                }, 3000);
+            }
+            
+            // Hide loading state
+            this.hideHealthLoadingState();
+            
+        } catch (error) {
+            console.error('Error loading health data:', error);
+            this.hideHealthLoadingState();
+            this.showNotification('Error al cargar datos de salud', 'error');
+        }
+    }
+
+    showHealthLoadingState() {
+        const loadingElements = document.querySelectorAll('#health-section .loading-alerts, #health-section .loading-forecast, #health-section .loading-recommendation');
+        loadingElements.forEach(element => {
+            element.style.display = 'flex';
+        });
+    }
+
+    hideHealthLoadingState() {
+        const loadingElements = document.querySelectorAll('#health-section .loading-alerts, #health-section .loading-forecast, #health-section .loading-recommendation');
+        loadingElements.forEach(element => {
+            element.style.display = 'none';
+        });
+    }
+
+    async updateHealthRiskAssessment(weatherData, aqiData) {
+        try {
+            const locationData = this.getCurrentLocationData();
+            
+            // Update location and timestamp
+            document.getElementById('healthLocation').textContent = locationData.name;
+            document.getElementById('healthTimestamp').textContent = `Última actualización: ${new Date().toLocaleTimeString('es-ES')}`;
+            
+            // Calculate health risks
+            const risks = this.calculateHealthRisks(weatherData, aqiData);
+            
+            // Update risk displays
+            this.updateRiskDisplay('respiratoryRiskValue', risks.respiratory);
+            this.updateRiskDisplay('cardiacRiskValue', risks.cardiac);
+            this.updateRiskDisplay('pediatricRiskValue', risks.pediatric);
+            this.updateRiskDisplay('elderlyRiskValue', risks.elderly);
+            
+        } catch (error) {
+            console.error('Error updating health risk assessment:', error);
+        }
+    }
+
+    calculateHealthRisks(weatherData, aqiData) {
+        const aqi = aqiData.aqi || 50;
+        const temperature = weatherData.temperature || 20;
+        const humidity = weatherData.humidity || 50;
+        const windSpeed = weatherData.windSpeed || 10;
+        
+        const risks = {
+            respiratory: this.getRiskLevel(aqi, 'respiratory'),
+            cardiac: this.getRiskLevel(aqi, 'cardiac'),
+            pediatric: this.getRiskLevel(aqi, 'pediatric'),
+            elderly: this.getRiskLevel(aqi, 'elderly')
+        };
+        
+        // Adjust risks based on weather conditions
+        if (temperature < 5 || temperature > 35) {
+            risks.respiratory = this.increaseRiskLevel(risks.respiratory);
+            risks.cardiac = this.increaseRiskLevel(risks.cardiac);
+        }
+        
+        if (humidity > 80) {
+            risks.respiratory = this.increaseRiskLevel(risks.respiratory);
+        }
+        
+        return risks;
+    }
+
+    getRiskLevel(aqi, riskType) {
+        if (aqi <= 50) return 'Bajo';
+        if (aqi <= 100) return 'Moderado';
+        if (aqi <= 150) return 'Alto';
+        if (aqi <= 200) return 'Muy Alto';
+        return 'Crítico';
+    }
+
+    increaseRiskLevel(riskLevel) {
+        const levels = ['Bajo', 'Moderado', 'Alto', 'Muy Alto', 'Crítico'];
+        const currentIndex = levels.indexOf(riskLevel);
+        return levels[Math.min(currentIndex + 1, levels.length - 1)];
+    }
+
+    updateRiskDisplay(elementId, riskLevel) {
+        const element = document.getElementById(elementId);
+        element.textContent = riskLevel;
+        element.className = 'risk-value';
+        
+        if (riskLevel === 'Bajo') element.classList.add('low');
+        else if (riskLevel === 'Moderado') element.classList.add('moderate');
+        else element.classList.add('high');
+    }
+
+    async updateHealthAlerts(weatherData, aqiData) {
+        try {
+            const alerts = this.generateHealthAlerts(weatherData, aqiData);
+            const alertsContainer = document.getElementById('healthAlertsContent');
+            
+            if (alerts.length === 0) {
+                alertsContainer.innerHTML = '<div class="no-alerts">No hay alertas médicas activas</div>';
+                return;
+            }
+            
+            alertsContainer.innerHTML = alerts.map(alert => `
+                <div class="alert-item health-alert-item">
+                    <i class="fas ${alert.icon}"></i>
+                    <div class="alert-info">
+                        <strong>${alert.title}</strong>
+                        <p>${alert.message}</p>
+                        <small>${alert.timestamp}</small>
+                    </div>
+                </div>
+            `).join('');
+            
+        } catch (error) {
+            console.error('Error updating health alerts:', error);
+        }
+    }
+
+    generateHealthAlerts(weatherData, aqiData) {
+        const alerts = [];
+        const aqi = aqiData.aqi || 50;
+        const temperature = weatherData.temperature || 20;
+        const humidity = weatherData.humidity || 50;
+        
+        // AQI-based alerts
+        if (aqi > 100) {
+            alerts.push({
+                icon: 'fa-lungs',
+                title: 'Alerta Respiratoria',
+                message: `AQI ${aqi}: Recomendar mascarillas a pacientes respiratorios y limitar actividades al aire libre.`,
+                timestamp: new Date().toLocaleTimeString('es-ES')
+            });
+        }
+        
+        if (aqi > 150) {
+            alerts.push({
+                icon: 'fa-heart',
+                title: 'Alerta Cardíaca',
+                message: `AQI ${aqi}: Pacientes cardíacos deben evitar esfuerzos físicos al aire libre.`,
+                timestamp: new Date().toLocaleTimeString('es-ES')
+            });
+        }
+        
+        if (aqi > 200) {
+            alerts.push({
+                icon: 'fa-exclamation-triangle',
+                title: 'Alerta Crítica',
+                message: `AQI ${aqi}: Considerar cancelar cirugías no urgentes y preparar equipos de emergencia.`,
+                timestamp: new Date().toLocaleTimeString('es-ES')
+            });
+        }
+        
+        // Weather-based alerts
+        if (temperature < 5) {
+            alerts.push({
+                icon: 'fa-thermometer-half',
+                title: 'Alerta por Frío',
+                message: `Temperatura ${temperature}°C: Aumentar precauciones para pacientes respiratorios y cardíacos.`,
+                timestamp: new Date().toLocaleTimeString('es-ES')
+            });
+        }
+        
+        if (humidity > 80) {
+            alerts.push({
+                icon: 'fa-tint',
+                title: 'Alerta por Humedad',
+                message: `Humedad ${humidity}%: Mayor riesgo de problemas respiratorios en pacientes sensibles.`,
+                timestamp: new Date().toLocaleTimeString('es-ES')
+            });
+        }
+        
+        return alerts;
+    }
+
+    async updateMedicalRecommendations(weatherData, aqiData) {
+        try {
+            const recommendations = this.generateMedicalRecommendations(weatherData, aqiData);
+            
+            // Update hospital recommendations
+            document.getElementById('hospitalRecommendations').innerHTML = 
+                recommendations.hospital.map(rec => `<li>${rec}</li>`).join('');
+            
+            // Update clinic recommendations
+            document.getElementById('clinicRecommendations').innerHTML = 
+                recommendations.clinic.map(rec => `<li>${rec}</li>`).join('');
+            
+            // Update emergency recommendations
+            document.getElementById('emergencyRecommendations').innerHTML = 
+                recommendations.emergency.map(rec => `<li>${rec}</li>`).join('');
+            
+            // Update homecare recommendations
+            document.getElementById('homecareRecommendations').innerHTML = 
+                recommendations.homecare.map(rec => `<li>${rec}</li>`).join('');
+            
+        } catch (error) {
+            console.error('Error updating medical recommendations:', error);
+        }
+    }
+
+    generateMedicalRecommendations(weatherData, aqiData) {
+        const aqi = aqiData.aqi || 50;
+        const temperature = weatherData.temperature || 20;
+        const humidity = weatherData.humidity || 50;
+        
+        const recommendations = {
+            hospital: [],
+            clinic: [],
+            emergency: [],
+            homecare: []
+        };
+        
+        // Hospital recommendations
+        if (aqi > 100) {
+            recommendations.hospital.push('Aumentar ventilación en salas de cuidados intensivos');
+            recommendations.hospital.push('Revisar filtros de aire en áreas críticas');
+            recommendations.hospital.push('Considerar limitar visitas de familiares');
+        }
+        
+        if (aqi > 150) {
+            recommendations.hospital.push('Preparar equipos adicionales para emergencias respiratorias');
+            recommendations.hospital.push('Revisar protocolos de cirugías no urgentes');
+        }
+        
+        // Clinic recommendations
+        if (aqi > 75) {
+            recommendations.clinic.push('Recomendar mascarillas a pacientes respiratorios');
+            recommendations.clinic.push('Programar citas de seguimiento más frecuentes');
+        }
+        
+        if (aqi > 100) {
+            recommendations.clinic.push('Considerar consultas telefónicas para pacientes de riesgo');
+            recommendations.clinic.push('Aumentar stock de medicamentos respiratorios');
+        }
+        
+        // Emergency recommendations
+        if (aqi > 100) {
+            recommendations.emergency.push('Preparar equipos para picos de llamadas respiratorias');
+            recommendations.emergency.push('Optimizar rutas de ambulancias evitando zonas contaminadas');
+        }
+        
+        if (aqi > 150) {
+            recommendations.emergency.push('Activar protocolos de emergencia ambiental');
+            recommendations.emergency.push('Coordinar con hospitales para preparar camas adicionales');
+        }
+        
+        // Homecare recommendations
+        if (aqi > 50) {
+            recommendations.homecare.push('Recomendar cerrar ventanas y usar purificadores de aire');
+            recommendations.homecare.push('Limitar actividades al aire libre para pacientes sensibles');
+        }
+        
+        if (aqi > 100) {
+            recommendations.homecare.push('Recomendar mascarillas N95 para salidas esenciales');
+            recommendations.homecare.push('Aumentar frecuencia de visitas domiciliarias');
+        }
+        
+        return recommendations;
+    }
+
+    async loadHealthForecast() {
+        try {
+            const forecast = await this.getHealthForecast();
+            const forecastContainer = document.getElementById('healthForecastContent');
+            
+            forecastContainer.innerHTML = `
+                <div class="health-forecast-timeline">
+                    ${forecast.map(day => `
+                        <div class="forecast-day health-forecast-day">
+                            <div class="forecast-day-name">${day.date}</div>
+                            <div class="forecast-day-aqi">AQI: ${day.aqi}</div>
+                            <div class="forecast-day-risk">Riesgo: ${day.riskLevel}</div>
+                            <div class="forecast-day-recommendations">
+                                ${day.recommendations.map(rec => `<div class="forecast-recommendation">${rec}</div>`).join('')}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+        } catch (error) {
+            console.error('Error loading health forecast:', error);
+            document.getElementById('healthForecastContent').innerHTML = 
+                '<div class="forecast-error">Error al cargar pronóstico de salud</div>';
+        }
+    }
+
+    async getHealthForecast() {
+        // Simulate health forecast data
+        const forecast = [];
+        for (let i = 0; i < 5; i++) {
+            const date = new Date();
+            date.setDate(date.getDate() + i);
+            
+            const aqi = 50 + Math.random() * 100;
+            const riskLevel = this.getRiskLevel(aqi, 'respiratory');
+            
+            forecast.push({
+                date: date.toLocaleDateString('es-ES', { weekday: 'short', month: 'short', day: 'numeric' }),
+                aqi: Math.round(aqi),
+                riskLevel: riskLevel,
+                recommendations: this.getForecastRecommendations(aqi)
+            });
+        }
+        
+        return forecast;
+    }
+
+    getForecastRecommendations(aqi) {
+        const recommendations = [];
+        
+        if (aqi > 100) {
+            recommendations.push('Preparar equipos adicionales');
+            recommendations.push('Revisar protocolos de emergencia');
+        }
+        
+        if (aqi > 150) {
+            recommendations.push('Activar alertas médicas');
+            recommendations.push('Coordinar con servicios de emergencia');
+        }
+        
+        return recommendations;
+    }
+
+    setupHealthConfiguration() {
+        // Wait for DOM elements to be available
+        setTimeout(() => {
+            try {
+                // Load saved health configuration
+                const savedConfig = localStorage.getItem('healthConfiguration');
+                if (savedConfig) {
+                    const config = JSON.parse(savedConfig);
+                    
+                    // Set alert checkboxes
+                    const alertRespiratory = document.getElementById('alertRespiratory');
+                    const alertCardiac = document.getElementById('alertCardiac');
+                    const alertPediatric = document.getElementById('alertPediatric');
+                    const alertElderly = document.getElementById('alertElderly');
+                    
+                    if (alertRespiratory) alertRespiratory.checked = config.alertRespiratory !== false;
+                    if (alertCardiac) alertCardiac.checked = config.alertCardiac !== false;
+                    if (alertPediatric) alertPediatric.checked = config.alertPediatric !== false;
+                    if (alertElderly) alertElderly.checked = config.alertElderly !== false;
+                    
+                    // Set thresholds
+                    const criticalThreshold = document.getElementById('criticalThreshold');
+                    const alertThreshold = document.getElementById('alertThreshold');
+                    
+                    if (criticalThreshold) criticalThreshold.value = config.criticalThreshold || 100;
+                    if (alertThreshold) alertThreshold.value = config.alertThreshold || 50;
+                }
+                
+                // Add event listeners
+                const saveBtn = document.getElementById('saveHealthConfigBtn');
+                if (saveBtn) {
+                    saveBtn.addEventListener('click', () => {
+                        this.saveHealthConfiguration();
+                    });
+                }
+                
+                // Add click handlers for alert options
+                const alertOptions = document.querySelectorAll('.alert-option');
+                alertOptions.forEach(option => {
+                    option.addEventListener('click', (e) => {
+                        const checkbox = option.querySelector('input[type="checkbox"]');
+                        if (checkbox && e.target !== checkbox) {
+                            checkbox.checked = !checkbox.checked;
+                            checkbox.dispatchEvent(new Event('change'));
+                        }
+                    });
+                });
+            } catch (error) {
+                console.error('Error setting up health configuration:', error);
+            }
+        }, 100);
+    }
+
+    saveHealthConfiguration() {
+        const config = {
+            alertRespiratory: document.getElementById('alertRespiratory').checked,
+            alertCardiac: document.getElementById('alertCardiac').checked,
+            alertPediatric: document.getElementById('alertPediatric').checked,
+            alertElderly: document.getElementById('alertElderly').checked,
+            criticalThreshold: parseInt(document.getElementById('criticalThreshold').value),
+            alertThreshold: parseInt(document.getElementById('alertThreshold').value)
+        };
+        
+        localStorage.setItem('healthConfiguration', JSON.stringify(config));
+        this.showNotification('Configuración de salud guardada', 'success');
+    }
+
+    // Push Notification Functions
+    async initializeNotifications() {
+        try {
+            console.log('Initializing notifications...');
+            
+            // Check if notifications are supported
+            if (!('Notification' in window)) {
+                console.log('Notifications not supported in this browser');
+                alert('Este navegador no soporta notificaciones');
+                return false;
+            }
+
+            console.log('Current notification permission:', Notification.permission);
+
+            // Request permission immediately
+            if (Notification.permission === 'default') {
+                console.log('Requesting notification permission...');
+                const permission = await Notification.requestPermission();
+                console.log('Permission result:', permission);
+                this.notificationPermission = permission;
+                
+                if (permission === 'granted') {
+                    this.showNotification('Notificaciones activadas correctamente', 'success');
+                    // Send welcome notification immediately
+                    this.sendWelcomeNotification();
+                } else {
+                    alert('Las notificaciones fueron denegadas. Por favor, habilítalas en la configuración del navegador.');
+                    return false;
+                }
+            } else if (Notification.permission === 'granted') {
+                console.log('Notifications already granted');
+                this.notificationPermission = 'granted';
+                // Send welcome notification if first time
+                this.sendWelcomeNotification();
+            } else {
+                console.log('Notifications denied');
+                alert('Las notificaciones están bloqueadas. Por favor, habilítalas en la configuración del navegador.');
+                return false;
+            }
+
+            // Try to register service worker (optional)
+            try {
+                if ('serviceWorker' in navigator) {
+                    const registration = await navigator.serviceWorker.register('/sw.js');
+                    console.log('Service Worker registered:', registration);
+                }
+            } catch (swError) {
+                console.log('Service Worker registration failed, using basic notifications:', swError);
+            }
+
+            // Load notification settings
+            this.loadNotificationSettings();
+
+            // Run diagnostic
+            this.checkNotificationSupport();
+
+            // Send immediate test notification
+            setTimeout(() => {
+                this.sendImmediateTestNotification();
+            }, 1000);
+
+            return true;
+        } catch (error) {
+            console.error('Error initializing notifications:', error);
+            return false;
+        }
+    }
+
+    async requestNotificationPermission() {
+        try {
+            const permission = await Notification.requestPermission();
+            this.notificationPermission = permission;
+            
+            if (permission === 'granted') {
+                this.showNotification('Notificaciones activadas', 'success');
+                this.notificationSettings.enabled = true;
+                this.saveNotificationSettings();
+                return true;
+            } else {
+                this.showNotification('Notificaciones denegadas', 'warning');
+                return false;
+            }
+        } catch (error) {
+            console.error('Error requesting notification permission:', error);
+            return false;
+        }
+    }
+
+    loadNotificationSettings() {
+        const savedSettings = localStorage.getItem('notificationSettings');
+        if (savedSettings) {
+            this.notificationSettings = { ...this.notificationSettings, ...JSON.parse(savedSettings) };
+        }
+    }
+
+    saveNotificationSettings() {
+        localStorage.setItem('notificationSettings', JSON.stringify(this.notificationSettings));
+    }
+
+    async sendPushNotification(title, body, data = {}) {
+        try {
+            console.log('Attempting to send notification:', title);
+            
+            // Check if service worker is available
+            if (!('serviceWorker' in navigator)) {
+                console.log('Service Worker not supported, using basic notification');
+                return this.sendBasicNotification(title, body, data);
+            }
+
+            // Check if service worker is ready
+            const registration = await navigator.serviceWorker.ready;
+            console.log('Service Worker ready:', registration);
+            
+            const options = {
+                body: body,
+                icon: '/airbytes_favicon.png',
+                badge: '/airbytes_favicon.png',
+                vibrate: [200, 100, 200],
+                data: {
+                    dateOfArrival: Date.now(),
+                    ...data
+                },
+                actions: [
+                    {
+                        action: 'explore',
+                        title: 'Ver detalles',
+                        icon: '/airbytes_favicon.png'
+                    },
+                    {
+                        action: 'close',
+                        title: 'Cerrar',
+                        icon: '/airbytes_favicon.png'
+                    }
+                ],
+                requireInteraction: true,
+                silent: false,
+                tag: 'air-quality-alert'
+            };
+
+            await registration.showNotification(title, options);
+            console.log('Notification sent successfully via Service Worker');
+            return true;
+        } catch (error) {
+            console.error('Error sending push notification:', error);
+            // Fallback to basic notification
+            return this.sendBasicNotification(title, body, data);
+        }
+    }
+
+    async sendBasicNotification(title, body, data = {}) {
+        try {
+            if (Notification.permission !== 'granted') {
+                console.log('Notification permission not granted');
+                return false;
+            }
+
+            const notification = new Notification(title, {
+                body: body,
+                icon: '/airbytes_favicon.png',
+                badge: '/airbytes_favicon.png',
+                tag: 'air-quality-alert',
+                data: data,
+                requireInteraction: true
+            });
+
+            notification.onclick = function() {
+                window.focus();
+                notification.close();
+            };
+
+            console.log('Basic notification sent successfully');
+            return true;
+        } catch (error) {
+            console.error('Error sending basic notification:', error);
+            return false;
+        }
+    }
+
+    async checkAirQualityAlerts() {
+        try {
+            console.log('Checking air quality alerts...');
+            console.log('Notification settings:', this.notificationSettings);
+            
+            if (!this.notificationSettings.enabled) {
+                console.log('Notifications disabled in settings');
+                return;
+            }
+
+            const aqiData = await this.getCurrentAQIData();
+            const weatherData = await this.getCurrentWeatherData();
+            const locationData = this.getCurrentLocationData();
+
+            const aqi = aqiData.aqi || 50;
+            const temperature = weatherData.temperature || 20;
+            const humidity = weatherData.humidity || 50;
+
+            console.log('Current AQI:', aqi, 'Threshold:', this.notificationSettings.aqiThreshold);
+
+            // Check AQI alerts
+            if (aqi >= this.notificationSettings.aqiThreshold) {
+                const alertLevel = this.getAQILevel(aqi);
+                const title = `🚨 Alerta de Calidad del Aire - ${alertLevel}`;
+                const body = `AQI: ${aqi} en ${locationData.name}. ${this.getAQIRecommendation(aqi)}`;
+                
+                console.log('Sending AQI alert:', title);
+                await this.sendPushNotification(title, body, {
+                    type: 'aqi_alert',
+                    aqi: aqi,
+                    location: locationData.name,
+                    level: alertLevel
+                });
+            }
+
+            // Check respiratory alerts
+            if (this.notificationSettings.respiratoryAlerts && aqi > 75) {
+                const title = '🫁 Alerta Respiratoria';
+                const body = `AQI ${aqi}: Pacientes respiratorios deben usar mascarillas y limitar actividades al aire libre.`;
+                
+                await this.sendPushNotification(title, body, {
+                    type: 'respiratory_alert',
+                    aqi: aqi,
+                    location: locationData.name
+                });
+            }
+
+            // Check cardiac alerts
+            if (this.notificationSettings.cardiacAlerts && aqi > 100) {
+                const title = '❤️ Alerta Cardíaca';
+                const body = `AQI ${aqi}: Pacientes cardíacos deben evitar esfuerzos físicos al aire libre.`;
+                
+                await this.sendPushNotification(title, body, {
+                    type: 'cardiac_alert',
+                    aqi: aqi,
+                    location: locationData.name
+                });
+            }
+
+            // Check pediatric alerts
+            if (this.notificationSettings.pediatricAlerts && aqi > 50) {
+                const title = '👶 Alerta Pediátrica';
+                const body = `AQI ${aqi}: Niños y bebés deben limitar tiempo al aire libre.`;
+                
+                await this.sendPushNotification(title, body, {
+                    type: 'pediatric_alert',
+                    aqi: aqi,
+                    location: locationData.name
+                });
+            }
+
+            // Check elderly alerts
+            if (this.notificationSettings.elderlyAlerts && aqi > 75) {
+                const title = '👴 Alerta Adultos Mayores';
+                const body = `AQI ${aqi}: Adultos mayores deben evitar actividades al aire libre.`;
+                
+                await this.sendPushNotification(title, body, {
+                    type: 'elderly_alert',
+                    aqi: aqi,
+                    location: locationData.name
+                });
+            }
+
+            // Check weather alerts
+            if (this.notificationSettings.weatherAlerts) {
+                if (temperature < 5) {
+                    const title = '❄️ Alerta por Frío';
+                    const body = `Temperatura ${temperature}°C: Mayor riesgo para pacientes respiratorios y cardíacos.`;
+                    
+                    await this.sendPushNotification(title, body, {
+                        type: 'weather_alert',
+                        temperature: temperature,
+                        location: locationData.name
+                    });
+                }
+
+                if (humidity > 80) {
+                    const title = '💧 Alerta por Humedad';
+                    const body = `Humedad ${humidity}%: Mayor riesgo de problemas respiratorios.`;
+                    
+                    await this.sendPushNotification(title, body, {
+                        type: 'humidity_alert',
+                        humidity: humidity,
+                        location: locationData.name
+                    });
+                }
+            }
+
+        } catch (error) {
+            console.error('Error checking air quality alerts:', error);
+        }
+    }
+
+    getAQILevel(aqi) {
+        if (aqi <= 50) return 'Bueno';
+        if (aqi <= 100) return 'Moderado';
+        if (aqi <= 150) return 'Insalubre para grupos sensibles';
+        if (aqi <= 200) return 'Insalubre';
+        if (aqi <= 300) return 'Muy insalubre';
+        return 'Peligroso';
+    }
+
+    getAQIRecommendation(aqi) {
+        if (aqi <= 50) return 'Calidad del aire satisfactoria.';
+        if (aqi <= 100) return 'Calidad del aire aceptable.';
+        if (aqi <= 150) return 'Grupos sensibles deben limitar actividades al aire libre.';
+        if (aqi <= 200) return 'Todos deben limitar actividades al aire libre.';
+        if (aqi <= 300) return 'Evitar actividades al aire libre.';
+        return 'Permanecer en interiores con aire filtrado.';
+    }
+
+    setupNotificationSettings() {
+        // Check if notification settings already exist
+        if (document.getElementById('notificationSettings')) {
+            return; // Already exists, don't create again
+        }
+        
+        // Create notification settings UI
+        const settingsContainer = document.createElement('div');
+        settingsContainer.id = 'notificationSettings';
+        settingsContainer.innerHTML = `
+            <div class="notification-settings-card">
+                <div class="settings-header">
+                    <i class="fas fa-bell"></i>
+                    <h3>Configuración de Notificaciones</h3>
+                </div>
+                <div class="settings-content">
+                    <div class="setting-item">
+                        <label>
+                            <input type="checkbox" id="notificationsEnabled" ${this.notificationSettings.enabled ? 'checked' : ''}>
+                            Activar notificaciones push
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <label for="aqiThreshold">Umbral de AQI para alertas:</label>
+                        <select id="aqiThreshold">
+                            <option value="50" ${this.notificationSettings.aqiThreshold === 50 ? 'selected' : ''}>50 (Moderado)</option>
+                            <option value="75" ${this.notificationSettings.aqiThreshold === 75 ? 'selected' : ''}>75 (Insalubre para grupos sensibles)</option>
+                            <option value="100" ${this.notificationSettings.aqiThreshold === 100 ? 'selected' : ''}>100 (Insalubre)</option>
+                            <option value="150" ${this.notificationSettings.aqiThreshold === 150 ? 'selected' : ''}>150 (Muy insalubre)</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label>
+                            <input type="checkbox" id="respiratoryAlerts" ${this.notificationSettings.respiratoryAlerts ? 'checked' : ''}>
+                            Alertas respiratorias
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <label>
+                            <input type="checkbox" id="cardiacAlerts" ${this.notificationSettings.cardiacAlerts ? 'checked' : ''}>
+                            Alertas cardíacas
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <label>
+                            <input type="checkbox" id="pediatricAlerts" ${this.notificationSettings.pediatricAlerts ? 'checked' : ''}>
+                            Alertas pediátricas
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <label>
+                            <input type="checkbox" id="elderlyAlerts" ${this.notificationSettings.elderlyAlerts ? 'checked' : ''}>
+                            Alertas adultos mayores
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <label>
+                            <input type="checkbox" id="weatherAlerts" ${this.notificationSettings.weatherAlerts ? 'checked' : ''}>
+                            Alertas meteorológicas
+                        </label>
+                    </div>
+                    <button id="saveNotificationSettings" class="save-notification-settings-btn">
+                        <i class="fas fa-save"></i>
+                        Guardar Configuración
+                    </button>
+                </div>
+            </div>
+        `;
+
+        // Add to health section
+        const healthSection = document.getElementById('health-section');
+        if (healthSection) {
+            healthSection.appendChild(settingsContainer);
+        }
+
+        // Add event listeners
+        document.getElementById('saveNotificationSettings').addEventListener('click', () => {
+            this.saveNotificationSettingsFromUI();
+        });
+    }
+
+    saveNotificationSettingsFromUI() {
+        this.notificationSettings = {
+            enabled: document.getElementById('notificationsEnabled').checked,
+            aqiThreshold: parseInt(document.getElementById('aqiThreshold').value),
+            respiratoryAlerts: document.getElementById('respiratoryAlerts').checked,
+            cardiacAlerts: document.getElementById('cardiacAlerts').checked,
+            pediatricAlerts: document.getElementById('pediatricAlerts').checked,
+            elderlyAlerts: document.getElementById('elderlyAlerts').checked,
+            weatherAlerts: document.getElementById('weatherAlerts').checked
+        };
+
+        this.saveNotificationSettings();
+        this.showNotification('Configuración de notificaciones guardada', 'success');
+    }
+
+    async testNotification() {
+        try {
+            console.log('Testing notification...');
+            
+            // Check if notifications are supported
+            if (!('Notification' in window)) {
+                alert('Este navegador no soporta notificaciones');
+                return;
+            }
+
+            console.log('Current permission:', Notification.permission);
+
+            // Request permission if needed
+            if (Notification.permission === 'default') {
+                console.log('Requesting permission...');
+                const permission = await Notification.requestPermission();
+                console.log('Permission result:', permission);
+                
+                if (permission !== 'granted') {
+                    alert('Permisos de notificación denegados');
+                    return;
+                }
+            }
+
+            if (Notification.permission === 'denied') {
+                alert('Las notificaciones están bloqueadas. Por favor, habilítalas en la configuración del navegador.');
+                return;
+            }
+
+            // Send immediate test notification
+            if (Notification.permission === 'granted') {
+                console.log('Sending test notification...');
+                
+                // Send welcome notification first
+                this.sendWelcomeNotification();
+                
+                // Then send test notification
+                setTimeout(() => {
+                    const testNotification = new Notification('🔔 AirBytes - Prueba de Notificación', {
+                        body: '¡Las notificaciones están funcionando correctamente!',
+                        icon: '/airbytes_favicon.png',
+                        badge: '/airbytes_favicon.png',
+                        tag: 'test-notification',
+                        requireInteraction: true,
+                        silent: false
+                    });
+
+                    testNotification.onclick = function() {
+                        console.log('Test notification clicked');
+                        window.focus();
+                        testNotification.close();
+                    };
+
+                    testNotification.onshow = function() {
+                        console.log('Test notification shown successfully');
+                    };
+
+                    testNotification.onerror = function(error) {
+                        console.error('Test notification error:', error);
+                    };
+
+                    console.log('Test notification created');
+                }, 2000);
+
+                this.showNotification('Notificación de prueba enviada', 'success');
+            }
+
+        } catch (error) {
+            console.error('Error testing notification:', error);
+            this.showNotification('Error al probar notificación', 'error');
+        }
+    }
+
+    async sendTestAlert() {
+        try {
+            console.log('Sending test alert...');
+            
+            const locationData = this.getCurrentLocationData();
+            const aqi = 120; // Simulated high AQI for testing
+            
+            const title = '🚨 Alerta de Prueba - AQI Insalubre';
+            const body = `AQI: ${aqi} en ${locationData.name}. Esta es una notificación de prueba.`;
+            
+            await this.sendPushNotification(title, body, {
+                type: 'test_alert',
+                aqi: aqi,
+                location: locationData.name,
+                level: 'Insalubre'
+            });
+            
+            console.log('Test alert sent successfully');
+        } catch (error) {
+            console.error('Error sending test alert:', error);
+        }
+    }
+
+    async sendImmediateTestNotification() {
+        try {
+            console.log('Sending immediate test notification...');
+            
+            if (Notification.permission !== 'granted') {
+                console.log('Notification permission not granted, skipping test');
+                return;
+            }
+
+            const notification = new Notification('🔔 AirBytes - Notificación de Prueba', {
+                body: '¡Las notificaciones están funcionando correctamente!',
+                icon: '/airbytes_favicon.png',
+                badge: '/airbytes_favicon.png',
+                tag: 'test-notification',
+                requireInteraction: true,
+                silent: false
+            });
+
+            notification.onclick = function() {
+                console.log('Test notification clicked');
+                window.focus();
+                notification.close();
+            };
+
+            notification.onshow = function() {
+                console.log('Test notification shown');
+            };
+
+            notification.onerror = function(error) {
+                console.error('Test notification error:', error);
+            };
+
+            console.log('Immediate test notification sent');
+            
+            // Also try service worker notification after 2 seconds
+            setTimeout(async () => {
+                try {
+                    await this.sendPushNotification(
+                        '🚨 Alerta de Prueba AQI',
+                        'AQI: 120 - Calidad del aire insalubre. Esta es una notificación de prueba.',
+                        {
+                            type: 'test_alert',
+                            aqi: 120,
+                            location: 'Prueba'
+                        }
+                    );
+                    console.log('Service worker test notification sent');
+                } catch (error) {
+                    console.error('Service worker test notification failed:', error);
+                }
+            }, 2000);
+
+        } catch (error) {
+            console.error('Error sending immediate test notification:', error);
+        }
+    }
+
+    async forceNotification() {
+        try {
+            console.log('Forcing notification...');
+            
+            // Check if notifications are supported
+            if (!('Notification' in window)) {
+                alert('Este navegador no soporta notificaciones');
+                return;
+            }
+
+            // Force permission request
+            console.log('Current permission:', Notification.permission);
+            
+            let permission = Notification.permission;
+            if (permission === 'default') {
+                console.log('Requesting permission...');
+                permission = await Notification.requestPermission();
+                console.log('Permission result:', permission);
+            }
+
+            if (permission !== 'granted') {
+                alert('Permisos de notificación denegados. Por favor, habilítalas en la configuración del navegador.');
+                return;
+            }
+
+            // Send multiple test notifications
+            console.log('Sending forced notifications...');
+            
+            // Notification 1
+            const notification1 = new Notification('🔔 AirBytes - Notificación Forzada 1', {
+                body: 'Esta es la primera notificación de prueba',
+                icon: '/airbytes_favicon.png',
+                tag: 'force-test-1',
+                requireInteraction: true
+            });
+
+            // Notification 2 (after 1 second)
+            setTimeout(() => {
+                const notification2 = new Notification('🚨 AirBytes - Alerta AQI Forzada', {
+                    body: 'AQI: 150 - Calidad del aire insalubre. Esta es una alerta de prueba.',
+                    icon: '/airbytes_favicon.png',
+                    tag: 'force-test-2',
+                    requireInteraction: true
+                });
+                
+                notification2.onclick = function() {
+                    console.log('Force notification 2 clicked');
+                    window.focus();
+                    notification2.close();
+                };
+            }, 1000);
+
+            // Notification 3 (after 2 seconds)
+            setTimeout(() => {
+                const notification3 = new Notification('⚠️ AirBytes - Alerta Meteorológica', {
+                    body: 'Temperatura: 5°C - Riesgo para pacientes respiratorios',
+                    icon: '/airbytes_favicon.png',
+                    tag: 'force-test-3',
+                    requireInteraction: true
+                });
+                
+                notification3.onclick = function() {
+                    console.log('Force notification 3 clicked');
+                    window.focus();
+                    notification3.close();
+                };
+            }, 2000);
+
+            console.log('Forced notifications sent');
+            this.showNotification('Notificaciones forzadas enviadas', 'success');
+
+        } catch (error) {
+            console.error('Error forcing notifications:', error);
+            this.showNotification('Error al forzar notificaciones', 'error');
+        }
+    }
+
+    async sendWelcomeNotification() {
+        try {
+            console.log('Sending welcome notification...');
+            
+            if (Notification.permission !== 'granted') {
+                console.log('Notification permission not granted, skipping welcome notification');
+                return;
+            }
+
+            const welcomeNotification = new Notification('🎉 ¡Bienvenido a AirBytes!', {
+                body: 'Gracias por activar las notificaciones. Ahora recibirás alertas sobre la calidad del aire y recomendaciones de salud.',
+                icon: '/airbytes_favicon.png',
+                badge: '/airbytes_favicon.png',
+                tag: 'welcome-notification',
+                requireInteraction: true,
+                silent: false,
+                vibrate: [200, 100, 200, 100, 200]
+            });
+
+            welcomeNotification.onclick = function() {
+                console.log('Welcome notification clicked');
+                window.focus();
+                welcomeNotification.close();
+            };
+
+            welcomeNotification.onshow = function() {
+                console.log('Welcome notification shown successfully');
+            };
+
+            welcomeNotification.onerror = function(error) {
+                console.error('Welcome notification error:', error);
+            };
+
+            console.log('Welcome notification sent successfully');
+            
+            // Send additional welcome notifications after a delay
+            setTimeout(() => {
+                this.sendWelcomeFollowUp();
+            }, 3000);
+
+        } catch (error) {
+            console.error('Error sending welcome notification:', error);
+        }
+    }
+
+    async sendWelcomeFollowUp() {
+        try {
+            console.log('Sending welcome follow-up notification...');
+            
+            const followUpNotification = new Notification('🔔 AirBytes - Configuración Completa', {
+                body: 'Tu sistema de alertas está listo. Recibirás notificaciones sobre AQI, alertas respiratorias, cardíacas y más.',
+                icon: '/airbytes_favicon.png',
+                badge: '/airbytes_favicon.png',
+                tag: 'welcome-followup',
+                requireInteraction: false,
+                silent: false
+            });
+
+            followUpNotification.onclick = function() {
+                console.log('Welcome follow-up notification clicked');
+                window.focus();
+                followUpNotification.close();
+            };
+
+            console.log('Welcome follow-up notification sent');
+
+        } catch (error) {
+            console.error('Error sending welcome follow-up notification:', error);
+        }
+    }
+
+    async sendSimpleNotification() {
+        try {
+            console.log('Sending simple notification...');
+            
+            // Check if notifications are supported
+            if (!('Notification' in window)) {
+                alert('Este navegador no soporta notificaciones');
+                return;
+            }
+
+            console.log('Current permission:', Notification.permission);
+
+            // Request permission if needed
+            if (Notification.permission === 'default') {
+                console.log('Requesting permission...');
+                const permission = await Notification.requestPermission();
+                console.log('Permission result:', permission);
+                
+                if (permission !== 'granted') {
+                    alert('Permisos de notificación denegados');
+                    return;
+                }
+            }
+
+            if (Notification.permission === 'denied') {
+                alert('Las notificaciones están bloqueadas. Por favor, habilítalas en la configuración del navegador.');
+                return;
+            }
+
+            // Send simple notification
+            if (Notification.permission === 'granted') {
+                console.log('Creating simple notification...');
+                
+                const simpleNotification = new Notification('🚀 AirBytes - Notificación Simple', {
+                    body: 'Esta es una notificación de prueba simple. Si puedes ver esto, las notificaciones funcionan correctamente.',
+                    icon: '/airbytes_favicon.png',
+                    badge: '/airbytes_favicon.png',
+                    tag: 'simple-test',
+                    requireInteraction: true,
+                    silent: false
+                });
+
+                simpleNotification.onclick = function() {
+                    console.log('Simple notification clicked');
+                    window.focus();
+                    simpleNotification.close();
+                };
+
+                simpleNotification.onshow = function() {
+                    console.log('Simple notification shown successfully');
+                    alert('¡Notificación mostrada correctamente!');
+                };
+
+                simpleNotification.onerror = function(error) {
+                    console.error('Simple notification error:', error);
+                    alert('Error en la notificación: ' + error);
+                };
+
+                console.log('Simple notification created');
+                this.showNotification('Notificación simple enviada', 'success');
+            }
+
+        } catch (error) {
+            console.error('Error sending simple notification:', error);
+            this.showNotification('Error al enviar notificación simple', 'error');
+        }
+    }
+
+    // Diagnostic function to check notification support
+    checkNotificationSupport() {
+        console.log('=== NOTIFICATION DIAGNOSTIC ===');
+        console.log('Notification in window:', 'Notification' in window);
+        console.log('Current permission:', Notification.permission);
+        console.log('Service Worker support:', 'serviceWorker' in navigator);
+        console.log('Push Manager support:', 'PushManager' in window);
+        
+        if ('Notification' in window) {
+            console.log('Notification constructor:', Notification);
+            console.log('Notification.permission:', Notification.permission);
+            console.log('Notification.requestPermission:', typeof Notification.requestPermission);
+        }
+        
+        // Test basic notification creation
+        try {
+            if (Notification.permission === 'granted') {
+                console.log('Creating test notification...');
+                const testNotif = new Notification('Test', { body: 'Test notification' });
+                console.log('Test notification created:', testNotif);
+                testNotif.close();
+            }
+        } catch (error) {
+            console.error('Error creating test notification:', error);
+        }
+        
+        console.log('=== END DIAGNOSTIC ===');
+    }
+
+    // Calculate AQI from air quality components
+    calculateAQIFromComponents(components) {
+        // US EPA AQI calculation
+        const pm25 = components.pm2_5;
+        const pm10 = components.pm10;
+        const o3 = components.o3;
+        const no2 = components.no2;
+        const so2 = components.so2;
+        const co = components.co;
+
+        // Calculate AQI for each pollutant
+        const aqiPM25 = this.calculatePollutantAQI(pm25, 'pm25');
+        const aqiPM10 = this.calculatePollutantAQI(pm10, 'pm10');
+        const aqiO3 = this.calculatePollutantAQI(o3, 'o3');
+        const aqiNO2 = this.calculatePollutantAQI(no2, 'no2');
+        const aqiSO2 = this.calculatePollutantAQI(so2, 'so2');
+        const aqiCO = this.calculatePollutantAQI(co, 'co');
+
+        // Return the highest AQI value
+        return Math.max(aqiPM25, aqiPM10, aqiO3, aqiNO2, aqiSO2, aqiCO);
+    }
+
+    calculatePollutantAQI(concentration, pollutant) {
+        // US EPA AQI breakpoints
+        const breakpoints = {
+            pm25: [
+                [0, 12, 0, 50],
+                [12.1, 35.4, 51, 100],
+                [35.5, 55.4, 101, 150],
+                [55.5, 150.4, 151, 200],
+                [150.5, 250.4, 201, 300],
+                [250.5, 500.4, 301, 500]
+            ],
+            pm10: [
+                [0, 54, 0, 50],
+                [55, 154, 51, 100],
+                [155, 254, 101, 150],
+                [255, 354, 151, 200],
+                [355, 424, 201, 300],
+                [425, 604, 301, 500]
+            ],
+            o3: [
+                [0, 0.054, 0, 50],
+                [0.055, 0.070, 51, 100],
+                [0.071, 0.085, 101, 150],
+                [0.086, 0.105, 151, 200],
+                [0.106, 0.200, 201, 300]
+            ],
+            no2: [
+                [0, 0.053, 0, 50],
+                [0.054, 0.100, 51, 100],
+                [0.101, 0.360, 101, 150],
+                [0.361, 0.649, 151, 200],
+                [0.650, 1.249, 201, 300],
+                [1.250, 2.049, 301, 500]
+            ],
+            so2: [
+                [0, 0.034, 0, 50],
+                [0.035, 0.144, 51, 100],
+                [0.145, 0.224, 101, 150],
+                [0.225, 0.304, 151, 200],
+                [0.305, 0.604, 201, 300],
+                [0.605, 1.004, 301, 500]
+            ],
+            co: [
+                [0, 4.4, 0, 50],
+                [4.5, 9.4, 51, 100],
+                [9.5, 12.4, 101, 150],
+                [12.5, 15.4, 151, 200],
+                [15.5, 30.4, 201, 300],
+                [30.5, 50.4, 301, 500]
+            ]
+        };
+
+        const bp = breakpoints[pollutant];
+        if (!bp) return 0;
+
+        for (let i = 0; i < bp.length; i++) {
+            const [cLow, cHigh, aqiLow, aqiHigh] = bp[i];
+            if (concentration >= cLow && concentration <= cHigh) {
+                return Math.round(((aqiHigh - aqiLow) / (cHigh - cLow)) * (concentration - cLow) + aqiLow);
+            }
+        }
+
+        return 0;
+    }
+
+    // Display data source status in the UI
+    updateDataSourceStatus(weatherData, aqiData) {
+        try {
+            // Update weather data source
+            const weatherSource = document.getElementById('weatherSource');
+            if (weatherSource && weatherData) {
+                weatherSource.textContent = weatherData.source || 'Datos Simulados';
+                weatherSource.className = weatherData.source && weatherData.source.includes('Real') ? 'real-data' : 'simulated-data';
+            }
+
+            // Update AQI data source
+            const aqiSource = document.getElementById('aqiSource');
+            if (aqiSource && aqiData) {
+                aqiSource.textContent = aqiData.source || 'Datos Simulados';
+                aqiSource.className = aqiData.source && aqiData.source.includes('Real') ? 'real-data' : 'simulated-data';
+            }
+
+            // Update timestamp
+            const dataTimestamp = document.getElementById('dataTimestamp');
+            if (dataTimestamp) {
+                const timestamp = weatherData?.timestamp || aqiData?.timestamp || new Date().toISOString();
+                dataTimestamp.textContent = `Última actualización: ${new Date(timestamp).toLocaleString('es-ES')}`;
+            }
+
+        } catch (error) {
+            console.error('Error updating data source status:', error);
+        }
+    }
+
     // Agricultural Functions
     async loadFarmersData() {
         try {
@@ -1081,30 +2470,59 @@ class AirBytesApp {
     async getCurrentWeatherData() {
         try {
             const locationData = this.getCurrentLocationData();
-            const response = await fetch(`${this.weatherBaseUrl}/weather?lat=${locationData.lat}&lon=${locationData.lon}&appid=${this.weatherApiKey}&units=metric&lang=es`);
-            const data = await response.json();
+            console.log('🌤️ Fetching REAL weather data for:', locationData.name);
+            console.log('🌤️ Use Real Data setting:', this.useRealData);
             
-            if (data.cod === 200) {
-                return {
-                    temperature: Math.round(data.main.temp),
-                    humidity: data.main.humidity,
-                    pressure: data.main.pressure,
-                    windSpeed: Math.round(data.wind.speed * 3.6), // Convert m/s to km/h
-                    windDirection: this.getWindDirection(data.wind.deg),
-                    precipitation: data.rain ? (data.rain['1h'] || 0) : 0,
-                    description: data.weather[0].description,
-                    icon: data.weather[0].icon,
-                    visibility: data.visibility / 1000, // Convert to km
-                    uvIndex: data.uvi || 0,
-                    cloudiness: data.clouds.all,
-                    sunrise: new Date(data.sys.sunrise * 1000),
-                    sunset: new Date(data.sys.sunset * 1000)
-                };
+            // FORCE real data usage
+            if (this.useRealData) {
+                try {
+                    const url = `${this.weatherBaseUrl}/weather?lat=${locationData.lat}&lon=${locationData.lon}&appid=${this.weatherApiKey}&units=metric&lang=es`;
+                    console.log('🌤️ Weather API URL:', url);
+                    
+                    const response = await fetch(url);
+                    console.log('🌤️ Weather API Response Status:', response.status);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('🌤️ REAL weather data received:', data);
+                        
+                        const weatherData = {
+                            temperature: Math.round(data.main.temp),
+                            humidity: data.main.humidity,
+                            pressure: data.main.pressure,
+                            windSpeed: Math.round(data.wind.speed * 3.6), // Convert m/s to km/h
+                            windDirection: this.getWindDirection(data.wind.deg),
+                            precipitation: data.rain ? (data.rain['1h'] || 0) : 0,
+                            description: data.weather[0].description,
+                            icon: data.weather[0].icon,
+                            visibility: data.visibility / 1000, // Convert to km
+                            uvIndex: data.uvi || 0,
+                            cloudiness: data.clouds.all,
+                            sunrise: new Date(data.sys.sunrise * 1000),
+                            sunset: new Date(data.sys.sunset * 1000),
+                            timestamp: new Date().toISOString(),
+                            source: '🌤️ OpenWeatherMap REAL DATA',
+                            location: locationData.name,
+                            isRealData: true
+                        };
+                        
+                        console.log('🌤️ Returning REAL weather data:', weatherData);
+                        return weatherData;
+                    } else {
+                        console.error('🌤️ Weather API response not ok:', response.status, response.statusText);
+                        throw new Error(`Weather API error: ${response.status}`);
+                    }
+                } catch (apiError) {
+                    console.error('🌤️ Weather API failed:', apiError);
+                    throw apiError;
+                }
             } else {
-                throw new Error('Error en datos meteorológicos');
+                console.log('🌤️ Real data disabled, using simulated data');
+                throw new Error('Real data disabled');
             }
         } catch (error) {
             console.error('Error fetching weather data:', error);
+            console.log('Using simulated weather data as fallback');
             // Fallback to existing data or generate realistic data
             const tempElement = document.getElementById('weatherTemp');
             const humidityElement = document.getElementById('weatherHumidity');
@@ -1126,6 +2544,96 @@ class AirBytesApp {
                 sunset: new Date()
             };
         }
+    }
+
+    async getCurrentAQIData() {
+        try {
+            const locationData = this.getCurrentLocationData();
+            console.log('🌬️ Fetching REAL AQI data for:', locationData.name);
+            console.log('🌬️ Use Real Data setting:', this.useRealData);
+            
+            // FORCE real data usage
+            if (this.useRealData) {
+                try {
+                    const url = `https://api.openweathermap.org/data/2.5/air_pollution?lat=${locationData.lat}&lon=${locationData.lon}&appid=${this.airQualityApiKey}`;
+                    console.log('🌬️ AQI API URL:', url);
+                    
+                    const aqiResponse = await fetch(url);
+                    console.log('🌬️ AQI API Response Status:', aqiResponse.status);
+                    
+                    if (aqiResponse.ok) {
+                        const aqiData = await aqiResponse.json();
+                        console.log('🌬️ REAL AQI data received:', aqiData);
+                        
+                        // Convert OpenWeatherMap data to our format
+                        const airQuality = aqiData.list[0];
+                        const aqi = this.calculateAQIFromComponents(airQuality.components);
+                        
+                        const aqiDataFormatted = {
+                            aqi: aqi,
+                            pm25: airQuality.components.pm2_5,
+                            pm10: airQuality.components.pm10,
+                            o3: airQuality.components.o3,
+                            no2: airQuality.components.no2,
+                            so2: airQuality.components.so2,
+                            co: airQuality.components.co,
+                            timestamp: new Date(airQuality.dt * 1000).toISOString(),
+                            source: '🌬️ OpenWeatherMap REAL DATA',
+                            location: locationData.name,
+                            isRealData: true
+                        };
+                        
+                        console.log('🌬️ Returning REAL AQI data:', aqiDataFormatted);
+                        return aqiDataFormatted;
+                    } else {
+                        console.error('🌬️ AQI API response not ok:', aqiResponse.status, aqiResponse.statusText);
+                        throw new Error(`AQI API error: ${aqiResponse.status}`);
+                    }
+                } catch (apiError) {
+                    console.error('🌬️ AQI API failed:', apiError);
+                    throw apiError;
+                }
+            } else {
+                console.log('🌬️ Real data disabled, using simulated data');
+                throw new Error('Real data disabled');
+            }
+            
+        } catch (error) {
+            console.error('🌬️ Error fetching AQI data:', error);
+            console.log('🌬️ Using simulated AQI data as fallback');
+            return this.generateSimulatedAQIData();
+        }
+    }
+
+    generateSimulatedAQIData() {
+        // Generate realistic AQI data based on time and location
+        const hour = new Date().getHours();
+        const baseAQI = 30 + Math.random() * 70; // AQI between 30-100
+        
+        // Higher AQI during rush hours (7-9 AM, 5-7 PM)
+        let aqi = baseAQI;
+        if ((hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 19)) {
+            aqi += 20 + Math.random() * 30;
+        }
+        
+        // Lower AQI at night
+        if (hour >= 22 || hour <= 6) {
+            aqi -= 10;
+        }
+        
+        aqi = Math.max(0, Math.min(300, aqi)); // Clamp between 0-300
+        
+        return {
+            aqi: Math.round(aqi),
+            pm25: Math.round(aqi * 0.8 + Math.random() * 10),
+            pm10: Math.round(aqi * 1.2 + Math.random() * 15),
+            o3: Math.round(aqi * 0.6 + Math.random() * 8),
+            no2: Math.round(aqi * 0.4 + Math.random() * 5),
+            so2: Math.round(aqi * 0.3 + Math.random() * 3),
+            co: Math.round(aqi * 0.1 + Math.random() * 2),
+            timestamp: new Date().toISOString(),
+            source: 'Simulated Data'
+        };
     }
 
     async getEnhancedSoilData(weatherData) {
@@ -2246,6 +3754,13 @@ class AirBytesApp {
             this.clearExpiredCache();
             this.refreshData();
         }, this.updateInterval);
+        
+        // Start notification check interval
+        setInterval(() => {
+            if (this.notificationSettings.enabled) {
+                this.checkAirQualityAlerts();
+            }
+        }, this.notificationCheckInterval);
     }
 
     startAgriculturalAutoUpdate() {
@@ -3040,6 +4555,9 @@ class Chatbot {
         this.messageCount = 0;
         this.conversationHistory = [];
         this.knowledgeBase = this.initializeKnowledgeBase();
+        this.userPreferences = this.loadUserPreferences();
+        this.learningData = this.loadLearningData();
+        this.contextMemory = [];
         this.initializeElements();
         this.attachEventListeners();
     }
@@ -3127,10 +4645,53 @@ class Chatbot {
         
         messageDiv.appendChild(avatar);
         messageDiv.appendChild(messageContent);
+        
+        // Agregar botones de feedback para mensajes del bot
+        if (sender === 'bot') {
+            const feedbackDiv = document.createElement('div');
+            feedbackDiv.className = 'message-feedback';
+            feedbackDiv.innerHTML = `
+                <button class="feedback-btn helpful" data-feedback="helpful" title="Útil">
+                    <i class="fas fa-thumbs-up"></i>
+                </button>
+                <button class="feedback-btn not-helpful" data-feedback="not-helpful" title="No útil">
+                    <i class="fas fa-thumbs-down"></i>
+                </button>
+            `;
+            
+            // Agregar event listeners para feedback
+            feedbackDiv.addEventListener('click', (e) => {
+                if (e.target.closest('.feedback-btn')) {
+                    const feedback = e.target.closest('.feedback-btn').dataset.feedback;
+                    this.handleFeedback(feedback, content);
+                    e.target.closest('.feedback-btn').classList.add('active');
+                }
+            });
+            
+            messageDiv.appendChild(feedbackDiv);
+        }
+        
         this.messages.appendChild(messageDiv);
         
         this.scrollToBottom();
         this.conversationHistory.push({ sender, content });
+    }
+    
+    handleFeedback(feedback, response) {
+        const lastUserMessage = this.conversationHistory
+            .filter(msg => msg.sender === 'user')
+            .slice(-1)[0];
+        
+        if (lastUserMessage) {
+            const wasHelpful = feedback === 'helpful';
+            this.learnFromInteraction(lastUserMessage.content, response, wasHelpful);
+            
+            console.log('🤖 Feedback received:', {
+                feedback,
+                wasHelpful,
+                userMessage: lastUserMessage.content
+            });
+        }
     }
 
     formatMessage(content) {
@@ -3186,19 +4747,72 @@ class Chatbot {
 
     generateResponse(userMessage) {
         const message = userMessage.toLowerCase();
+        const context = this.getCurrentContext();
+        const currentData = this.getCurrentAppData();
         
+        // Análisis de intención avanzado
+        const intent = this.analyzeIntent(message);
+        const sentiment = this.analyzeSentiment(message);
+        
+        console.log('🤖 Chatbot AI Analysis:', {
+            message: userMessage,
+            intent: intent,
+            sentiment: sentiment,
+            context: context,
+            currentData: currentData
+        });
+        
+        // Respuestas contextuales basadas en datos actuales
+        if (intent === 'current_conditions' || message.includes('actual') || message.includes('ahora')) {
+            return this.getCurrentConditionsResponse(currentData);
+        }
+        
+        if (intent === 'forecast' || message.includes('pronóstico') || message.includes('futuro')) {
+            return this.getForecastResponse(currentData);
+        }
+        
+        if (intent === 'health_advice' || message.includes('salud') || message.includes('recomendación')) {
+            return this.getHealthAdviceResponse(currentData, sentiment);
+        }
+        
+        if (intent === 'pollutant_info' || message.includes('contaminante') || message.includes('partícula')) {
+            return this.getPollutantInfoResponse(message, currentData);
+        }
+        
+        if (intent === 'location_specific' || message.includes('ubicación') || message.includes('ciudad')) {
+            return this.getLocationSpecificResponse(currentData);
+        }
+        
+        if (intent === 'comparison' || message.includes('comparar') || message.includes('diferencia')) {
+            return this.getComparisonResponse(message, currentData);
+        }
+        
+        if (intent === 'emergency' || message.includes('emergencia') || message.includes('peligro')) {
+            return this.getEmergencyResponse(currentData);
+        }
+        
+        // Verificar si hay contexto relevante de conversaciones anteriores
+        const contextualResponse = this.getContextualResponse(userMessage);
+        if (contextualResponse) {
+            this.updateContextMemory(userMessage, contextualResponse);
+            this.learnFromInteraction(userMessage, contextualResponse);
+            return contextualResponse;
+        }
+        
+        // Respuestas personalizadas basadas en aprendizaje
+        const personalizedResponse = this.getPersonalizedResponse(intent, currentData);
+        if (personalizedResponse) {
+            this.updateContextMemory(userMessage, personalizedResponse);
+            this.learnFromInteraction(userMessage, personalizedResponse);
+            return personalizedResponse;
+        }
+        
+        // Respuestas específicas mejoradas
         if (message.includes('aqi') || message.includes('índice') || message.includes('calidad del aire')) {
-            return {
-                text: "El Índice de Calidad del Aire (AQI) es una medida que indica qué tan limpio o contaminado está el aire y qué efectos para la salud podría tener.",
-                list: [
-                    "🟢 0-50: Buena - El aire es satisfactorio",
-                    "🟡 51-100: Moderada - Aceptable para la mayoría",
-                    "🟠 101-150: Insalubre para grupos sensibles",
-                    "🔴 151-200: Insalubre - Todos pueden experimentar efectos",
-                    "🟣 201-300: Muy insalubre - Alerta de salud",
-                    "🟤 301-500: Peligroso - Alerta de emergencia"
-                ]
-            };
+            const response = this.getAQIResponse(currentData);
+            this.updateContextMemory(userMessage, response);
+            this.learnFromInteraction(userMessage, response);
+            return response;
         }
         
         if (message.includes('contaminante') || message.includes('partícula') || message.includes('pm2.5') || message.includes('pm10')) {
@@ -3306,6 +4920,700 @@ class Chatbot {
         };
     }
 
+    // ===== FUNCIONES DE IA AVANZADA =====
+    
+    analyzeIntent(message) {
+        const intents = {
+            'current_conditions': ['actual', 'ahora', 'hoy', 'condiciones', 'estado'],
+            'forecast': ['pronóstico', 'futuro', 'mañana', 'semana', 'predicción'],
+            'health_advice': ['salud', 'recomendación', 'consejo', 'qué hacer', 'precaución'],
+            'pollutant_info': ['contaminante', 'partícula', 'pm2.5', 'pm10', 'ozono', 'no2', 'so2', 'co'],
+            'location_specific': ['ubicación', 'ciudad', 'zona', 'área', 'región'],
+            'comparison': ['comparar', 'diferencia', 'mejor', 'peor', 'vs', 'versus'],
+            'emergency': ['emergencia', 'peligro', 'alerta', 'crítico', 'urgente'],
+            'help': ['ayuda', 'cómo', 'funciona', 'usar', 'navegar'],
+            'technical': ['técnico', 'datos', 'api', 'fuente', 'precisión']
+        };
+        
+        for (const [intent, keywords] of Object.entries(intents)) {
+            if (keywords.some(keyword => message.includes(keyword))) {
+                return intent;
+            }
+        }
+        return 'general';
+    }
+    
+    analyzeSentiment(message) {
+        const positiveWords = ['bueno', 'excelente', 'genial', 'perfecto', 'mejor', 'bien'];
+        const negativeWords = ['malo', 'terrible', 'horrible', 'peligroso', 'preocupante', 'mal'];
+        const urgentWords = ['urgente', 'emergencia', 'crítico', 'peligro', 'alerta'];
+        
+        const positiveCount = positiveWords.filter(word => message.includes(word)).length;
+        const negativeCount = negativeWords.filter(word => message.includes(word)).length;
+        const urgentCount = urgentWords.filter(word => message.includes(word)).length;
+        
+        if (urgentCount > 0) return 'urgent';
+        if (negativeCount > positiveCount) return 'negative';
+        if (positiveCount > negativeCount) return 'positive';
+        return 'neutral';
+    }
+    
+    getCurrentContext() {
+        // Obtener contexto de la aplicación actual
+        const activeSection = document.querySelector('.section.active')?.id || 'today-section';
+        const currentLocation = document.getElementById('locationSelect')?.value || 'colombia';
+        const currentTime = new Date();
+        
+        return {
+            activeSection,
+            currentLocation,
+            currentTime,
+            isDaytime: currentTime.getHours() >= 6 && currentTime.getHours() < 18
+        };
+    }
+    
+    getCurrentAppData() {
+        // Obtener datos actuales de la aplicación
+        try {
+            const weatherTemp = document.getElementById('weatherTemp')?.textContent;
+            const aqiValue = document.getElementById('aqiValue')?.textContent;
+            const weatherDesc = document.getElementById('weatherDesc')?.textContent;
+            const locationName = document.getElementById('locationName')?.textContent;
+            
+            return {
+                temperature: weatherTemp ? parseInt(weatherTemp) : null,
+                aqi: aqiValue ? parseInt(aqiValue) : null,
+                weatherDescription: weatherDesc || null,
+                location: locationName || null,
+                timestamp: new Date().toISOString()
+            };
+        } catch (error) {
+            console.warn('Error getting current app data:', error);
+            return null;
+        }
+    }
+    
+    // ===== RESPUESTAS CONTEXTUALES AVANZADAS =====
+    
+    getCurrentConditionsResponse(data) {
+        if (!data || !data.aqi) {
+            return {
+                text: "No tengo datos actuales disponibles. Por favor, asegúrate de que la aplicación esté cargada correctamente.",
+                tips: [
+                    "🔄 Recarga la página si es necesario",
+                    "📍 Verifica que la ubicación esté seleccionada",
+                    "🌐 Comprueba tu conexión a internet"
+                ]
+            };
+        }
+        
+        const aqiLevel = this.getAQILevel(data.aqi);
+        const recommendations = this.getAQIRecommendations(data.aqi);
+        
+        return {
+            text: `🌤️ **Condiciones Actuales en ${data.location || 'tu ubicación'}:**`,
+            list: [
+                `🌡️ Temperatura: ${data.temperature || 'N/A'}°C`,
+                `🌬️ AQI: ${data.aqi} (${aqiLevel})`,
+                `☁️ Clima: ${data.weatherDescription || 'N/A'}`,
+                `⏰ Última actualización: ${new Date().toLocaleTimeString()}`
+            ],
+            tips: recommendations
+        };
+    }
+    
+    getForecastResponse(data) {
+        return {
+            text: "📅 **Pronóstico de Calidad del Aire:**",
+            list: [
+                "📊 Consulta la sección 'Cada Hora' para pronóstico detallado",
+                "📈 Revisa 'Diario' para tendencias de 7 días",
+                "🌡️ Los datos meteorológicos ayudan a predecir la calidad del aire"
+            ],
+            tips: [
+                "💡 Los vientos fuertes mejoran la calidad del aire",
+                "🌧️ La lluvia limpia naturalmente la atmósfera",
+                "☀️ Los días soleados pueden aumentar el ozono",
+                "🌫️ Las condiciones estables concentran contaminantes"
+            ]
+        };
+    }
+    
+    getHealthAdviceResponse(data, sentiment) {
+        if (!data || !data.aqi) {
+            return {
+                text: "Para darte recomendaciones de salud precisas, necesito datos actuales de calidad del aire.",
+                tips: [
+                    "🔄 Asegúrate de que la aplicación esté cargada",
+                    "📍 Selecciona tu ubicación",
+                    "⏰ Espera a que se actualicen los datos"
+                ]
+            };
+        }
+        
+        const aqiLevel = this.getAQILevel(data.aqi);
+        const healthRisks = this.getHealthRisks(data.aqi);
+        const recommendations = this.getHealthRecommendations(data.aqi, sentiment);
+        
+        return {
+            text: `🏥 **Recomendaciones de Salud (AQI: ${data.aqi} - ${aqiLevel}):**`,
+            list: healthRisks,
+            tips: recommendations
+        };
+    }
+    
+    getPollutantInfoResponse(message, data) {
+        const pollutants = {
+            'pm2.5': {
+                name: 'PM2.5 (Partículas Finas)',
+                description: 'Partículas menores a 2.5 micrómetros',
+                health: 'Pueden penetrar profundamente en los pulmones',
+                sources: 'Tráfico, industria, quema de combustibles'
+            },
+            'pm10': {
+                name: 'PM10 (Partículas Gruesas)',
+                description: 'Partículas menores a 10 micrómetros',
+                health: 'Afectan el sistema respiratorio',
+                sources: 'Polvo, polen, construcción'
+            },
+            'o3': {
+                name: 'Ozono (O₃)',
+                description: 'Gas formado por reacciones químicas',
+                health: 'Irrita ojos, nariz y garganta',
+                sources: 'Emisiones vehiculares + luz solar'
+            },
+            'no2': {
+                name: 'Dióxido de Nitrógeno (NO₂)',
+                description: 'Gas marrón-rojizo',
+                health: 'Afecta el sistema respiratorio',
+                sources: 'Tráfico, centrales eléctricas'
+            },
+            'so2': {
+                name: 'Dióxido de Azufre (SO₂)',
+                description: 'Gas incoloro con olor penetrante',
+                health: 'Irrita vías respiratorias',
+                sources: 'Combustión de carbón, petróleo'
+            },
+            'co': {
+                name: 'Monóxido de Carbono (CO)',
+                description: 'Gas incoloro e inodoro',
+                health: 'Reduce capacidad de transporte de oxígeno',
+                sources: 'Combustión incompleta de combustibles'
+            }
+        };
+        
+        const detectedPollutant = Object.keys(pollutants).find(p => message.includes(p));
+        
+        if (detectedPollutant) {
+            const pollutant = pollutants[detectedPollutant];
+            return {
+                text: `🌫️ **${pollutant.name}:**`,
+                list: [
+                    `📝 Descripción: ${pollutant.description}`,
+                    `🏥 Efectos en salud: ${pollutant.health}`,
+                    `🏭 Principales fuentes: ${pollutant.sources}`
+                ],
+                tips: [
+                    "💡 Usa mascarilla N95 en días de alta contaminación",
+                    "🏠 Mantén ventanas cerradas cuando los niveles son altos",
+                    "🚶 Evita ejercicio al aire libre en días insalubres"
+                ]
+            };
+        }
+        
+        return {
+            text: "🌫️ **Principales Contaminantes Monitoreados:**",
+            list: Object.values(pollutants).map(p => `• ${p.name}: ${p.description}`),
+            tips: [
+                "🔍 Pregunta por un contaminante específico (ej: 'PM2.5')",
+                "📊 Revisa los valores actuales en la sección 'Hoy'",
+                "⚠️ Los niveles altos requieren precauciones especiales"
+            ]
+        };
+    }
+    
+    getLocationSpecificResponse(data) {
+        const location = data?.location || 'tu ubicación';
+        return {
+            text: `📍 **Datos Específicos para ${location}:**`,
+            list: [
+                "🌍 Los datos se obtienen de estaciones meteorológicas locales",
+                "🔄 Se actualizan cada 10 minutos con información en tiempo real",
+                "📊 Incluyen calidad del aire, clima y pronósticos"
+            ],
+            tips: [
+                "🌐 Cambia la ubicación usando el selector superior",
+                "📍 Usa el botón de geolocalización para tu posición exacta",
+                "🏙️ Los datos urbanos pueden diferir de áreas rurales"
+            ]
+        };
+    }
+    
+    getComparisonResponse(message, data) {
+        return {
+            text: "📊 **Comparación de Datos:**",
+            list: [
+                "📈 Usa la sección 'Mensual' para comparar tendencias",
+                "⏰ Compara 'Hoy' vs 'Cada Hora' para ver variaciones",
+                "🌍 Cambia ubicaciones para comparar diferentes ciudades"
+            ],
+            tips: [
+                "💡 Los datos se normalizan según estándares internacionales",
+                "📊 El AQI permite comparar entre diferentes contaminantes",
+                "🔄 Los datos históricos ayudan a identificar patrones"
+            ]
+        };
+    }
+    
+    getEmergencyResponse(data) {
+        if (!data || !data.aqi) {
+            return {
+                text: "🚨 **En caso de emergencia por calidad del aire:**",
+                list: [
+                    "🏠 Permanece en interiores con ventanas cerradas",
+                    "🚫 Evita actividades al aire libre",
+                    "📞 Contacta servicios de emergencia si es necesario"
+                ],
+                tips: [
+                    "⚠️ AQI > 200 requiere precauciones inmediatas",
+                    "👶 Niños y ancianos son más vulnerables",
+                    "🫁 Personas con asma deben usar medicamentos preventivos"
+                ]
+            };
+        }
+        
+        const aqiLevel = this.getAQILevel(data.aqi);
+        const isEmergency = data.aqi > 200;
+        
+        if (isEmergency) {
+            return {
+                text: `🚨 **ALERTA DE CALIDAD DEL AIRE - AQI: ${data.aqi} (${aqiLevel})**`,
+                list: [
+                    "🏠 PERMANECE EN INTERIORES",
+                    "🚫 EVITA actividades al aire libre",
+                    "🪟 MANTÉN ventanas y puertas cerradas",
+                    "👶 PROTEGE especialmente a niños y ancianos"
+                ],
+                tips: [
+                    "📞 Contacta servicios de emergencia si tienes problemas respiratorios",
+                    "💊 Usa medicamentos preventivos si tienes asma",
+                    "🌬️ Considera usar purificadores de aire"
+                ]
+            };
+        }
+        
+        return {
+            text: `✅ **Calidad del Aire Actual: ${aqiLevel}**`,
+            list: [
+                "🌤️ Las condiciones son manejables",
+                "🚶 Puedes realizar actividades normales",
+                "👀 Monitorea cambios en los próximos días"
+            ],
+            tips: [
+                "📊 Revisa el pronóstico para planificar actividades",
+                "🌱 Los grupos sensibles deben tomar precauciones",
+                "🔄 Los datos se actualizan automáticamente"
+            ]
+        };
+    }
+    
+    getAQIResponse(data) {
+        if (!data || !data.aqi) {
+            return {
+                text: "📊 **Índice de Calidad del Aire (AQI):**",
+                list: [
+                    "🟢 0-50: Buena - Aire satisfactorio",
+                    "🟡 51-100: Moderada - Aceptable para la mayoría",
+                    "🟠 101-150: Insalubre para grupos sensibles",
+                    "🔴 151-200: Insalubre - Todos pueden experimentar efectos",
+                    "🟣 201-300: Muy insalubre - Alerta de salud",
+                    "🟤 301-500: Peligroso - Alerta de emergencia"
+                ]
+            };
+        }
+        
+        const aqiLevel = this.getAQILevel(data.aqi);
+        const recommendations = this.getAQIRecommendations(data.aqi);
+        
+        return {
+            text: `📊 **AQI Actual: ${data.aqi} (${aqiLevel})**`,
+            list: [
+                `📍 Ubicación: ${data.location || 'No disponible'}`,
+                `⏰ Última actualización: ${new Date().toLocaleTimeString()}`,
+                `🌡️ Temperatura: ${data.temperature || 'N/A'}°C`
+            ],
+            tips: recommendations
+        };
+    }
+    
+    // ===== FUNCIONES AUXILIARES =====
+    
+    getAQILevel(aqi) {
+        if (aqi <= 50) return 'Buena';
+        if (aqi <= 100) return 'Moderada';
+        if (aqi <= 150) return 'Insalubre para grupos sensibles';
+        if (aqi <= 200) return 'Insalubre';
+        if (aqi <= 300) return 'Muy insalubre';
+        return 'Peligroso';
+    }
+    
+    getAQIRecommendations(aqi) {
+        if (aqi <= 50) {
+            return [
+                "✅ Excelente calidad del aire",
+                "🚶 Perfecto para actividades al aire libre",
+                "🌱 Ideal para ejercicio y deportes"
+            ];
+        } else if (aqi <= 100) {
+            return [
+                "✅ Buena calidad del aire",
+                "🚶 Actividades normales son seguras",
+                "👀 Grupos sensibles deben monitorear síntomas"
+            ];
+        } else if (aqi <= 150) {
+            return [
+                "⚠️ Grupos sensibles deben reducir actividades al aire libre",
+                "👶 Niños y ancianos deben tomar precauciones",
+                "🫁 Personas con asma deben usar medicamentos"
+            ];
+        } else if (aqi <= 200) {
+            return [
+                "🚫 Todos deben evitar actividades al aire libre",
+                "🏠 Permanece en interiores con ventanas cerradas",
+                "🚗 Evita conducir si no es necesario"
+            ];
+        } else {
+            return [
+                "🚨 ALERTA - Evita salir al exterior",
+                "🏠 Permanece en interiores con purificadores",
+                "📞 Contacta servicios médicos si tienes síntomas"
+            ];
+        }
+    }
+    
+    getHealthRisks(aqi) {
+        if (aqi <= 50) {
+            return ["✅ Riesgo mínimo para la salud"];
+        } else if (aqi <= 100) {
+            return ["⚠️ Riesgo bajo para grupos sensibles"];
+        } else if (aqi <= 150) {
+            return [
+                "🫁 Problemas respiratorios en grupos sensibles",
+                "👶 Niños y ancianos en riesgo",
+                "🤧 Puede empeorar alergias y asma"
+            ];
+        } else if (aqi <= 200) {
+            return [
+                "🫁 Todos pueden experimentar problemas respiratorios",
+                "❤️ Riesgo cardiovascular aumentado",
+                "🧠 Posible impacto en función cognitiva"
+            ];
+        } else {
+            return [
+                "🚨 RIESGO CRÍTICO para toda la población",
+                "🫁 Problemas respiratorios severos",
+                "❤️ Emergencias cardiovasculares posibles"
+            ];
+        }
+    }
+    
+    getHealthRecommendations(aqi, sentiment) {
+        const baseRecommendations = this.getAQIRecommendations(aqi);
+        
+        if (sentiment === 'urgent') {
+            return [
+                "🚨 ATENCIÓN INMEDIATA REQUERIDA",
+                ...baseRecommendations,
+                "📞 Contacta servicios de emergencia si es necesario"
+            ];
+        } else if (sentiment === 'negative') {
+            return [
+                "😟 Entiendo tu preocupación",
+                ...baseRecommendations,
+                "💡 Los datos se actualizan constantemente"
+            ];
+        }
+        
+        return baseRecommendations;
+    }
+    
+    // ===== FUNCIONES DE APRENDIZAJE Y MEMORIA =====
+    
+    loadUserPreferences() {
+        try {
+            const saved = localStorage.getItem('chatbot_user_preferences');
+            return saved ? JSON.parse(saved) : {
+                language: 'es',
+                preferredTopics: [],
+                alertLevel: 'moderate',
+                experience: 'beginner'
+            };
+        } catch (error) {
+            console.warn('Error loading user preferences:', error);
+            return {
+                language: 'es',
+                preferredTopics: [],
+                alertLevel: 'moderate',
+                experience: 'beginner'
+            };
+        }
+    }
+    
+    saveUserPreferences() {
+        try {
+            localStorage.setItem('chatbot_user_preferences', JSON.stringify(this.userPreferences));
+        } catch (error) {
+            console.warn('Error saving user preferences:', error);
+        }
+    }
+    
+    loadLearningData() {
+        try {
+            const saved = localStorage.getItem('chatbot_learning_data');
+            return saved ? JSON.parse(saved) : {
+                commonQuestions: {},
+                userInterests: {},
+                responsePatterns: {},
+                successRate: 0
+            };
+        } catch (error) {
+            console.warn('Error loading learning data:', error);
+            return {
+                commonQuestions: {},
+                userInterests: {},
+                responsePatterns: {},
+                successRate: 0
+            };
+        }
+    }
+    
+    saveLearningData() {
+        try {
+            localStorage.setItem('chatbot_learning_data', JSON.stringify(this.learningData));
+        } catch (error) {
+            console.warn('Error saving learning data:', error);
+        }
+    }
+    
+    learnFromInteraction(userMessage, response, wasHelpful = null) {
+        // Aprender de las interacciones del usuario
+        const message = userMessage.toLowerCase();
+        
+        // Actualizar preguntas comunes
+        if (!this.learningData.commonQuestions[message]) {
+            this.learningData.commonQuestions[message] = 0;
+        }
+        this.learningData.commonQuestions[message]++;
+        
+        // Detectar intereses del usuario
+        const topics = this.extractTopics(message);
+        topics.forEach(topic => {
+            if (!this.learningData.userInterests[topic]) {
+                this.learningData.userInterests[topic] = 0;
+            }
+            this.learningData.userInterests[topic]++;
+        });
+        
+        // Guardar patrón de respuesta si fue útil
+        if (wasHelpful === true) {
+            const intent = this.analyzeIntent(message);
+            if (!this.learningData.responsePatterns[intent]) {
+                this.learningData.responsePatterns[intent] = [];
+            }
+            this.learningData.responsePatterns[intent].push({
+                message: userMessage,
+                response: response,
+                timestamp: new Date().toISOString()
+            });
+        }
+        
+        this.saveLearningData();
+    }
+    
+    extractTopics(message) {
+        const topics = [];
+        const topicKeywords = {
+            'aqi': ['aqi', 'índice', 'calidad del aire'],
+            'health': ['salud', 'recomendación', 'consejo', 'precaución'],
+            'weather': ['clima', 'temperatura', 'viento', 'lluvia'],
+            'pollutants': ['contaminante', 'partícula', 'pm2.5', 'pm10', 'ozono'],
+            'forecast': ['pronóstico', 'futuro', 'mañana', 'predicción'],
+            'emergency': ['emergencia', 'alerta', 'peligro', 'crítico']
+        };
+        
+        for (const [topic, keywords] of Object.entries(topicKeywords)) {
+            if (keywords.some(keyword => message.includes(keyword))) {
+                topics.push(topic);
+            }
+        }
+        
+        return topics;
+    }
+    
+    getPersonalizedResponse(intent, data) {
+        // Respuestas personalizadas basadas en el historial del usuario
+        const userInterests = Object.keys(this.learningData.userInterests)
+            .sort((a, b) => this.learningData.userInterests[b] - this.learningData.userInterests[a])
+            .slice(0, 3);
+        
+        const experience = this.userPreferences.experience;
+        
+        // Adaptar el nivel de detalle según la experiencia
+        let response = this.getBaseResponse(intent, data);
+        
+        if (experience === 'beginner') {
+            response = this.simplifyResponse(response);
+        } else if (experience === 'expert') {
+            response = this.addTechnicalDetails(response);
+        }
+        
+        // Agregar información relacionada con intereses del usuario
+        if (userInterests.length > 0) {
+            response = this.addRelatedInfo(response, userInterests);
+        }
+        
+        return response;
+    }
+    
+    simplifyResponse(response) {
+        // Simplificar respuesta para usuarios principiantes
+        if (response.list && response.list.length > 3) {
+            response.list = response.list.slice(0, 3);
+        }
+        if (response.tips && response.tips.length > 2) {
+            response.tips = response.tips.slice(0, 2);
+        }
+        return response;
+    }
+    
+    addTechnicalDetails(response) {
+        // Agregar detalles técnicos para usuarios expertos
+        if (response.text && !response.text.includes('**')) {
+            response.text = `**Detalles Técnicos:** ${response.text}`;
+        }
+        return response;
+    }
+    
+    addRelatedInfo(response, interests) {
+        // Agregar información relacionada con los intereses del usuario
+        const relatedTips = [];
+        
+        if (interests.includes('health')) {
+            relatedTips.push("🏥 Revisa la sección 'Salud' para más detalles médicos");
+        }
+        if (interests.includes('forecast')) {
+            relatedTips.push("📅 Consulta 'Cada Hora' y 'Diario' para pronósticos detallados");
+        }
+        if (interests.includes('pollutants')) {
+            relatedTips.push("🌫️ Explora los contaminantes específicos en 'Calidad del Aire'");
+        }
+        
+        if (relatedTips.length > 0 && response.tips) {
+            response.tips = [...response.tips, ...relatedTips];
+        }
+        
+        return response;
+    }
+    
+    getBaseResponse(intent, data) {
+        // Obtener respuesta base según la intención
+        switch (intent) {
+            case 'current_conditions':
+                return this.getCurrentConditionsResponse(data);
+            case 'forecast':
+                return this.getForecastResponse(data);
+            case 'health_advice':
+                return this.getHealthAdviceResponse(data, 'neutral');
+            case 'pollutant_info':
+                return this.getPollutantInfoResponse('', data);
+            case 'location_specific':
+                return this.getLocationSpecificResponse(data);
+            case 'comparison':
+                return this.getComparisonResponse('', data);
+            case 'emergency':
+                return this.getEmergencyResponse(data);
+            default:
+                return this.getGeneralResponse();
+        }
+    }
+    
+    getGeneralResponse() {
+        return {
+            text: "🤖 **Soy tu asistente inteligente de AirBytes**",
+            list: [
+                "📊 Puedo ayudarte con datos de calidad del aire",
+                "🏥 Te doy recomendaciones de salud personalizadas",
+                "🌤️ Analizo condiciones meteorológicas",
+                "🔮 Te ayudo con pronósticos y tendencias"
+            ],
+            tips: [
+                "💡 Pregúntame sobre condiciones actuales",
+                "🔍 Pregunta por contaminantes específicos (PM2.5, O3, etc.)",
+                "📱 Explora las diferentes secciones de la app"
+            ]
+        };
+    }
+    
+    // ===== FUNCIONES DE CONTEXTO AVANZADO =====
+    
+    updateContextMemory(userMessage, response) {
+        // Mantener memoria de contexto de la conversación
+        this.contextMemory.push({
+            userMessage,
+            response,
+            timestamp: new Date().toISOString(),
+            context: this.getCurrentContext()
+        });
+        
+        // Mantener solo los últimos 10 intercambios
+        if (this.contextMemory.length > 10) {
+            this.contextMemory = this.contextMemory.slice(-10);
+        }
+    }
+    
+    getContextualResponse(userMessage) {
+        // Respuesta basada en el contexto de la conversación
+        const recentContext = this.contextMemory.slice(-3);
+        const currentData = this.getCurrentAppData();
+        
+        // Si el usuario pregunta sobre algo mencionado recientemente
+        for (const context of recentContext) {
+            if (this.isRelatedQuestion(userMessage, context.userMessage)) {
+                return this.getFollowUpResponse(userMessage, context, currentData);
+            }
+        }
+        
+        return null; // No hay contexto relevante
+    }
+    
+    isRelatedQuestion(currentMessage, previousMessage) {
+        const currentWords = currentMessage.toLowerCase().split(' ');
+        const previousWords = previousMessage.toLowerCase().split(' ');
+        
+        // Buscar palabras clave en común
+        const commonWords = currentWords.filter(word => 
+            previousWords.includes(word) && word.length > 3
+        );
+        
+        return commonWords.length >= 2;
+    }
+    
+    getFollowUpResponse(userMessage, context, currentData) {
+        return {
+            text: `🔄 **Siguiendo tu pregunta anterior sobre "${context.userMessage}":**`,
+            list: [
+                "📊 Aquí tienes información adicional relacionada",
+                "🔍 ¿Te gustaría profundizar en algún aspecto específico?",
+                "💡 Puedo ayudarte con más detalles si necesitas"
+            ],
+            tips: [
+                "🤖 Recuerdo nuestro contexto de conversación",
+                "📱 Los datos se actualizan en tiempo real",
+                "❓ Pregunta por cualquier duda adicional"
+            ]
+        };
+    }
+
     initializeKnowledgeBase() {
         return {
             aqi: {
@@ -3342,18 +5650,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
  
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

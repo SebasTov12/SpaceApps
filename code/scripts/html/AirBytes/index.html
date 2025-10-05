@@ -2,15 +2,21 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="theme-color" content="#4CAF50">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="apple-touch-fullscreen" content="yes">
     <title>AirBytes - Monitoreo de Calidad del Aire</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath fill='%234CAF50' d='M288 32c0 17.7 14.3 32 32 32h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H320c-17.7 0-32 14.3-32 32s14.3 32 32 32h32c53 0 96-43 96-96s-43-96-96-96H320c-17.7 0-32 14.3-32 32zM160 96c0 17.7 14.3 32 32 32h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H192c-17.7 0-32 14.3-32 32s14.3 32 32 32h32c53 0 96-43 96-96s-43-96-96-96H192c-17.7 0-32 14.3-32 32zM64 192c0 17.7 14.3 32 32 32h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H96c-17.7 0-32 14.3-32 32s14.3 32 32 32h32c53 0 96-43 96-96s-43-96-96-96H96c-17.7 0-32 14.3-32 32zM288 256c0 17.7 14.3 32 32 32h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H320c-17.7 0-32 14.3-32 32s14.3 32 32 32h32c53 0 96-43 96-96s-43-96-96-96H320c-17.7 0-32 14.3-32 32zM160 352c0 17.7 14.3 32 32 32h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H192c-17.7 0-32 14.3-32 32s14.3 32 32 32h32c53 0 96-43 96-96s-43-96-96-96H192c-17.7 0-32 14.3-32 32zM64 448c0 17.7 14.3 32 32 32h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H96c-17.7 0-32 14.3-32 32s14.3 32 32 32h32c53 0 96-43 96-96s-43-96-96-96H96c-17.7 0-32 14.3-32 32z'/%3E%3C/svg%3E">
     <link rel="alternate icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath fill='%234CAF50' d='M288 32c0 17.7 14.3 32 32 32h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H320c-17.7 0-32 14.3-32 32s14.3 32 32 32h32c53 0 96-43 96-96s-43-96-96-96H320c-17.7 0-32 14.3-32 32zM160 96c0 17.7 14.3 32 32 32h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H192c-17.7 0-32 14.3-32 32s14.3 32 32 32h32c53 0 96-43 96-96s-43-96-96-96H192c-17.7 0-32 14.3-32 32zM64 192c0 17.7 14.3 32 32 32h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H96c-17.7 0-32 14.3-32 32s14.3 32 32 32h32c53 0 96-43 96-96s-43-96-96-96H96c-17.7 0-32 14.3-32 32zM288 256c0 17.7 14.3 32 32 32h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H320c-17.7 0-32 14.3-32 32s14.3 32 32 32h32c53 0 96-43 96-96s-43-96-96-96H320c-17.7 0-32 14.3-32 32zM160 352c0 17.7 14.3 32 32 32h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H192c-17.7 0-32 14.3-32 32s14.3 32 32 32h32c53 0 96-43 96-96s-43-96-96-96H192c-17.7 0-32 14.3-32 32zM64 448c0 17.7 14.3 32 32 32h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H96c-17.7 0-32 14.3-32 32s14.3 32 32 32h32c53 0 96-43 96-96s-43-96-96-96H96c-17.7 0-32 14.3-32 32z'/%3E%3C/svg%3E">
     <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#dc3545">
+    <script src="config.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
@@ -70,6 +76,10 @@
                 <button class="nav-btn" data-section="farmers">
                     <i class="fas fa-seedling"></i>
                     <span>Agricultores</span>
+                </button>
+                <button class="nav-btn" data-section="health">
+                    <i class="fas fa-heartbeat"></i>
+                    <span>Salud</span>
                 </button>
             </div>
         </nav>
@@ -1263,6 +1273,199 @@
                 </div>
             </section>
 
+            <!-- Health Section -->
+            <section class="content-section" id="health-section">
+                <div class="section-header health-header">
+                    <div class="health-icons">
+                        <i class="fas fa-heartbeat health-icon"></i>
+                        <i class="fas fa-user-md health-icon"></i>
+                        <i class="fas fa-ambulance health-icon"></i>
+                        <i class="fas fa-hospital health-icon"></i>
+                        <i class="fas fa-stethoscope health-icon"></i>
+                    </div>
+                    <h2>Centro de Salud</h2>
+                    <p>Monitoreo especializado para profesionales de la salud y entidades médicas</p>
+                </div>
+
+                <!-- Health Overview -->
+                <div class="health-overview">
+                    <div class="health-summary-card">
+                <div class="health-header-info">
+                    <div class="health-location">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span id="healthLocation">Cargando ubicación...</span>
+                    </div>
+                    <div class="health-timestamp">
+                        <i class="fas fa-clock"></i>
+                        <span id="healthTimestamp">Última actualización: --</span>
+                    </div>
+                    <div class="data-source-indicator">
+                        <i class="fas fa-database"></i>
+                        <span id="weatherSource">Cargando datos...</span>
+                    </div>
+                    <div class="data-source-indicator">
+                        <i class="fas fa-wind"></i>
+                        <span id="aqiSource">Cargando datos...</span>
+                    </div>
+                    <div class="data-timestamp" id="dataTimestamp">
+                        Verificando fuentes de datos...
+                    </div>
+                </div>
+                        <div class="health-risk-assessment">
+                            <h3>Evaluación de Riesgo Sanitario</h3>
+                            <div class="risk-levels">
+                                <div class="risk-item" id="respiratoryRisk">
+                                    <i class="fas fa-lungs"></i>
+                                    <span class="risk-label">Riesgo Respiratorio</span>
+                                    <span class="risk-value" id="respiratoryRiskValue">Evaluando...</span>
+                                </div>
+                                <div class="risk-item" id="cardiacRisk">
+                                    <i class="fas fa-heart"></i>
+                                    <span class="risk-label">Riesgo Cardíaco</span>
+                                    <span class="risk-value" id="cardiacRiskValue">Evaluando...</span>
+                                </div>
+                                <div class="risk-item" id="pediatricRisk">
+                                    <i class="fas fa-baby"></i>
+                                    <span class="risk-label">Riesgo Pediátrico</span>
+                                    <span class="risk-value" id="pediatricRiskValue">Evaluando...</span>
+                                </div>
+                                <div class="risk-item" id="elderlyRisk">
+                                    <i class="fas fa-user-friends"></i>
+                                    <span class="risk-label">Riesgo Adultos Mayores</span>
+                                    <span class="risk-value" id="elderlyRiskValue">Evaluando...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Health Alerts -->
+                <div class="health-alerts">
+                    <div class="alert-card health-alert-card">
+                        <div class="alert-header">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <h3>Alertas Médicas</h3>
+                        </div>
+                        <div class="alert-content" id="healthAlertsContent">
+                            <div class="loading-alerts">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <span>Cargando alertas médicas...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Medical Recommendations -->
+                <div class="medical-recommendations">
+                    <div class="recommendations-card medical-recommendations-card">
+                        <div class="recommendations-header">
+                            <i class="fas fa-clipboard-list"></i>
+                            <h3>Recomendaciones Médicas</h3>
+                        </div>
+                        <div class="recommendations-content" id="medicalRecommendationsContent">
+                            <div class="recommendation-category">
+                                <h4><i class="fas fa-hospital"></i> Para Hospitales</h4>
+                                <ul class="recommendation-list" id="hospitalRecommendations">
+                                    <li class="loading-recommendation">Cargando recomendaciones...</li>
+                                </ul>
+                            </div>
+                            <div class="recommendation-category">
+                                <h4><i class="fas fa-user-md"></i> Para Clínicas</h4>
+                                <ul class="recommendation-list" id="clinicRecommendations">
+                                    <li class="loading-recommendation">Cargando recomendaciones...</li>
+                                </ul>
+                            </div>
+                            <div class="recommendation-category">
+                                <h4><i class="fas fa-ambulance"></i> Para Servicios de Emergencia</h4>
+                                <ul class="recommendation-list" id="emergencyRecommendations">
+                                    <li class="loading-recommendation">Cargando recomendaciones...</li>
+                                </ul>
+                            </div>
+                            <div class="recommendation-category">
+                                <h4><i class="fas fa-home"></i> Para Atención Domiciliaria</h4>
+                                <ul class="recommendation-list" id="homecareRecommendations">
+                                    <li class="loading-recommendation">Cargando recomendaciones...</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Patient Management -->
+                <div class="patient-management">
+                    <div class="config-card patient-config-card">
+                        <div class="config-header">
+                            <i class="fas fa-users"></i>
+                            <h3>Gestión de Pacientes</h3>
+                        </div>
+                        <div class="config-content">
+                            <div class="config-section">
+                                <h4>Configuración de Alertas</h4>
+                                <div class="alert-settings">
+                                    <div class="alert-option">
+                                        <input type="checkbox" id="alertRespiratory" checked>
+                                        <label for="alertRespiratory">Pacientes Respiratorios</label>
+                                    </div>
+                                    <div class="alert-option">
+                                        <input type="checkbox" id="alertCardiac" checked>
+                                        <label for="alertCardiac">Pacientes Cardíacos</label>
+                                    </div>
+                                    <div class="alert-option">
+                                        <input type="checkbox" id="alertPediatric" checked>
+                                        <label for="alertPediatric">Pacientes Pediátricos</label>
+                                    </div>
+                                    <div class="alert-option">
+                                        <input type="checkbox" id="alertElderly" checked>
+                                        <label for="alertElderly">Adultos Mayores</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="config-section">
+                                <h4>Umbrales de Riesgo</h4>
+                                <div class="risk-thresholds">
+                                    <div class="threshold-item">
+                                        <label>AQI Crítico:</label>
+                                        <select id="criticalThreshold">
+                                            <option value="100">100 (Insalubre para grupos sensibles)</option>
+                                            <option value="150">150 (Insalubre)</option>
+                                            <option value="200">200 (Muy insalubre)</option>
+                                        </select>
+                                    </div>
+                                    <div class="threshold-item">
+                                        <label>AQI Alerta:</label>
+                                        <select id="alertThreshold">
+                                            <option value="50">50 (Moderado)</option>
+                                            <option value="75">75 (Insalubre para grupos sensibles)</option>
+                                            <option value="100">100 (Insalubre)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="save-health-config-btn" id="saveHealthConfigBtn">
+                                <i class="fas fa-save"></i>
+                                Guardar Configuración
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Health Forecast -->
+                <div class="health-forecast">
+                    <div class="forecast-card health-forecast-card">
+                        <div class="forecast-header">
+                            <i class="fas fa-chart-line"></i>
+                            <h3>Pronóstico de Salud</h3>
+                        </div>
+                        <div class="forecast-content" id="healthForecastContent">
+                            <div class="loading-forecast">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <span>Cargando pronóstico de salud...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
         </main>
 
         <footer class="footer">
@@ -1284,7 +1487,7 @@
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2024 AirBytes Team. Todos los derechos reservados.</p>
+                <p>&copy; 2025 AirBytes Team. Todos los derechos reservados.</p>
             </div>
         </footer>
 
