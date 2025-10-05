@@ -158,9 +158,6 @@ def process_tropomi_l2(file_path: str, qa_threshold: float = 0.75,
             if not filtered.empty:
                 df = filtered
 
-        # ⚡ DEMO: limitar a 50 filas
-        df = df.head(50)
-
         records = []
         for _, row in df.iterrows():
             records.append({
@@ -239,9 +236,6 @@ def process_tempo(file_path: str,
             ]
             if not filtered.empty:
                 df = filtered
-
-        # ⚡ DEMO: limitar a 50 filas
-        df = df.head(50)
 
         records = []
         for _, row in df.iterrows():
