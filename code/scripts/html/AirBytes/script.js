@@ -204,7 +204,6 @@ class AirBytesApp {
     }
 
     updateDisplayData(tempoData, groundData, weatherData) {
-        
         document.getElementById('tempoNo2').textContent = `${tempoData.no2} ppb`;
         document.getElementById('tempoO3').textContent = `${tempoData.o3} ppb`;
         document.getElementById('tempoHcho').textContent = `${tempoData.hcho} ppb`;
@@ -812,15 +811,23 @@ class AirBytesApp {
         // Add touch event listeners for better mobile experience
         navigation.addEventListener('touchstart', (e) => {
             this.handleTouchStart(e, navigation);
-        });
+        }, { passive: false });
         
         navigation.addEventListener('touchmove', (e) => {
             this.handleTouchMove(e, navigation);
-        });
+        }, { passive: false });
         
         navigation.addEventListener('touchend', (e) => {
             this.handleTouchEnd(e, navigation);
-        });
+        }, { passive: true });
+        
+        // Add wheel event for desktop trackpad support
+        navigation.addEventListener('wheel', (e) => {
+            if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+                e.preventDefault();
+                navigation.scrollLeft += e.deltaX;
+            }
+        }, { passive: false });
         
         // Initial update of scroll indicators
         this.updateScrollIndicators(navigation);
@@ -912,15 +919,34 @@ class AirBytesApp {
     handleTouchStart(e, navigation) {
         this.touchStartX = e.touches[0].clientX;
         this.touchStartScrollLeft = navigation.scrollLeft;
+        this.touchStartTime = Date.now();
         navigation.style.scrollBehavior = 'auto';
+        
+        // Add momentum for better mobile experience
+        this.touchVelocity = 0;
+        this.lastTouchX = this.touchStartX;
+        this.lastTouchTime = this.touchStartTime;
     }
     
     handleTouchMove(e, navigation) {
         if (!this.touchStartX) return;
         
         const touchCurrentX = e.touches[0].clientX;
+        const currentTime = Date.now();
         const touchDiff = this.touchStartX - touchCurrentX;
         const newScrollLeft = this.touchStartScrollLeft + touchDiff;
+        
+        // Calculate velocity for momentum
+        if (this.lastTouchX !== undefined && this.lastTouchTime !== undefined) {
+            const deltaX = touchCurrentX - this.lastTouchX;
+            const deltaTime = currentTime - this.lastTouchTime;
+            if (deltaTime > 0) {
+                this.touchVelocity = deltaX / deltaTime;
+            }
+        }
+        
+        this.lastTouchX = touchCurrentX;
+        this.lastTouchTime = currentTime;
         
         // Prevent default to allow custom scroll behavior
         e.preventDefault();
@@ -932,6 +958,18 @@ class AirBytesApp {
     handleTouchEnd(e, navigation) {
         if (!this.touchStartX) return;
         
+        // Apply momentum scrolling
+        if (Math.abs(this.touchVelocity) > 0.5) {
+            const momentum = this.touchVelocity * 50; // Adjust momentum strength
+            const targetScroll = navigation.scrollLeft + momentum;
+            
+            // Smooth scroll to target with momentum
+            navigation.scrollTo({
+                left: Math.max(0, Math.min(targetScroll, navigation.scrollWidth - navigation.clientWidth)),
+                behavior: 'smooth'
+            });
+        }
+        
         // Re-enable smooth scrolling
         navigation.style.scrollBehavior = 'smooth';
         
@@ -941,6 +979,10 @@ class AirBytesApp {
         // Reset touch variables
         this.touchStartX = null;
         this.touchStartScrollLeft = null;
+        this.touchStartTime = null;
+        this.touchVelocity = 0;
+        this.lastTouchX = null;
+        this.lastTouchTime = null;
     }
     
     scrollToActiveNavButton(activeButton) {
@@ -1339,9 +1381,6 @@ class AirBytesApp {
         try {
             const locationData = this.getCurrentLocationData();
             
-            // Update location and timestamp
-            document.getElementById('healthLocation').textContent = locationData.name;
-            document.getElementById('healthTimestamp').textContent = `Última actualización: ${new Date().toLocaleTimeString('es-ES')}`;
             
             // Calculate health risks
             const risks = this.calculateHealthRisks(weatherData, aqiData);
@@ -2618,7 +2657,6 @@ class AirBytesApp {
                 const timestamp = weatherData?.timestamp || aqiData?.timestamp || new Date().toISOString();
                 dataTimestamp.textContent = `Última actualización: ${new Date(timestamp).toLocaleString('es-ES')}`;
             }
-
         } catch (error) {
             console.error('Error updating data source status:', error);
         }
@@ -2664,8 +2702,6 @@ class AirBytesApp {
     async updateAgriculturalWeatherData() {
         const locationData = this.getCurrentLocationData();
         
-        // Update location
-        document.getElementById('farmLocation').textContent = locationData.name;
         
         // Show loading state
         this.showAgriculturalLoadingState();
@@ -2769,9 +2805,6 @@ class AirBytesApp {
             console.error('Error fetching weather data:', error);
             console.log('Using simulated weather data as fallback');
             // Fallback to existing data or generate realistic data
-            const tempElement = document.getElementById('weatherTemp');
-            const humidityElement = document.getElementById('weatherHumidity');
-            const windElement = document.getElementById('weatherWind');
             
             return {
                 temperature: tempElement ? parseInt(tempElement.textContent) : 22,
@@ -5220,13 +5253,11 @@ class Chatbot {
     getCurrentAppData() {
         // Obtener datos actuales de la aplicación
         try {
-            const weatherTemp = document.getElementById('weatherTemp')?.textContent;
             const aqiValue = document.getElementById('aqiValue')?.textContent;
             const weatherDesc = document.getElementById('weatherDesc')?.textContent;
             const locationName = document.getElementById('locationName')?.textContent;
             
             return {
-                temperature: weatherTemp ? parseInt(weatherTemp) : null,
                 aqi: aqiValue ? parseInt(aqiValue) : null,
                 weatherDescription: weatherDesc || null,
                 location: locationName || null,
