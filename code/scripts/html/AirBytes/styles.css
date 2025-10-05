@@ -199,8 +199,9 @@ body {
 
 .content-section {
     display: none;
-    padding: 2rem 0;
+    padding: 3rem 0;
     min-height: 60vh;
+    margin-bottom: 2rem;
 }
 
 .content-section.active {
@@ -474,7 +475,7 @@ body {
     padding: 2rem;
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: 4rem;
 }
 
 .current-aqi-card {
@@ -484,6 +485,7 @@ body {
     padding: 2rem;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
+    margin: 2rem 0;
 }
 
 .card-header {
@@ -672,7 +674,8 @@ body {
 .data-sources {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1.5rem;
+    gap: 2.5rem;
+    margin: 2rem 0;
 }
 
 .source-card {
@@ -683,6 +686,7 @@ body {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+    margin-bottom: 1rem;
 }
 
 .source-card:hover {
@@ -746,6 +750,7 @@ body {
     padding: 2rem;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
+    margin: 2rem 0;
 }
 
 .prediction-section h2 {
@@ -904,6 +909,7 @@ body {
     padding: 2rem;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
+    margin: 2rem 0;
 }
 
 .forecast-section h2 {
@@ -957,6 +963,7 @@ body {
     padding: 2rem;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
+    margin: 2rem 0;
 }
 
 .alerts-section h2 {
@@ -1018,6 +1025,7 @@ body {
     padding: 2rem;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
+    margin: 2rem 0;
 }
 
 .map-section h2 {
@@ -1440,19 +1448,901 @@ body {
     font-size: 0.9rem;
 }
 
-/* Mobile First Responsive Design */
+/* Mobile First Responsive Design - All Mobile Devices */
 @media (max-width: 480px) {
+    /* Reset and base styles for mobile portrait */
+    * {
+        box-sizing: border-box;
+    }
+    
     body {
         font-size: 14px;
         line-height: 1.4;
+        overflow-x: hidden;
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        max-width: 100vw;
+        min-height: 100vh;
     }
     
+    /* Prevent horizontal scroll and ensure proper viewport */
+    html {
+        overflow-x: hidden;
+        width: 100%;
+        max-width: 100vw;
+        height: 100%;
+    }
+    
+    /* Container constraints */
+    .main-content,
+    .section,
+    .header,
+    .footer {
+        max-width: 100vw;
+        overflow-x: hidden;
+        width: 100%;
+    }
+    
+    /* Fix text overlap issues */
     .header {
+        position: relative;
+        z-index: 10;
+        background: white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .main-navigation {
+        position: relative;
+        z-index: 9;
+        background: white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .main-content {
+        position: relative;
+        z-index: 1;
+        padding-top: 0;
+        margin-top: 0;
+    }
+    
+    /* Mobile header optimization - Portrait */
+    .header {
+        padding: 0.75rem 0.5rem;
+        min-height: auto;
+        width: 100%;
+        max-width: 100vw;
+        overflow-x: hidden;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: white;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .header-content {
+        flex-direction: column;
+        gap: 0.75rem;
+        padding: 0;
+        width: 100%;
+        max-width: 100%;
+        align-items: center;
+    }
+    
+    .logo {
+        text-align: center;
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .logo h1 {
+        font-size: 1.3rem;
+        margin: 0;
+        line-height: 1.2;
+        font-weight: 600;
+    }
+    
+    .logo p {
+        font-size: 0.75rem;
+        margin: 0;
+        line-height: 1.2;
+        color: #666;
+    }
+    
+    /* Mobile navigation - All mobile devices */
+    .main-navigation {
+        width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        position: sticky;
+        top: 0;
+        z-index: 99;
+        background: white;
+        border-bottom: 1px solid #e0e0e0;
+        padding: 0.5rem 0;
+        touch-action: pan-x;
+        overscroll-behavior-x: contain;
+        scroll-behavior: smooth;
+        scroll-snap-type: x mandatory;
+        scroll-padding: 0 20px;
+    }
+    
+    .main-navigation::-webkit-scrollbar {
+        display: none;
+    }
+    
+    .nav-container {
+        display: flex;
+        gap: 0.4rem;
+        padding: 0 0.5rem;
+        min-width: max-content;
+        width: max-content;
+        align-items: center;
+        flex-wrap: nowrap;
+    }
+    
+    .nav-btn {
+        padding: 0.5rem 0.8rem;
+        font-size: 0.7rem;
+        text-align: center;
+        white-space: nowrap;
+        min-height: 48px;
+        min-width: 70px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        color: #495057;
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        cursor: pointer;
+        scroll-snap-align: center;
+        scroll-snap-stop: normal;
+    }
+    
+    .nav-btn:hover {
+        background: #e9ecef;
+        transform: translateY(-1px);
+    }
+    
+    .nav-btn.active {
+        background: #007bff;
+        color: white;
+        border-color: #007bff;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,123,255,0.3);
+    }
+    
+    .nav-btn i {
+        font-size: 0.9rem;
+        margin-bottom: 0.2rem;
+    }
+    
+    .nav-btn span {
+        font-size: 0.65rem;
+        line-height: 1;
+        font-weight: 500;
+    }
+    
+    /* Scroll indicators for mobile navigation */
+    .main-navigation::before,
+    .main-navigation::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 20px;
+        pointer-events: none;
+        z-index: 2;
+        transition: opacity 0.3s ease;
+    }
+    
+    .main-navigation::before {
+        left: 0;
+        background: linear-gradient(to right, 
+            rgba(255,255,255,1) 0%, 
+            rgba(255,255,255,0.8) 30%, 
+            rgba(255,255,255,0.4) 60%, 
+            transparent 100%
+        );
+    }
+    
+    .main-navigation::after {
+        right: 0;
+        background: linear-gradient(to left, 
+            rgba(255,255,255,1) 0%, 
+            rgba(255,255,255,0.8) 30%, 
+            rgba(255,255,255,0.4) 60%, 
+            transparent 100%
+        );
+    }
+    
+    /* Hide indicators when at scroll boundaries */
+    .main-navigation.scroll-start::before {
+        opacity: 0;
+    }
+    
+    .main-navigation.scroll-end::after {
+        opacity: 0;
+    }
+    
+    /* Fix text overlap issues in portrait mode */
+    .header-info,
+    .health-header-info,
+    .weather-header-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 0.5rem 0;
+        margin-bottom: 1rem;
+    }
+    
+    .header-info > div,
+    .health-header-info > div,
+    .weather-header-info > div {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.25rem 0;
+        font-size: 0.85rem;
+        color: #666;
+    }
+    
+    .header-info i,
+    .health-header-info i,
+    .weather-header-info i {
+        font-size: 0.9rem;
+        color: #007bff;
+        flex-shrink: 0;
+    }
+    
+    .header-info span,
+    .health-header-info span,
+    .weather-header-info span {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        line-height: 1.3;
+    }
+    
+    /* Fix location selector overlap */
+    .location-selector {
+        margin: 1rem 0;
+        padding: 0.5rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .location-selector select {
+        width: 100%;
+        padding: 0.75rem;
+        font-size: 16px;
+        border: 1px solid #ced4da;
+        border-radius: 6px;
+        background: white;
+        margin-bottom: 0.5rem;
+    }
+    
+    .location-btn {
+        width: 100%;
+        padding: 0.75rem;
+        font-size: 0.9rem;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-weight: 500;
+    }
+    
+    /* Fix grid items text overlap */
+    .weather-item,
+    .health-item,
+    .agricultural-item {
+        padding: 1rem;
+        margin: 0.5rem 0;
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .weather-item i,
+    .health-item i,
+    .agricultural-item i {
+        font-size: 1.3rem;
+        margin-right: 0.75rem;
+        color: #007bff;
+        flex-shrink: 0;
+    }
+    
+    .weather-item span,
+    .health-item span,
+    .agricultural-item span {
+        font-size: 0.9rem;
+        line-height: 1.4;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+    
+    /* Fix chatbot in portrait mode */
+    .chatbot-container {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        left: 20px;
+        height: 70vh;
+        max-height: 500px;
+        z-index: 1000;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+    
+    .chatbot-toggle {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 56px;
+        height: 56px;
+        z-index: 1001;
+        border-radius: 50%;
+        font-size: 1.2rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    
+    .chatbot-messages {
+        padding: 1rem;
+        height: calc(100% - 80px);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .chatbot-input-container {
+        padding: 1rem;
+        border-top: 1px solid #e9ecef;
+        background: white;
+    }
+    
+    .chatbot-input {
+        font-size: 16px;
+        padding: 0.75rem;
+        border: 1px solid #ced4da;
+        border-radius: 8px;
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .chatbot-send {
+        width: 100%;
+        padding: 0.75rem;
+        font-size: 0.9rem;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 500;
+    }
+    
+    /* Mobile location selector - Fixed layout */
+    .location-selector {
+        flex-direction: column;
+        gap: 0.5rem;
+        width: 100%;
+        margin: 0.5rem 0;
+    }
+    
+    .location-selector select {
+        width: 100%;
+        font-size: 14px;
+        padding: 0.6rem;
+        min-height: 44px;
+        border-radius: 8px;
+    }
+    
+    .location-btn {
+        width: 100%;
+        padding: 0.6rem;
+        font-size: 0.8rem;
+        min-height: 44px;
+        border-radius: 8px;
+    }
+    
+    /* Mobile main content - Portrait mode */
+    .main-content {
         padding: 1rem 0.5rem;
+        width: 100%;
+        max-width: 100vw;
+        overflow-x: hidden;
+        margin-top: 0;
+        padding-top: 1rem;
+    }
+    
+    .section {
+        padding: 1rem 0.5rem;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+        margin-bottom: 1rem;
+    }
+    
+    .content-section {
+        padding: 1rem 0.5rem;
+        margin: 0;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+    
+    /* Mobile cards optimization - Portrait mode */
+    .current-aqi-card,
+    .weather-card,
+    .health-summary-card,
+    .data-card {
+        padding: 1.25rem;
+        margin: 0.75rem 0;
+        border-radius: 12px;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+        box-sizing: border-box;
+        position: relative;
+        z-index: 1;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .current-aqi-card h2,
+    .weather-card h2,
+    .health-summary-card h2 {
+        font-size: 1.2rem;
+        margin-bottom: 0.75rem;
+        line-height: 1.3;
+        word-wrap: break-word;
+        color: #333;
+        font-weight: 600;
+    }
+    
+    .aqi-value {
+        font-size: 2.2rem;
+        margin: 0.75rem 0;
+        line-height: 1;
+        font-weight: 700;
+    }
+    
+    .aqi-level {
+        font-size: 0.9rem;
+        padding: 0.4rem 0.8rem;
+        display: inline-block;
+        white-space: nowrap;
+        border-radius: 6px;
+        font-weight: 500;
+    }
+    
+    /* Mobile grid layouts - Fixed to prevent overflow */
+    .weather-grid,
+    .health-grid,
+    .agricultural-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+    
+    .weather-item,
+    .health-item,
+    .agricultural-item {
+        padding: 0.8rem;
+        font-size: 0.9rem;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+        box-sizing: border-box;
+        word-wrap: break-word;
+    }
+    
+    .weather-item i,
+    .health-item i,
+    .agricultural-item i {
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+    
+    /* Mobile charts - Fixed dimensions */
+    .chart-container {
+        height: 200px;
+        margin: 1rem 0;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+        position: relative;
+    }
+    
+    .chart-container canvas {
+        max-height: 200px;
+        width: 100% !important;
+        height: 200px !important;
+    }
+    
+    /* Mobile tables - Fixed scroll */
+    .data-table-container {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .data-table {
+        font-size: 0.8rem;
+        min-width: 100%;
+        width: max-content;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 0.4rem 0.3rem;
+        white-space: nowrap;
+        min-width: 80px;
+    }
+    
+    /* Mobile buttons - Fixed touch targets */
+    .btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.8rem;
+        min-height: 44px;
+        min-width: 44px;
+        width: auto;
+        max-width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .btn-sm {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.7rem;
+        min-height: 36px;
+        min-width: 36px;
+    }
+    
+    /* Mobile forms - Fixed layout */
+    .form-group {
+        margin-bottom: 1rem;
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    .form-group label {
+        font-size: 0.9rem;
+        margin-bottom: 0.3rem;
+        display: block;
+        width: 100%;
+        word-wrap: break-word;
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        padding: 0.6rem;
+        font-size: 16px; /* Prevent zoom on iOS */
+        border-radius: 8px;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        min-height: 44px;
+    }
+    
+    /* Mobile alerts */
+    .alert {
+        padding: 0.8rem;
+        margin: 0.5rem 0;
+        font-size: 0.9rem;
+        border-radius: 8px;
+    }
+    
+    .alert i {
+        font-size: 1rem;
+        margin-right: 0.5rem;
+    }
+    
+    /* Mobile loading states */
+    .loading {
+        padding: 1rem;
+        font-size: 0.9rem;
+    }
+    
+    .loading i {
+        font-size: 1.2rem;
+    }
+    
+    /* Mobile error states */
+    .error {
+        padding: 0.8rem;
+        font-size: 0.9rem;
+        border-radius: 8px;
+    }
+    
+    /* Mobile success states */
+    .success {
+        padding: 0.8rem;
+        font-size: 0.9rem;
+        border-radius: 8px;
+    }
+    
+    /* Mobile footer */
+    .footer {
+        padding: 1rem 0.5rem;
+        text-align: center;
+    }
+    
+    .footer-content {
         flex-direction: column;
         gap: 1rem;
+        padding: 1rem 0;
+    }
+    
+    .footer-section {
+        margin-bottom: 1rem;
+    }
+    
+    .footer-section h3 {
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .footer-section p,
+    .footer-section li {
+        font-size: 0.8rem;
+        line-height: 1.4;
+    }
+    
+    .footer-bottom {
+        padding: 0.5rem 0;
+        font-size: 0.7rem;
+    }
+    
+    /* Mobile map */
+    .map-container {
+        height: 300px;
+        margin: 1rem 0;
+        border-radius: 12px;
+    }
+    
+    /* Mobile charts */
+    .chart-container {
+        height: 250px;
+        margin: 1rem 0;
+        padding: 0.5rem;
+    }
+    
+    /* Mobile tables - horizontal scroll */
+    .data-table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin: 1rem 0;
+    }
+    
+    .data-table {
+        min-width: 600px;
+        font-size: 0.8rem;
+    }
+    
+    /* Mobile tooltips */
+    .tooltip {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.6rem;
+        max-width: 200px;
+    }
+    
+    /* Mobile modals */
+    .modal {
+        padding: 1rem;
+        margin: 1rem;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    .modal-content {
+        padding: 1rem;
+    }
+    
+    .modal-header h2 {
+        font-size: 1.2rem;
+    }
+    
+    .modal-body {
+        padding: 1rem 0;
+        font-size: 0.9rem;
+    }
+    
+    .modal-footer {
+        padding: 1rem 0;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .modal-footer .btn {
+        width: 100%;
+        margin: 0;
+    }
+    
+    /* Mobile notifications */
+    .notification {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        z-index: 1000;
+        padding: 1rem;
+        font-size: 0.9rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    
+    /* Mobile accessibility */
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+    
+    /* Mobile focus states */
+    .btn:focus,
+    .form-control:focus,
+    .nav-btn:focus {
+        outline: 2px solid #007bff;
+        outline-offset: 2px;
+    }
+    
+    /* Mobile touch targets */
+    .clickable {
+        min-height: 44px;
+        min-width: 44px;
+        display: flex;
         align-items: center;
-        text-align: center;
+        justify-content: center;
+    }
+    
+    /* Mobile text selection */
+    ::selection {
+        background: #007bff;
+        color: white;
+    }
+    
+    /* Mobile scrollbar */
+    ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 3px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }
+    
+    /* Fix common mobile distortion issues */
+    
+    /* Prevent text overflow */
+    h1, h2, h3, h4, h5, h6, p, span, div {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        hyphens: auto;
+        max-width: 100%;
+    }
+    
+    /* Fix flex items overflow */
+    .flex, .d-flex, [class*="flex-"] {
+        min-width: 0;
+        flex-shrink: 1;
+    }
+    
+    /* Fix grid items overflow */
+    .grid, [class*="grid-"] {
+        min-width: 0;
+    }
+    
+    /* Fix absolute positioned elements */
+    .absolute, [class*="absolute"] {
+        max-width: 100vw;
+    }
+    
+    /* Fix fixed positioned elements */
+    .fixed, [class*="fixed"] {
+        max-width: 100vw;
+    }
+    
+    /* Ensure all containers respect viewport */
+    .container, .container-fluid, .row, .col, [class*="col-"] {
+        max-width: 100vw;
+        overflow-x: hidden;
+    }
+    
+    /* Fix images and media */
+    img, video, iframe, canvas {
+        max-width: 100%;
+        height: auto;
+        display: block;
+    }
+    
+    /* Fix long words and URLs */
+    .long-text, .url, .email {
+        word-break: break-all;
+        overflow-wrap: break-word;
+    }
+    
+    /* Fix modal and overlay issues */
+    .modal, .overlay, .popup {
+        max-width: 100vw;
+        max-height: 100vh;
+        overflow-x: hidden;
+    }
+    
+    /* Fix navigation overflow */
+    .nav, .navbar, .menu {
+        max-width: 100vw;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Fix footer issues */
+    .footer {
+        max-width: 100vw;
+        overflow-x: hidden;
+    }
+    
+    /* Fix specific AirBytes components */
+    .current-aqi-card,
+    .weather-card,
+    .health-summary-card,
+    .data-card,
+    .alert-card,
+    .recommendation-card {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+    
+    /* Fix chatbot mobile issues */
+    .chatbot-container {
+        max-width: 100vw;
+        overflow-x: hidden;
+    }
+    
+    .chatbot-messages {
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+    
+    .chatbot-message {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
     }
     
     .header-info {
@@ -2129,6 +3019,3665 @@ input, select, textarea {
 @media screen and (max-width: 768px) {
     input, select, textarea {
         font-size: 16px !important;
+    }
+}
+
+/* Chatbot Styles */
+.chatbot-container {
+    position: fixed;
+    bottom: 100px;
+    right: 20px;
+    width: 400px;
+    height: 600px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    display: none;
+    flex-direction: column;
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+.chatbot-container.active {
+    display: flex;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.chatbot-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem;
+    border-bottom: 1px solid #e1e5e9;
+    background: linear-gradient(135deg, #3f4d39, #2a3327);
+    color: white;
+    border-radius: 20px 20px 0 0;
+}
+
+.chatbot-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.chatbot-title i {
+    font-size: 1.3rem;
+    color: #8BC34A;
+}
+
+.chatbot-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 35px;
+    height: 35px;
+}
+
+.chatbot-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+.chatbot-messages {
+    flex: 1;
+    padding: 1rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    -webkit-overflow-scrolling: touch;
+}
+
+.chatbot-message {
+    display: flex;
+    gap: 0.75rem;
+    animation: messageSlide 0.3s ease;
+}
+
+@keyframes messageSlide {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.bot-message {
+    align-items: flex-start;
+}
+
+.user-message {
+    flex-direction: row-reverse;
+    align-items: flex-start;
+}
+
+.message-avatar {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1rem;
+}
+
+.bot-message .message-avatar {
+    background: linear-gradient(135deg, #3f4d39, #4a5c44);
+    color: white;
+}
+
+.user-message .message-avatar {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+}
+
+.message-content {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 15px;
+    max-width: 80%;
+    line-height: 1.5;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.user-message .message-content {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+}
+
+.message-content p {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.95rem;
+}
+
+.message-content p:last-child {
+    margin-bottom: 0;
+}
+
+.message-content ul {
+    margin: 0.5rem 0;
+    padding-left: 1.2rem;
+}
+
+.message-content li {
+    margin-bottom: 0.25rem;
+    font-size: 0.9rem;
+}
+
+.chatbot-input-container {
+    padding: 1rem;
+    border-top: 1px solid #e1e5e9;
+    background: white;
+    border-radius: 0 0 20px 20px;
+}
+
+.chatbot-input-wrapper {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.chatbot-input-wrapper input {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: 2px solid #e1e5e9;
+    border-radius: 25px;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.3s ease;
+    background: #f8f9fa;
+}
+
+.chatbot-input-wrapper input:focus {
+    border-color: #3f4d39;
+    background: white;
+}
+
+.chatbot-send-btn {
+    background: linear-gradient(135deg, #3f4d39, #2a3327);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+}
+
+.chatbot-send-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(63, 77, 57, 0.3);
+}
+
+.chatbot-send-btn:active {
+    transform: scale(0.95);
+}
+
+.chatbot-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.suggestion-btn {
+    background: #f8f9fa;
+    border: 1px solid #e1e5e9;
+    color: #3f4d39;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.suggestion-btn:hover {
+    background: #3f4d39;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(63, 77, 57, 0.2);
+}
+
+.chatbot-toggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #3f4d39, #2a3327);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: 0 8px 25px rgba(63, 77, 57, 0.3);
+    transition: all 0.3s ease;
+    z-index: 999;
+}
+
+.chatbot-toggle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 12px 35px rgba(63, 77, 57, 0.4);
+}
+
+.chatbot-toggle:active {
+    transform: scale(0.95);
+}
+
+.chatbot-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ff4444;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 600;
+    min-width: 20px;
+}
+
+.chatbot-badge.hidden {
+    display: none;
+}
+
+/* Typing indicator */
+.typing-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 15px;
+    max-width: 80px;
+}
+
+.typing-dot {
+    width: 8px;
+    height: 8px;
+    background: #3f4d39;
+    border-radius: 50%;
+    animation: typing 1.4s infinite ease-in-out;
+}
+
+.typing-dot:nth-child(1) { animation-delay: -0.32s; }
+.typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes typing {
+    0%, 80%, 100% {
+        transform: scale(0.8);
+        opacity: 0.5;
+    }
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Mobile Responsive for Chatbot */
+@media (max-width: 768px) {
+    .chatbot-container {
+        bottom: 80px;
+        right: 10px;
+        left: 10px;
+        width: auto;
+        height: 70vh;
+        max-height: 500px;
+        border-radius: 16px;
+    }
+    
+    .chatbot-toggle {
+        bottom: 20px;
+        right: 20px;
+        width: 60px;
+        height: 60px;
+        font-size: 1.3rem;
+        border-radius: 50%;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    
+    .chatbot-messages {
+        padding: 1rem;
+        max-height: calc(70vh - 120px);
+        font-size: 0.9rem;
+    }
+    
+    .chatbot-input-container {
+        padding: 1rem;
+        gap: 0.5rem;
+    }
+    
+    .chatbot-input {
+        font-size: 14px;
+        padding: 0.8rem;
+        border-radius: 20px;
+        min-height: 44px; /* Touch-friendly */
+    }
+    
+    .chatbot-send {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        min-width: 44px; /* Touch-friendly */
+    }
+    
+    .chatbot-suggestions {
+        flex-direction: column;
+        padding: 0.5rem;
+        gap: 0.5rem;
+    }
+    
+    .suggestion-btn {
+        text-align: center;
+        white-space: normal;
+        padding: 0.5rem 0.8rem;
+        font-size: 0.8rem;
+        border-radius: 16px;
+        min-height: 36px;
+    }
+    
+    .chatbot-message {
+        margin-bottom: 0.8rem;
+        padding: 0.8rem;
+        border-radius: 12px;
+    }
+    
+    .message-avatar {
+        width: 32px;
+        height: 32px;
+        font-size: 0.9rem;
+    }
+    
+    .message-content {
+        font-size: 0.9rem;
+        line-height: 1.4;
+    }
+    
+    .message-feedback {
+        margin-top: 0.3rem;
+        gap: 0.3rem;
+    }
+    
+    .feedback-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 0.7rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .chatbot-container {
+        height: 75vh;
+        max-height: 450px;
+        bottom: 70px;
+        right: 5px;
+        left: 5px;
+        border-radius: 12px;
+    }
+    
+    .chatbot-toggle {
+        bottom: 15px;
+        right: 15px;
+        width: 50px;
+        height: 50px;
+        font-size: 1.1rem;
+    }
+    
+    .chatbot-messages {
+        padding: 0.8rem;
+        font-size: 0.85rem;
+    }
+    
+    .chatbot-input {
+        font-size: 13px;
+        padding: 0.7rem;
+    }
+    
+    .chatbot-send {
+        width: 40px;
+        height: 40px;
+        font-size: 0.9rem;
+    }
+    
+    .suggestion-btn {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.75rem;
+        min-height: 32px;
+    }
+    
+    .message-avatar {
+        width: 28px;
+        height: 28px;
+        font-size: 0.8rem;
+    }
+    
+    .message-content {
+        font-size: 0.85rem;
+    }
+    
+    .feedback-btn {
+        width: 24px;
+        height: 24px;
+        font-size: 0.6rem;
+    }
+}
+
+/* Extra small screens (320px and below) - Fixed distortion */
+@media (max-width: 320px) {
+    /* Force viewport constraints */
+    html, body {
+        font-size: 13px;
+        width: 100vw;
+        max-width: 100vw;
+        overflow-x: hidden;
+        margin: 0;
+        padding: 0;
+    }
+    
+    /* Header fixes for very small screens */
+    .header {
+        padding: 0.5rem 0.25rem;
+        width: 100vw;
+        max-width: 100vw;
+        overflow-x: hidden;
+    }
+    
+    .logo h1 {
+        font-size: 1rem;
+        line-height: 1.1;
+        word-wrap: break-word;
+    }
+    
+    .logo p {
+        font-size: 0.6rem;
+        line-height: 1.1;
+    }
+    
+    /* Navigation fixes for very small screens - Scrollable */
+    .main-navigation {
+        width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    
+    .main-navigation::-webkit-scrollbar {
+        display: none;
+    }
+    
+    .nav-container {
+        display: flex;
+        gap: 0.25rem;
+        padding: 0.25rem;
+        min-width: max-content;
+        width: max-content;
+    }
+    
+    .nav-btn {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.65rem;
+        min-width: 70px;
+        width: auto;
+        max-width: none;
+        text-align: center;
+        white-space: nowrap;
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 40px;
+    }
+    
+    .nav-btn i {
+        font-size: 0.9rem;
+        margin-bottom: 0.1rem;
+    }
+    
+    .nav-btn span {
+        font-size: 0.6rem;
+        line-height: 1;
+    }
+    
+    /* Content fixes for very small screens */
+    .main-content {
+        padding: 0.25rem;
+        width: 100vw;
+        max-width: 100vw;
+        overflow-x: hidden;
+    }
+    
+    .section {
+        padding: 0.5rem 0.25rem;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+    
+    /* Card fixes for very small screens */
+    .current-aqi-card,
+    .weather-card,
+    .health-summary-card,
+    .data-card {
+        padding: 0.8rem;
+        margin: 0.25rem 0;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+        box-sizing: border-box;
+    }
+    
+    .aqi-value {
+        font-size: 1.8rem;
+        line-height: 1;
+    }
+    
+    /* Button fixes for very small screens */
+    .btn {
+        padding: 0.5rem 0.8rem;
+        font-size: 0.75rem;
+        min-height: 40px;
+        width: 100%;
+        max-width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    /* Form fixes for very small screens */
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        padding: 0.5rem;
+        font-size: 16px; /* Keep 16px to prevent zoom */
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+    
+    /* Chatbot fixes for very small screens */
+    .chatbot-container {
+        height: 80vh;
+        max-height: 400px;
+        bottom: 60px;
+        right: 2px;
+        left: 2px;
+        width: calc(100vw - 4px);
+        max-width: calc(100vw - 4px);
+        overflow-x: hidden;
+    }
+    
+    .chatbot-toggle {
+        bottom: 10px;
+        right: 10px;
+        width: 45px;
+        height: 45px;
+        font-size: 1rem;
+    }
+    
+    .chatbot-messages {
+        padding: 0.6rem;
+        font-size: 0.8rem;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+    
+    .chatbot-input {
+        font-size: 16px; /* Keep 16px to prevent zoom */
+        padding: 0.6rem;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+    
+    .chatbot-send {
+        width: 36px;
+        height: 36px;
+        font-size: 0.8rem;
+        flex-shrink: 0;
+    }
+    
+    /* Grid fixes for very small screens */
+    .weather-grid,
+    .health-grid,
+    .agricultural-grid {
+        grid-template-columns: 1fr;
+        gap: 0.25rem;
+    }
+    
+    .weather-item,
+    .health-item,
+    .agricultural-item {
+        padding: 0.6rem;
+        font-size: 0.8rem;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+    
+    /* Chart fixes for very small screens */
+    .chart-container {
+        height: 150px;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+    
+    .chart-container canvas {
+        width: 100% !important;
+        height: 150px !important;
+        max-width: 100%;
+    }
+    
+    /* Table fixes for very small screens */
+    .data-table {
+        font-size: 0.7rem;
+        min-width: 100%;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 0.3rem 0.2rem;
+        min-width: 60px;
+    }
+}
+
+/* Mobile Performance Optimizations */
+@media (max-width: 768px) {
+    /* Reduce animations on mobile for better performance */
+    * {
+        animation-duration: 0.2s !important;
+        transition-duration: 0.2s !important;
+    }
+    
+    /* Optimize images for mobile */
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+    
+    /* Improve touch scrolling */
+    .chatbot-messages,
+    .data-table-container,
+    .modal-body {
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+    }
+    
+    /* Mobile-specific shadows */
+    .card,
+    .data-card,
+    .weather-card {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    /* Mobile-specific borders */
+    .btn,
+    .nav-btn {
+        border-radius: 8px;
+    }
+    
+    /* Mobile-specific spacing */
+    .section {
+        margin-bottom: 1rem;
+    }
+    
+    /* Mobile-specific typography */
+    h1, h2, h3 {
+        line-height: 1.2;
+    }
+    
+    p, li {
+        line-height: 1.4;
+    }
+}
+
+/* Mobile Dark Mode Support */
+@media (max-width: 768px) and (prefers-color-scheme: dark) {
+    .card,
+    .data-card,
+    .weather-card,
+    .health-summary-card {
+        background: #2d2d2d;
+        color: #ffffff;
+        border: 1px solid #404040;
+    }
+    
+    .btn,
+    .nav-btn {
+        background: #404040;
+        color: #ffffff;
+        border: 1px solid #555555;
+    }
+    
+    .btn:hover,
+    .nav-btn:hover {
+        background: #555555;
+    }
+    
+    .chatbot-container {
+        background: #2d2d2d;
+        border: 1px solid #404040;
+    }
+    
+    .chatbot-message {
+        background: #404040;
+        color: #ffffff;
+    }
+    
+    .chatbot-input {
+        background: #404040;
+        color: #ffffff;
+        border: 1px solid #555555;
+    }
+}
+
+/* Global Navigation Fixes */
+.content-section {
+    display: none;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
+}
+
+.content-section.active {
+    display: block;
+}
+
+.nav-btn {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+.nav-container {
+    flex-wrap: nowrap !important;
+    overflow: visible;
+}
+
+/* Additional Mobile Distortion Fixes */
+
+/* Fix for iOS Safari viewport issues */
+@supports (-webkit-touch-callout: none) {
+    @media (max-width: 768px) {
+        html {
+            -webkit-text-size-adjust: 100%;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            -webkit-overflow-scrolling: touch;
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
+        }
+        
+        .main-content,
+        .section {
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
+        }
+    }
+}
+
+/* Fix for Android Chrome viewport issues */
+@media (max-width: 768px) and (-webkit-min-device-pixel-ratio: 1) {
+    html {
+        -webkit-text-size-adjust: 100%;
+    }
+    
+    body {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+}
+
+/* Fix for specific mobile browsers */
+@media (max-width: 768px) {
+    /* Prevent horizontal scroll on all elements */
+    * {
+        max-width: 100vw;
+    }
+    
+    /* Fix for flexbox overflow issues */
+    .flex, .d-flex, [class*="flex-"] {
+        min-width: 0;
+        flex-shrink: 1;
+        flex-basis: auto;
+    }
+    
+    /* Fix for grid overflow issues */
+    .grid, [class*="grid-"] {
+        min-width: 0;
+        grid-template-columns: 1fr;
+    }
+    
+    /* Fix for absolute/fixed positioning issues */
+    .absolute, .fixed, [class*="absolute"], [class*="fixed"] {
+        max-width: 100vw;
+        left: 0;
+        right: 0;
+    }
+    
+    /* Fix for transform issues */
+    .transform, [class*="transform"] {
+        max-width: 100vw;
+    }
+    
+    /* Fix for specific AirBytes layout issues */
+    .header-content {
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .nav-buttons {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 0.5rem;
+        width: 100%;
+    }
+    
+    .location-selector {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    /* Fix for card overflow */
+    .card, .data-card, .weather-card, .health-summary-card {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        hyphens: auto;
+    }
+    
+    /* Fix for text overflow */
+    h1, h2, h3, h4, h5, h6 {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        hyphens: auto;
+        line-height: 1.2;
+    }
+    
+    p, span, div, li {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        hyphens: auto;
+    }
+    
+    /* Fix for button overflow */
+    .btn, .nav-btn {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-width: 44px;
+        min-height: 44px;
+    }
+    
+    /* Fix for input overflow */
+    input, select, textarea {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+    
+    /* Fix for image overflow */
+    img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+    }
+    
+    /* Fix for table overflow */
+    .data-table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    /* Fix for chart overflow */
+    .chart-container {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+    
+    .chart-container canvas {
+        max-width: 100%;
+        width: 100% !important;
+    }
+    
+    /* Fix for chatbot overflow */
+    .chatbot-container {
+        max-width: 100vw;
+        overflow-x: hidden;
+    }
+    
+    .chatbot-messages {
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+    
+    .chatbot-message {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+    
+    /* Fix for modal overflow */
+    .modal, .overlay {
+        max-width: 100vw;
+        max-height: 100vh;
+        overflow-x: hidden;
+    }
+    
+    /* Fix for footer overflow */
+    .footer {
+        max-width: 100vw;
+        overflow-x: hidden;
+    }
+    
+    /* Fix for specific AirBytes sections */
+    .weather-section,
+    .health-section,
+    .agricultural-section {
+        max-width: 100vw;
+        overflow-x: hidden;
+    }
+    
+    /* Fix for grid items */
+    .weather-grid,
+    .health-grid,
+    .agricultural-grid {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    .weather-item,
+    .health-item,
+    .agricultural-item {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+        word-wrap: break-word;
+    }
+}
+
+/* Navigation scrollable for all screen sizes - Enhanced */
+@media (max-width: 1024px) {
+    /* Force horizontal scroll for all devices */
+    .main-navigation {
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+        scrollbar-width: none !important;
+        -ms-overflow-style: none !important;
+        touch-action: pan-x !important;
+        overscroll-behavior-x: contain !important;
+        scroll-behavior: smooth !important;
+    }
+    
+    .main-navigation::-webkit-scrollbar {
+        display: none !important;
+    }
+    
+    .nav-container {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        min-width: max-content !important;
+        width: max-content !important;
+    }
+    
+    .nav-btn {
+        flex-shrink: 0 !important;
+        white-space: nowrap !important;
+    }
+    
+    .main-navigation {
+        width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE and Edge */
+        position: relative;
+        touch-action: pan-x;
+        overscroll-behavior-x: contain;
+        scroll-behavior: smooth;
+    }
+    
+    .main-navigation::-webkit-scrollbar {
+        display: none; /* Chrome, Safari, Opera */
+    }
+    
+    .nav-container {
+        display: flex;
+        gap: 0.5rem;
+        padding: 0.5rem;
+        min-width: max-content;
+        width: max-content;
+        flex-wrap: nowrap;
+        align-items: center;
+        height: 100%;
+    }
+    
+    .nav-btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.8rem;
+        text-align: center;
+        white-space: nowrap;
+        min-height: 44px;
+        min-width: 80px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        color: #495057;
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+    }
+    
+    .nav-btn:hover {
+        background: #e9ecef;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .nav-btn:active {
+        transform: translateY(0);
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    
+    .nav-btn i {
+        font-size: 1.1rem;
+        margin-bottom: 0.25rem;
+        flex-shrink: 0;
+    }
+    
+    .nav-btn span {
+        font-size: 0.75rem;
+        line-height: 1;
+        font-weight: 500;
+    }
+    
+    /* Enhanced scroll indicators for navigation */
+    .main-navigation {
+        position: relative;
+        background: linear-gradient(90deg, 
+            rgba(255,255,255,1) 0%, 
+            rgba(255,255,255,0.95) 5%, 
+            rgba(255,255,255,0.9) 10%, 
+            rgba(255,255,255,0.8) 15%, 
+            rgba(255,255,255,0.6) 20%, 
+            transparent 25%, 
+            transparent 75%, 
+            rgba(255,255,255,0.6) 80%, 
+            rgba(255,255,255,0.8) 85%, 
+            rgba(255,255,255,0.9) 90%, 
+            rgba(255,255,255,0.95) 95%, 
+            rgba(255,255,255,1) 100%
+        );
+    }
+    
+    .main-navigation::before,
+    .main-navigation::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 30px;
+        pointer-events: none;
+        z-index: 2;
+        transition: opacity 0.3s ease;
+    }
+    
+    .main-navigation::before {
+        left: 0;
+        background: linear-gradient(to right, 
+            rgba(255,255,255,1) 0%, 
+            rgba(255,255,255,0.8) 30%, 
+            rgba(255,255,255,0.4) 60%, 
+            transparent 100%
+        );
+    }
+    
+    .main-navigation::after {
+        right: 0;
+        background: linear-gradient(to left, 
+            rgba(255,255,255,1) 0%, 
+            rgba(255,255,255,0.8) 30%, 
+            rgba(255,255,255,0.4) 60%, 
+            transparent 100%
+        );
+    }
+    
+    /* Hide indicators when at scroll boundaries */
+    .main-navigation.scroll-start::before {
+        opacity: 0;
+    }
+    
+    .main-navigation.scroll-end::after {
+        opacity: 0;
+    }
+    
+    /* Active navigation button highlight */
+    .nav-btn.active {
+        background: #007bff;
+        color: white;
+        transform: scale(1.05);
+        box-shadow: 0 2px 8px rgba(0,123,255,0.3);
+    }
+    
+    .nav-btn:hover {
+        background: #f8f9fa;
+        transform: scale(1.02);
+    }
+    
+    .nav-btn:active {
+        transform: scale(0.98);
+    }
+    
+    /* Enhanced touch-friendly scroll improvements */
+    .main-navigation {
+        touch-action: pan-x;
+        overscroll-behavior-x: contain;
+        scroll-snap-type: x mandatory;
+        scroll-padding: 0 20px;
+    }
+    
+    /* Smooth scroll behavior */
+    .nav-container {
+        scroll-behavior: smooth;
+    }
+    
+    /* Snap scrolling for better UX */
+    .nav-btn {
+        scroll-snap-align: center;
+        scroll-snap-stop: normal;
+    }
+    
+    /* Enhanced scroll momentum */
+    .main-navigation {
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+        overscroll-behavior-x: contain;
+        overscroll-behavior-y: none;
+    }
+    
+    /* Scroll shadow effects */
+    .main-navigation.scroll-start::after {
+        opacity: 1;
+        animation: fadeInRight 0.3s ease;
+    }
+    
+    .main-navigation.scroll-end::before {
+        opacity: 1;
+        animation: fadeInLeft 0.3s ease;
+    }
+    
+    @keyframes fadeInRight {
+        from { opacity: 0; transform: translateX(10px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    
+    @keyframes fadeInLeft {
+        from { opacity: 0; transform: translateX(-10px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    
+    /* Active button pulse animation */
+    .nav-btn.active {
+        animation: pulseActive 2s infinite;
+    }
+    
+    @keyframes pulseActive {
+        0% { box-shadow: 0 2px 8px rgba(0,123,255,0.3); }
+        50% { box-shadow: 0 4px 16px rgba(0,123,255,0.5); }
+        100% { box-shadow: 0 2px 8px rgba(0,123,255,0.3); }
+    }
+    
+    /* Ensure all sections are accessible */
+    .content-section {
+        display: none;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+    
+    .content-section.active {
+        display: block;
+    }
+    
+    /* Fix for navigation button visibility */
+    .nav-btn {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+    }
+    
+    /* Ensure navigation container doesn't wrap */
+    .nav-container {
+        flex-wrap: nowrap !important;
+        overflow: visible;
+    }
+}
+
+/* Mobile landscape orientation */
+@media (max-width: 768px) and (orientation: landscape) {
+    .header {
+        padding: 0.5rem 1rem;
+        min-height: auto;
+    }
+    
+    .header-content {
+        flex-direction: row;
+        gap: 1rem;
+        align-items: center;
+    }
+    
+    .nav-buttons {
+        flex-wrap: nowrap;
+        gap: 0.5rem;
+    }
+    
+    .nav-btn {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.7rem;
+        min-width: auto;
+        flex: 1;
+    }
+    
+    .location-selector {
+        flex-direction: row;
+        gap: 0.5rem;
+        width: auto;
+    }
+    
+    .location-selector select {
+        width: 200px;
+    }
+    
+    .location-btn {
+        width: auto;
+        padding: 0.4rem 0.8rem;
+    }
+    
+    .main-content {
+        padding: 0.5rem 1rem;
+    }
+    
+    .section {
+        padding: 0.5rem 0;
+    }
+    
+    .current-aqi-card,
+    .weather-card,
+    .health-summary-card,
+    .data-card {
+        padding: 0.8rem;
+        margin: 0.3rem 0;
+    }
+    
+    .weather-grid,
+    .health-grid,
+    .agricultural-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+    }
+    
+    .chart-container {
+        height: 180px;
+    }
+    
+    .map-container {
+        height: 250px;
+    }
+    
+    .chatbot-container {
+        height: 60vh;
+        max-height: 300px;
+        bottom: 10px;
+        right: 10px;
+        left: 10px;
+    }
+    
+    .chatbot-toggle {
+        bottom: 10px;
+        right: 10px;
+        width: 50px;
+        height: 50px;
+    }
+    
+    .chatbot-messages {
+        padding: 0.8rem;
+        max-height: calc(60vh - 100px);
+    }
+    
+    .chatbot-input {
+        font-size: 13px;
+        padding: 0.6rem;
+    }
+    
+    .chatbot-send {
+        width: 36px;
+        height: 36px;
+    }
+}
+
+/* Mobile touch improvements */
+@media (hover: none) and (pointer: coarse) {
+    /* Touch device optimizations */
+    .btn:hover,
+    .nav-btn:hover,
+    .chatbot-toggle:hover {
+        transform: none;
+        box-shadow: none;
+    }
+    
+    .btn:active,
+    .nav-btn:active,
+    .chatbot-toggle:active {
+        transform: scale(0.95);
+        transition: transform 0.1s ease;
+    }
+    
+    .feedback-btn:hover {
+        transform: none;
+    }
+    
+    .feedback-btn:active {
+        transform: scale(0.9);
+    }
+    
+    /* Remove hover effects on touch devices */
+    .card:hover,
+    .data-card:hover,
+    .weather-card:hover {
+        transform: none;
+        box-shadow: none;
+    }
+    
+    /* Improve touch scrolling */
+    .chatbot-messages,
+    .data-table-container {
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+    }
+    
+    /* Prevent zoom on input focus */
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="url"],
+    input[type="password"],
+    textarea,
+    select {
+        font-size: 16px !important;
+    }
+}
+
+/* Chatbot Tips Styles */
+.chatbot-tips {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.chatbot-tips .tip-item {
+    background: rgba(63, 77, 57, 0.1);
+    padding: 0.75rem;
+    border-radius: 10px;
+    border-left: 3px solid #3f4d39;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    transition: all 0.3s ease;
+}
+
+.chatbot-tips .tip-item:hover {
+    background: rgba(63, 77, 57, 0.15);
+    transform: translateX(3px);
+}
+
+/* Chatbot Welcome Animation */
+@keyframes welcomePulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.chatbot-toggle.new-message {
+    animation: welcomePulse 0.6s ease-in-out;
+}
+
+/* Chatbot Message Animations */
+@keyframes messageSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.chatbot-message {
+    animation: messageSlideIn 0.3s ease;
+}
+
+/* Chatbot Responsive Improvements */
+@media (max-width: 480px) {
+    .chatbot-tips .tip-item {
+        padding: 0.6rem;
+        font-size: 0.85rem;
+    }
+    
+    .message-content ul {
+        padding-left: 1rem;
+    }
+    
+    .message-content li {
+        font-size: 0.85rem;
+        margin-bottom: 0.2rem;
+    }
+}
+
+/* User Guide Section Styles */
+.guide-section {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.guide-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.guide-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+}
+
+.guide-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.guide-header i {
+    font-size: 1.5rem;
+    color: #3f4d39;
+    background: linear-gradient(135deg, #3f4d39, #4a5c44);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.guide-header h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #2a3327;
+    margin: 0;
+}
+
+.guide-content {
+    line-height: 1.6;
+}
+
+.guide-content p {
+    color: #666;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+}
+
+/* AQI Levels */
+.aqi-levels {
+    margin-top: 1.5rem;
+}
+
+.aqi-levels h4 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2a3327;
+    margin-bottom: 1rem;
+}
+
+.level-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    border-radius: 12px;
+    background: #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.level-item:hover {
+    background: #e9ecef;
+    transform: translateX(5px);
+}
+
+.level-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    flex-shrink: 0;
+}
+
+.level-color.good { background-color: #4CAF50; }
+.level-color.moderate { background-color: #FFEB3B; }
+.level-color.unhealthy-sensitive { background-color: #FF9800; }
+.level-color.unhealthy { background-color: #F44336; }
+.level-color.very-unhealthy { background-color: #9C27B0; }
+.level-color.hazardous { background-color: #795548; }
+
+.level-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.level-info strong {
+    color: #2a3327;
+    font-size: 1rem;
+}
+
+.level-info span {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+/* Recommendations Container */
+.recommendations-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.recommendation-card {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-radius: 15px;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.recommendation-card:hover {
+    transform: translateY(-5px);
+    border-color: #3f4d39;
+    box-shadow: 0 10px 25px rgba(63, 77, 57, 0.1);
+}
+
+.recommendation-card i {
+    font-size: 2rem;
+    color: #3f4d39;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.recommendation-card h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2a3327;
+    margin-bottom: 0.75rem;
+}
+
+.recommendation-card p {
+    color: #666;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Pollutants Grid */
+.pollutants-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.pollutant-item {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    border-left: 4px solid #3f4d39;
+}
+
+.pollutant-item:hover {
+    background: #e9ecef;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.pollutant-item h4 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2a3327;
+    margin-bottom: 0.75rem;
+}
+
+.pollutant-item p {
+    color: #666;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Tips Grid */
+.tips-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.tip-item {
+    background: linear-gradient(135deg, #fff, #f8f9fa);
+    border-radius: 15px;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
+}
+
+.tip-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    border-color: #3f4d39;
+}
+
+.tip-item i {
+    font-size: 2rem;
+    color: #3f4d39;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.tip-item h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2a3327;
+    margin-bottom: 0.75rem;
+}
+
+.tip-item p {
+    color: #666;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Alert Settings */
+.alert-settings {
+    margin-top: 1rem;
+}
+
+.alert-settings h4 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2a3327;
+    margin-bottom: 1.5rem;
+}
+
+.alert-options {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.alert-option {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.alert-option:hover {
+    background: #e9ecef;
+    border-color: #3f4d39;
+}
+
+.alert-option input[type="checkbox"] {
+    display: none;
+}
+
+.checkmark {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #3f4d39;
+    border-radius: 4px;
+    position: relative;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.alert-option input[type="checkbox"]:checked + .checkmark {
+    background: #3f4d39;
+}
+
+.alert-option input[type="checkbox"]:checked + .checkmark::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.alert-option span:last-child {
+    color: #2a3327;
+    font-weight: 500;
+}
+
+.save-alerts-btn {
+    background: linear-gradient(135deg, #3f4d39, #2a3327);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 15px rgba(63, 77, 57, 0.2);
+}
+
+.save-alerts-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(63, 77, 57, 0.3);
+}
+
+.save-alerts-btn:active {
+    transform: translateY(0);
+}
+
+.save-alerts-btn i {
+    font-size: 1rem;
+}
+
+/* Responsive Design for User Guide */
+@media (max-width: 768px) {
+    .guide-section {
+        padding: 0 0.5rem;
+    }
+    
+    .guide-card {
+        padding: 1.5rem;
+    }
+    
+    .guide-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+    }
+    
+    .guide-header h3 {
+        font-size: 1.3rem;
+    }
+    
+    .level-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+    }
+    
+    .recommendations-container {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .pollutants-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .tips-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .alert-options {
+        gap: 0.75rem;
+    }
+    
+    .alert-option {
+        padding: 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .guide-card {
+        padding: 1rem;
+    }
+    
+    .guide-header h3 {
+        font-size: 1.2rem;
+    }
+    
+    .level-item {
+        padding: 0.75rem;
+    }
+    
+    .recommendation-card,
+    .pollutant-item,
+    .tip-item {
+        padding: 1rem;
+    }
+    
+    .alert-option {
+        padding: 0.5rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* Agricultural Section Styles */
+.agricultural-summary {
+    margin-bottom: 2rem;
+}
+
+/* Agricultural Header with Crop Icons */
+.agricultural-header {
+    position: relative;
+    text-align: center;
+    padding: 2rem 0;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 15px;
+    margin-bottom: 2rem;
+    overflow: hidden;
+}
+
+.crop-icons {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.crop-icon {
+    font-size: 2rem;
+    color: #28a745;
+    opacity: 0.7;
+    transition: all 0.3s ease;
+    animation: float 3s ease-in-out infinite;
+}
+
+.crop-icon:nth-child(1) { animation-delay: 0s; }
+.crop-icon:nth-child(2) { animation-delay: 0.5s; }
+.crop-icon:nth-child(3) { animation-delay: 1s; }
+.crop-icon:nth-child(4) { animation-delay: 1.5s; }
+.crop-icon:nth-child(5) { animation-delay: 2s; }
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+/* Card Background Images */
+.card-background {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.05;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.background-crop {
+    font-size: 8rem;
+    color: #28a745;
+    position: absolute;
+    top: 50%;
+    right: 20px;
+    transform: translateY(-50%);
+    opacity: 0.1;
+}
+
+/* Specific card styles */
+.atmospheric-card,
+.soil-card,
+.precipitation-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.atmospheric-card .card-background {
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.02) 0%, rgba(40, 167, 69, 0.05) 100%);
+}
+
+.soil-card .card-background {
+    background: linear-gradient(135deg, rgba(139, 69, 19, 0.02) 0%, rgba(160, 82, 45, 0.05) 100%);
+}
+
+.precipitation-card .card-background {
+    background: linear-gradient(135deg, rgba(0, 123, 255, 0.02) 0%, rgba(0, 123, 255, 0.05) 100%);
+}
+
+.alert-card .card-background {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.02) 0%, rgba(255, 193, 7, 0.05) 100%);
+}
+
+.recommendations-card .card-background {
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.02) 0%, rgba(40, 167, 69, 0.05) 100%);
+}
+
+/* Ensure content is above background */
+.data-card .card-header,
+.data-card .data-content,
+.alert-card .alert-header,
+.alert-card .alert-content,
+.recommendations-card .recommendations-header,
+.recommendations-card .recommendations-content {
+    position: relative;
+    z-index: 1;
+}
+
+/* Health Section Styles */
+.health-header {
+    position: relative;
+    text-align: center;
+    padding: 2rem 0;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 15px;
+    margin-bottom: 2rem;
+    overflow: hidden;
+}
+
+.health-icons {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.health-icon {
+    font-size: 2rem;
+    color: #dc3545;
+    opacity: 0.7;
+    transition: all 0.3s ease;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.health-icon:nth-child(2) { animation-delay: 0.2s; }
+.health-icon:nth-child(3) { animation-delay: 0.4s; }
+.health-icon:nth-child(4) { animation-delay: 0.6s; }
+.health-icon:nth-child(5) { animation-delay: 0.8s; }
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 0.7; }
+    50% { transform: scale(1.1); opacity: 1; }
+}
+
+.health-overview {
+    margin-bottom: 2rem;
+}
+
+.health-summary-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    margin-bottom: 2rem;
+}
+
+.health-header-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.health-location, .health-timestamp {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.health-risk-assessment h3 {
+    color: #2a3327;
+    margin-bottom: 1.5rem;
+    font-size: 1.3rem;
+}
+
+.risk-levels {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.risk-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 12px;
+    border-left: 4px solid #dc3545;
+    transition: all 0.3s ease;
+}
+
+.risk-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.risk-item i {
+    font-size: 1.5rem;
+    color: #dc3545;
+}
+
+.risk-label {
+    font-weight: 600;
+    color: #2a3327;
+    flex: 1;
+}
+
+.risk-value {
+    font-weight: 700;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+}
+
+.risk-value.low {
+    background: #d4edda;
+    color: #155724;
+}
+
+.risk-value.moderate {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.risk-value.high {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.health-alerts {
+    margin-bottom: 2rem;
+}
+
+.health-alert-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.medical-recommendations {
+    margin-bottom: 2rem;
+}
+
+.medical-recommendations-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.patient-management {
+    margin-bottom: 2rem;
+}
+
+.patient-config-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.alert-settings {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.alert-option {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 12px;
+    border: 2px solid #e1e5e9;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.alert-option:hover {
+    background: rgba(255, 255, 255, 1);
+    border-color: #dc3545;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.alert-option input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    accent-color: #dc3545;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0;
+    border: 2px solid #dc3545;
+    border-radius: 4px;
+    background: white;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    position: relative;
+}
+
+.alert-option input[type="checkbox"]:checked {
+    background: #dc3545;
+    border-color: #dc3545;
+}
+
+.alert-option input[type="checkbox"]:checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-weight: bold;
+    font-size: 12px;
+    line-height: 1;
+}
+
+.alert-option label {
+    font-weight: 500;
+    color: #2a3327;
+    cursor: pointer;
+    flex: 1;
+    user-select: none;
+}
+
+.risk-thresholds {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.threshold-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.threshold-item label {
+    font-weight: 600;
+    color: #2a3327;
+}
+
+.threshold-item select {
+    padding: 0.75rem 1rem;
+    border: 2px solid #e1e5e9;
+    border-radius: 10px;
+    background: white;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+}
+
+.threshold-item select:focus {
+    outline: none;
+    border-color: #dc3545;
+}
+
+.save-health-config-btn {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.save-health-config-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(220, 53, 69, 0.3);
+}
+
+.health-forecast {
+    margin-bottom: 2rem;
+}
+
+.health-forecast-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.loading-alerts, .loading-forecast {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 2rem;
+    color: #666;
+}
+
+.loading-recommendation {
+    color: #666;
+    font-style: italic;
+}
+
+/* Responsive Design for Health Section */
+@media (max-width: 768px) {
+    .health-section {
+        padding: 1rem 0.5rem;
+    }
+    
+    .health-header {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .health-header h2 {
+        font-size: 1.3rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .health-icons {
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .health-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
+    }
+    
+    .health-overview {
+        padding: 1rem;
+    }
+    
+    .health-summary-card {
+        padding: 1rem;
+        margin: 0.5rem 0;
+    }
+    
+    .health-risk-assessment {
+        padding: 1rem;
+    }
+    
+    .risk-levels {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+    
+    .risk-item {
+        padding: 0.8rem;
+        font-size: 0.9rem;
+    }
+    
+    .health-alerts {
+        padding: 1rem;
+    }
+    
+    .health-alert-card {
+        padding: 0.8rem;
+        margin: 0.5rem 0;
+        font-size: 0.9rem;
+    }
+    
+    .medical-recommendations {
+        padding: 1rem;
+    }
+    
+    .medical-recommendations-card {
+        padding: 0.8rem;
+        margin: 0.5rem 0;
+    }
+    
+    .patient-management {
+        padding: 1rem;
+    }
+    
+    .patient-config-card {
+        padding: 0.8rem;
+        margin: 0.5rem 0;
+    }
+    
+    .alert-settings {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+    
+    .alert-option {
+        padding: 0.6rem;
+        font-size: 0.9rem;
+    }
+    
+    .health-forecast {
+        padding: 1rem;
+    }
+    
+    .health-forecast-card {
+        padding: 0.8rem;
+        margin: 0.5rem 0;
+    }
+    
+    .data-source-indicator {
+        font-size: 0.8rem;
+        margin: 0.3rem 0;
+    }
+    
+    .data-timestamp {
+        font-size: 0.7rem;
+        margin-top: 0.3rem;
+    }
+}
+
+/* Health Forecast Styles */
+.health-forecast-timeline {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.health-forecast-day {
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 12px;
+    padding: 1rem;
+    border-left: 4px solid #dc3545;
+    transition: all 0.3s ease;
+}
+
+.health-forecast-day:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.forecast-day-name {
+    font-weight: 600;
+    color: #2a3327;
+    margin-bottom: 0.5rem;
+}
+
+.forecast-day-aqi {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #dc3545;
+    margin-bottom: 0.5rem;
+}
+
+.forecast-day-risk {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 1rem;
+}
+
+.forecast-day-recommendations {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.forecast-recommendation {
+    font-size: 0.8rem;
+    color: #666;
+    padding: 0.25rem 0.5rem;
+    background: rgba(220, 53, 69, 0.1);
+    border-radius: 6px;
+}
+
+.no-alerts {
+    text-align: center;
+    color: #28a745;
+    font-style: italic;
+    padding: 2rem;
+}
+
+.forecast-error {
+    text-align: center;
+    color: #dc3545;
+    font-style: italic;
+    padding: 2rem;
+}
+
+/* Notification Settings Styles */
+.notification-settings-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border-radius: 15px;
+    padding: 2rem;
+    margin: 2rem 0;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+}
+
+.settings-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.settings-header i {
+    font-size: 2rem;
+    color: #dc3545;
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.settings-header h3 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.settings-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.setting-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 10px;
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.setting-item:hover {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: #dc3545;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.1);
+}
+
+.setting-item label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 500;
+    color: #2c3e50;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.setting-item label:hover {
+    color: #dc3545;
+}
+
+.setting-item input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    accent-color: #dc3545;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0;
+    border: 2px solid #dc3545;
+    border-radius: 4px;
+    background: white;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    position: relative;
+}
+
+.setting-item input[type="checkbox"]:checked {
+    background: #dc3545;
+    border-color: #dc3545;
+}
+
+.setting-item input[type="checkbox"]:checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-weight: bold;
+    font-size: 12px;
+    line-height: 1;
+}
+
+.setting-item select {
+    padding: 0.75rem;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    background: white;
+    color: #2c3e50;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.setting-item select:focus {
+    outline: none;
+    border-color: #dc3545;
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+}
+
+.save-notification-settings-btn {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-top: 1rem;
+    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+}
+
+.save-notification-settings-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(220, 53, 69, 0.4);
+    background: linear-gradient(135deg, #c82333, #a71e2a);
+}
+
+.save-notification-settings-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 10px rgba(220, 53, 69, 0.3);
+}
+
+
+/* Responsive design for notification settings */
+@media (max-width: 768px) {
+    .notification-settings-card {
+        padding: 1.5rem;
+        margin: 1rem 0;
+    }
+    
+    .settings-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+    }
+    
+    .settings-header i {
+        font-size: 1.5rem;
+    }
+    
+    .settings-header h3 {
+        font-size: 1.25rem;
+    }
+    
+    .setting-item {
+        padding: 0.75rem;
+    }
+    
+    .save-notification-settings-btn {
+        padding: 0.75rem 1.5rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* Data Source Status Styles */
+.real-data {
+    color: #28a745;
+    font-weight: 600;
+    background: rgba(40, 167, 69, 0.1);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    border: 1px solid #28a745;
+}
+
+.simulated-data {
+    color: #ffc107;
+    font-weight: 600;
+    background: rgba(255, 193, 7, 0.1);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    border: 1px solid #ffc107;
+}
+
+.data-source-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.5rem 0;
+    font-size: 0.9rem;
+}
+
+.data-source-indicator i {
+    font-size: 1rem;
+}
+
+.data-timestamp {
+    font-size: 0.8rem;
+    color: #6c757d;
+    font-style: italic;
+    margin-top: 0.5rem;
+}
+
+/* Chatbot AI Feedback Styles */
+.message-feedback {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    padding: 0.25rem 0;
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+}
+
+.message-feedback:hover {
+    opacity: 1;
+}
+
+.feedback-btn {
+    background: none;
+    border: 1px solid #ddd;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.8rem;
+}
+
+.feedback-btn:hover {
+    background: #f8f9fa;
+    border-color: #007bff;
+    transform: scale(1.1);
+}
+
+.feedback-btn.helpful:hover {
+    background: #d4edda;
+    border-color: #28a745;
+    color: #28a745;
+}
+
+.feedback-btn.not-helpful:hover {
+    background: #f8d7da;
+    border-color: #dc3545;
+    color: #dc3545;
+}
+
+.feedback-btn.active {
+    background: #007bff;
+    border-color: #007bff;
+    color: white;
+}
+
+.feedback-btn.helpful.active {
+    background: #28a745;
+    border-color: #28a745;
+}
+
+.feedback-btn.not-helpful.active {
+    background: #dc3545;
+    border-color: #dc3545;
+}
+
+/* Enhanced Chatbot AI Styles */
+.chatbot-message.bot-message .message-content {
+    position: relative;
+}
+
+.chatbot-message.bot-message .message-content::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    right: 10px;
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 8px solid #f8f9fa;
+}
+
+/* AI Learning Indicator */
+.ai-learning-indicator {
+    display: inline-block;
+    margin-left: 0.5rem;
+    font-size: 0.7rem;
+    color: #6c757d;
+    opacity: 0.8;
+}
+
+.ai-learning-indicator::before {
+    content: '🧠';
+    margin-right: 0.25rem;
+}
+
+/* Personalized Response Indicator */
+.personalized-response {
+    border-left: 3px solid #007bff;
+    padding-left: 0.5rem;
+    background: rgba(0, 123, 255, 0.05);
+}
+
+.personalized-response::before {
+    content: '✨ Personalizado';
+    display: block;
+    font-size: 0.7rem;
+    color: #007bff;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.weather-overview-card {
+    background: linear-gradient(135deg, #2d5016, #3f4d39);
+    border-radius: 20px;
+    padding: 2rem;
+    color: white;
+    box-shadow: 0 20px 40px rgba(45, 80, 22, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.weather-overview-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="30" r="1.5" fill="rgba(255,255,255,0.1)"/><circle cx="40" cy="60" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="70" cy="70" r="2.5" fill="rgba(255,255,255,0.1)"/></svg>');
+    opacity: 0.3;
+}
+
+.weather-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    position: relative;
+    z-index: 1;
+}
+
+.weather-header i {
+    font-size: 2rem;
+    color: #8BC34A;
+}
+
+.weather-header h3 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin: 0;
+    flex: 1;
+}
+
+.weather-location {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.realtime-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    opacity: 0.8;
+    background: rgba(139, 195, 74, 0.2);
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    border: 1px solid rgba(139, 195, 74, 0.3);
+}
+
+.realtime-indicator i {
+    color: #8BC34A;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.weather-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    position: relative;
+    z-index: 1;
+}
+
+.summary-item {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.summary-item:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+}
+
+.summary-icon {
+    width: 50px;
+    height: 50px;
+    background: rgba(139, 195, 74, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.summary-icon i {
+    font-size: 1.5rem;
+    color: #8BC34A;
+}
+
+.summary-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.summary-label {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.summary-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+}
+
+/* Agricultural Data Grid */
+.agricultural-data-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.data-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.data-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+}
+
+.data-card .card-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.data-card .card-header i {
+    font-size: 1.5rem;
+    color: #3f4d39;
+}
+
+.data-card .card-header h3 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #2a3327;
+    margin: 0;
+}
+
+.data-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.data-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.data-item:hover {
+    background: #e9ecef;
+    transform: translateX(5px);
+}
+
+.data-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+}
+
+.data-label i {
+    font-size: 1.2rem;
+    color: #3f4d39;
+    width: 20px;
+}
+
+.data-label span {
+    font-weight: 500;
+    color: #2a3327;
+}
+
+.data-value {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #3f4d39;
+    margin-right: 1rem;
+}
+
+.data-trend {
+    font-size: 0.9rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    font-weight: 500;
+    min-width: 60px;
+    text-align: center;
+}
+
+.data-trend.rising {
+    background: #d4edda;
+    color: #155724;
+}
+
+.data-trend.falling {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.data-trend.stable {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+/* Agricultural Alerts */
+.agricultural-alerts {
+    margin-bottom: 2rem;
+}
+
+.alert-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.alert-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.alert-header i {
+    font-size: 1.5rem;
+    color: #ff9800;
+}
+
+.alert-header h3 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #2a3327;
+    margin: 0;
+}
+
+.alert-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.alert-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: 12px;
+    background: #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.alert-item:hover {
+    background: #e9ecef;
+    transform: translateX(5px);
+}
+
+.alert-item i {
+    font-size: 1.5rem;
+    width: 30px;
+    text-align: center;
+}
+
+.alert-item i.fa-snowflake {
+    color: #17a2b8;
+}
+
+.alert-item i.fa-bolt {
+    color: #ffc107;
+}
+
+.alert-item i.fa-sun {
+    color: #fd7e14;
+}
+
+.alert-info h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2a3327;
+    margin: 0 0 0.25rem 0;
+}
+
+.alert-info p {
+    color: #666;
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+/* Agricultural Recommendations */
+.agricultural-recommendations {
+    margin-bottom: 2rem;
+}
+
+.recommendations-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.recommendations-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.recommendations-header i {
+    font-size: 1.5rem;
+    color: #3f4d39;
+}
+
+.recommendations-header h3 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #2a3327;
+    margin: 0;
+}
+
+.recommendations-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.recommendation-category {
+    background: #f8f9fa;
+    border-radius: 15px;
+    padding: 1.5rem;
+    border-left: 4px solid #3f4d39;
+    transition: all 0.3s ease;
+}
+
+.recommendation-category:hover {
+    background: #e9ecef;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.recommendation-category h4 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2a3327;
+    margin: 0 0 1rem 0;
+}
+
+.recommendation-category h4 i {
+    color: #3f4d39;
+}
+
+.recommendation-list {
+    color: #666;
+    line-height: 1.6;
+}
+
+.recommendation-list ul {
+    margin: 0;
+    padding-left: 1.5rem;
+}
+
+.recommendation-list li {
+    margin-bottom: 0.5rem;
+}
+
+/* Agricultural Forecast */
+.agricultural-forecast {
+    margin-bottom: 2rem;
+}
+
+.forecast-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.forecast-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.forecast-header i {
+    font-size: 1.5rem;
+    color: #3f4d39;
+}
+
+.forecast-header h3 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #2a3327;
+    margin: 0;
+}
+
+.forecast-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.forecast-day {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 1rem;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.forecast-day:hover {
+    background: #e9ecef;
+    transform: translateY(-2px);
+}
+
+.forecast-day-name {
+    font-weight: 600;
+    color: #2a3327;
+    margin-bottom: 0.5rem;
+}
+
+.forecast-day-temp {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #3f4d39;
+    margin-bottom: 0.25rem;
+}
+
+.forecast-day-rain {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 0.25rem;
+}
+
+.forecast-day-wind {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+/* Crop Configuration */
+.crop-configuration {
+    margin-bottom: 2rem;
+}
+
+.config-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.config-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.config-header i {
+    font-size: 1.5rem;
+    color: #3f4d39;
+}
+
+.config-header h3 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #2a3327;
+    margin: 0;
+}
+
+.config-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.config-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.config-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.config-section h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #2a3327;
+    margin: 0;
+}
+
+.crop-selector {
+    padding: 0.75rem 1rem;
+    border: 2px solid #e1e5e9;
+    border-radius: 10px;
+    background: white;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+}
+
+.crop-selector:focus {
+    outline: none;
+    border-color: #3f4d39;
+}
+
+.update-recommendations-btn {
+    background: linear-gradient(135deg, #3f4d39, #2a3327);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 15px rgba(63, 77, 57, 0.2);
+    justify-self: start;
+}
+
+.update-recommendations-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(63, 77, 57, 0.3);
+}
+
+.update-recommendations-btn:active {
+    transform: translateY(0);
+}
+
+.update-recommendations-btn i {
+    font-size: 1rem;
+}
+
+/* Mobile adjustments for crop images */
+@media (max-width: 768px) {
+    .crop-icons {
+        gap: 1rem;
+    }
+    
+    .crop-icon {
+        font-size: 1.5rem;
+    }
+    
+    .background-crop {
+        font-size: 4rem;
+        right: 10px;
+    }
+    
+    .agricultural-header {
+        padding: 1.5rem 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .crop-icons {
+        gap: 0.5rem;
+    }
+    
+    .crop-icon {
+        font-size: 1.2rem;
+    }
+    
+    .background-crop {
+        font-size: 3rem;
+    }
+}
+
+/* Responsive Design for Agricultural Section */
+@media (max-width: 768px) {
+    .agricultural-section {
+        padding: 1rem 0.5rem;
+    }
+    
+    .agricultural-header {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .agricultural-header h2 {
+        font-size: 1.3rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .crop-icons {
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .crop-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+    }
+    
+    .weather-summary-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .weather-overview-card {
+        padding: 1rem;
+        margin: 0.5rem 0;
+    }
+    
+    .data-card {
+        padding: 0.8rem;
+        margin: 0.5rem 0;
+        font-size: 0.9rem;
+    }
+    
+    .data-card h3 {
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .data-card .value {
+        font-size: 1.2rem;
+        margin: 0.3rem 0;
+    }
+    
+    .data-card .unit {
+        font-size: 0.8rem;
+    }
+    
+    .agricultural-alerts {
+        padding: 1rem;
+    }
+    
+    .agricultural-alert-card {
+        padding: 0.8rem;
+        margin: 0.5rem 0;
+        font-size: 0.9rem;
+    }
+    
+    .agricultural-recommendations {
+        padding: 1rem;
+    }
+    
+    .recommendation-card {
+        padding: 0.8rem;
+        margin: 0.5rem 0;
+        font-size: 0.9rem;
+    }
+    
+    .crop-configuration {
+        padding: 1rem;
+    }
+    
+    .crop-config-card {
+        padding: 0.8rem;
+        margin: 0.5rem 0;
+    }
+    
+    .crop-selector {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .crop-selector select {
+        width: 100%;
+        padding: 0.6rem;
+        font-size: 14px;
+    }
+    
+    .agricultural-forecast {
+        padding: 1rem;
+    }
+    
+    .forecast-card {
+        padding: 0.8rem;
+        margin: 0.5rem 0;
+    }
+    
+    .forecast-item {
+        padding: 0.6rem;
+        font-size: 0.9rem;
+    }
+    
+    .forecast-chart {
+        height: 200px;
+        margin: 1rem 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .weather-overview-card {
+        padding: 1.5rem;
+    }
+    
+    .data-card,
+    .alert-card,
+    .recommendations-card,
+    .forecast-card,
+    .config-card {
+        padding: 1.5rem;
+    }
+    
+    .summary-item {
+        padding: 1rem;
+    }
+    
+    .summary-icon {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .summary-icon i {
+        font-size: 1.2rem;
+    }
+    
+    .summary-value {
+        font-size: 1.3rem;
+    }
+    
+    .data-item {
+        padding: 0.75rem;
+    }
+    
+    .data-label span {
+        font-size: 0.9rem;
+    }
+    
+    .data-value {
+        font-size: 1.1rem;
+    }
+    
+    .forecast-content {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 

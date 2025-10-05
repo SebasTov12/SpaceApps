@@ -1,0 +1,28 @@
+# Base
+python-dotenv
+requests
+gdown
+
+# Data science stack
+pandas
+numpy
+scikit-learn
+joblib
+
+# Fechas y tiempo
+python-dateutil
+
+# PostgreSQL
+psycopg2-binary
+SQLAlchemy
+
+# Archivos NetCDF / HDF5
+xarray
+h5netcdf
+netCDF4
+
+# Compresión y utilidades
+tqdm
+
+# Opcional (visualización, si quieres explorar)
+matplotlib

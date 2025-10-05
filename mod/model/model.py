@@ -1,192 +1,183 @@
 """
-climate_model_train.py
+model.py - Versión robusta y conectada a múltiples bases PostgreSQL
 
-Entrena un modelo predictivo usando la tabla 'model_features'
-de tu base de datos PostgreSQL (dump air_quality_db.sql).
-
-Predice valores futuros de variables ambientales (pm25, no2, o3, etc.)
-en función de fecha, ubicación (lat/lon) y otras condiciones.
+- Usa config_db.py con SQLAlchemy para conectar las bases
+- Corrige advertencia de pandas (usa engine)
+- Evita ValueError si no hay suficientes datos para entrenar
 """
 
 import os
+import argparse
+from datetime import datetime, timezone, timedelta
+import math
 import joblib
-from datetime import datetime
-from dateutil import parser
-import pandas as pd
 import numpy as np
-from sqlalchemy import create_engine, text
-
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from sklearn.compose import ColumnTransformer
-from sklearn.pipeline import Pipeline
-from sklearn.multioutput import MultiOutputRegressor
+import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import mean_squared_error, mean_absolute_error
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error, r2_score
+from sqlalchemy import text
+from config_db import air_quality_engine, predictions_engine  # tu archivo config_db.py
 
-# Intentamos importar LightGBM (si no está, usamos RandomForest)
-try:
-    import lightgbm as lgb
-    HAS_LGB = True
-except ImportError:
-    HAS_LGB = False
+MODEL_DIR = "models"
+os.makedirs(MODEL_DIR, exist_ok=True)
 
-# -----------------------
-# Función para obtener estación
-# -----------------------
-def month_to_season(month, hemisphere='north'):
-    mapping_north = {
-        12: 'invierno', 1: 'invierno', 2: 'invierno',
-        3: 'primavera', 4: 'primavera', 5: 'primavera',
-        6: 'verano', 7: 'verano', 8: 'verano',
-        9: 'otoño', 10: 'otoño', 11: 'otoño'
-    }
-    mapping_south = {
-        12: 'verano', 1: 'verano', 2: 'verano',
-        3: 'otoño', 4: 'otoño', 5: 'otoño',
-        6: 'invierno', 7: 'invierno', 8: 'invierno',
-        9: 'primavera', 10: 'primavera', 11: 'primavera'
-    }
-    return mapping_south.get(month, 'desconocido') if hemisphere == 'south' else mapping_north.get(month, 'desconocido')
+# ------------------ Cargar datos ------------------
 
-# -----------------------
-# Conexión a la base de datos
-# -----------------------
-def load_data_from_db(connection_string, table_name):
-    """Carga la tabla desde la base de datos."""
-    engine = create_engine(connection_string)
-    query = f"SELECT * FROM {table_name};"
-    with engine.connect() as conn:
-        df = pd.read_sql(text(query), conn)
-    df["datetime_utc"] = pd.to_datetime(df["datetime_utc"])
+def fetch_model_features(start_dt=None, end_dt=None, bbox=None, limit=None):
+    """Carga filas desde model_features usando SQLAlchemy (sin warnings)."""
+    q = "SELECT * FROM model_features"
+    clauses = []
+    params = {}
+
+    if start_dt:
+        clauses.append("datetime_utc >= :start_dt")
+        params["start_dt"] = start_dt if isinstance(start_dt, str) else start_dt.isoformat()
+    if end_dt:
+        clauses.append("datetime_utc <= :end_dt")
+        params["end_dt"] = end_dt if isinstance(end_dt, str) else end_dt.isoformat()
+    if bbox:
+        lat_min, lat_max, lon_min, lon_max = bbox
+        clauses.append("lat BETWEEN :lat_min AND :lat_max")
+        clauses.append("lon BETWEEN :lon_min AND :lon_max")
+        params.update({"lat_min": lat_min, "lat_max": lat_max, "lon_min": lon_min, "lon_max": lon_max})
+
+    if clauses:
+        q += " WHERE " + " AND ".join(clauses)
+    if limit:
+        q += f" LIMIT {int(limit)}"
+
+    with air_quality_engine.connect() as conn:
+        df = pd.read_sql(text(q), conn, params=params)
+
+    print(f"📊 Se cargaron {len(df)} filas desde model_features")
     return df
 
-# -----------------------
-# Preprocesamiento
-# -----------------------
-def preprocess_df(df):
-    """Crea variables de tiempo y prepara features/targets."""
-    df = df.copy()
-    df["year"] = df["datetime_utc"].dt.year
-    df["month"] = df["datetime_utc"].dt.month
-    df["day"] = df["datetime_utc"].dt.day
-    df["dayofweek"] = df["datetime_utc"].dt.dayofweek
-    df["dayofyear"] = df["datetime_utc"].dt.dayofyear
-    df["season"] = df["month"].apply(month_to_season)
+# ------------------ Preparación ------------------
 
-    # Features numéricas base
-    feature_cols = ["lat", "lon", "year", "month", "day", "dayofweek", "dayofyear"]
+def prepare_X_y(df, target="pm25"):
+    """Prepara X e y asegurando que haya suficientes filas válidas."""
+    candidate_cols = ["temp", "wind_speed", "no2", "o3", "pm25", "lat", "lon"]
+    cols = [c for c in candidate_cols if c in df.columns]
 
-    # Targets: variables ambientales
-    target_cols = ["pm25", "no2", "o3", "temp", "wind_speed", "pm10", "humidity", "wind_dir", "pressure"]
+    if target not in cols:
+        if target in df.columns:
+            cols.append(target)
+        else:
+            raise ValueError(f"Target {target} no existe en los datos")
 
-    # Filtramos solo las columnas existentes (por si alguna falta)
-    target_cols = [c for c in target_cols if c in df.columns]
+    df = df.dropna(subset=[target])
+    if len(df) < 5:
+        raise RuntimeError(f"No hay suficientes filas para entrenar ({len(df)} registros válidos)")
 
-    # Eliminamos filas con NaN en las columnas objetivo
-    df = df.dropna(subset=target_cols)
+    feature_cols = [c for c in cols if c != target]
+    X = df[feature_cols].copy()
+    for c in X.columns:
+        if X[c].isna().any():
+            X[c] = X[c].fillna(X[c].median())
+    y = df[target].astype(float)
+    return X, y, feature_cols
 
-    X = df[feature_cols + ["season"]]
-    y = df[target_cols]
+# ------------------ Entrenamiento ------------------
 
-    preprocessor = ColumnTransformer([
-        ("cat", OneHotEncoder(handle_unknown="ignore", sparse=False), ["season"]),
-        ("num", StandardScaler(), feature_cols)
-    ])
+def train_model_for(target='pm25', days_history=180, bbox=None, test_size=0.2):
+    """Entrena un modelo RandomForest y lo guarda."""
+    end_dt = datetime.now(timezone.utc)
+    start_dt = end_dt - timedelta(days=days_history)
 
-    return X, y, preprocessor, target_cols
+    print(f"🔎 Cargando datos entre {start_dt.isoformat()} y {end_dt.isoformat()} (target={target})")
+    df = fetch_model_features(start_dt=start_dt.isoformat(), end_dt=end_dt.isoformat(), bbox=bbox)
+    if df.empty:
+        print("⚠️ No se encontraron datos en model_features. Entrenamiento cancelado.")
+        return None
 
-# -----------------------
-# Construcción del modelo
-# -----------------------
-def build_model(use_lightgbm=True):
-    if use_lightgbm and HAS_LGB:
-        base_model = lgb.LGBMRegressor(n_estimators=150, learning_rate=0.05, random_state=42)
-    else:
-        base_model = RandomForestRegressor(n_estimators=150, n_jobs=-1, random_state=42)
-    model = MultiOutputRegressor(base_model)
-    return model
+    try:
+        X, y, feature_names = prepare_X_y(df, target=target)
+    except RuntimeError as e:
+        print(f"⚠️ {e}. Entrenamiento cancelado.")
+        return None
 
-# -----------------------
-# Entrenamiento
-# -----------------------
-def train_model(df, model_save_path="models", use_lightgbm=True):
-    X, y, preprocessor, target_cols = preprocess_df(df)
+    # Evita error si hay muy pocas filas
+    if len(X) < 10:
+        print(f"⚠️ Muy pocos datos ({len(X)} filas). Entrenamiento cancelado.")
+        return None
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, shuffle=True)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=42)
 
-    X_train_prep = preprocessor.fit_transform(X_train)
-    X_test_prep = preprocessor.transform(X_test)
+    print(f"📦 Entrenando RandomForest ({len(X_train)} train / {len(X_test)} test)...")
+    model = RandomForestRegressor(n_estimators=200, max_depth=12, random_state=42)
+    model.fit(X_train, y_train)
 
-    model = build_model(use_lightgbm=use_lightgbm)
-    print(f"Entrenando modelo con {len(X_train)} muestras...")
-    model.fit(X_train_prep, y_train)
+    y_pred = model.predict(X_test)
+    rmse = math.sqrt(mean_squared_error(y_test, y_pred))
+    r2 = r2_score(y_test, y_pred)
 
-    y_pred = model.predict(X_test_prep)
+    model_path = os.path.join(MODEL_DIR, f"{target}_rf.joblib")
+    joblib.dump({"model": model, "features": feature_names}, model_path)
 
-    metrics = {}
-    for i, col in enumerate(target_cols):
-        mse = mean_squared_error(y_test.iloc[:, i], y_pred[:, i])
-        rmse = np.sqrt(mse)
-        mae = mean_absolute_error(y_test.iloc[:, i], y_pred[:, i])
-        metrics[col] = {"RMSE": rmse, "MAE": mae}
-        print(f"{col}: RMSE={rmse:.4f}, MAE={mae:.4f}")
+    print(f"✅ Modelo guardado en {model_path}")
+    print(f"📊 Métricas: RMSE={rmse:.4f}, R2={r2:.4f}")
 
-    os.makedirs(model_save_path, exist_ok=True)
-    pipeline = {"preprocessor": preprocessor, "model": model, "target_cols": target_cols}
-    joblib.dump(pipeline, os.path.join(model_save_path, "climate_pipeline.joblib"))
-    print(f"\n✅ Modelo guardado en {model_save_path}/climate_pipeline.joblib")
+    return {"rmse": rmse, "r2": r2, "features": feature_names}
 
-    return metrics
+# ------------------ Cargar modelo ------------------
 
-# -----------------------
-# Predicción
-# -----------------------
-def load_pipeline(pipeline_path="models/climate_pipeline.joblib"):
-    pipeline = joblib.load(pipeline_path)
-    return pipeline["preprocessor"], pipeline["model"], pipeline["target_cols"]
+def load_model(target='pm25'):
+    path = os.path.join(MODEL_DIR, f"{target}_rf.joblib")
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"No existe el modelo {path}")
+    obj = joblib.load(path)
+    return obj['model'], obj['features']
 
-def predict_for_date(pipeline_path, predict_date, lat, lon):
-    preprocessor, model, target_cols = load_pipeline(pipeline_path)
+# ------------------ Predicción ------------------
 
-    if isinstance(predict_date, str):
-        dt = parser.parse(predict_date)
-    else:
-        dt = predict_date
+def predict_for(lat, lon, dt_iso, target='pm25'):
+    model, feature_names = load_model(target)
+    X_row = pd.DataFrame([{"lat": lat, "lon": lon, "temp": 25, "wind_speed": 2, "no2": 10, "o3": 15}])
+    X_row = X_row.reindex(columns=feature_names, fill_value=0.0)
+    pred = model.predict(X_row)
+    val = float(pred[0])
 
-    row = pd.DataFrame([{
+    # Guardar en base predictions
+    df_pred = pd.DataFrame([{
+        "timestamp": pd.Timestamp.now(),
         "lat": lat,
         "lon": lon,
-        "year": dt.year,
-        "month": dt.month,
-        "day": dt.day,
-        "dayofweek": dt.weekday(),
-        "dayofyear": dt.timetuple().tm_yday,
-        "season": month_to_season(dt.month)
+        f"{target}_pred": val,
+        "modelo_version": "v1.0"
     }])
+    df_pred.to_sql("predictions", predictions_engine, if_exists="append", index=False)
+    print(f"💾 Predicción guardada en la base: {val:.4f}")
+    return val
 
-    X_prep = preprocessor.transform(row)
-    pred = model.predict(X_prep)[0]
+# ------------------ CLI ------------------
 
-    return {target_cols[i]: float(pred[i]) for i in range(len(target_cols))}
+def parse_args():
+    p = argparse.ArgumentParser()
+    p.add_argument('--train', action='store_true')
+    p.add_argument('--predict', action='store_true')
+    p.add_argument('--param', type=str, default='pm25')
+    p.add_argument('--lat', type=float)
+    p.add_argument('--lon', type=float)
+    p.add_argument('--datetime', type=str)
+    return p.parse_args()
 
-# -----------------------
-# Main de ejemplo
-# -----------------------
+def main():
+    args = parse_args()
+    if args.train:
+        res = train_model_for(target=args.param)
+        if res:
+            print("✅ Entrenamiento completado.")
+    if args.predict:
+        if args.lat is None or args.lon is None:
+            raise ValueError("Faltan parámetros --lat y --lon")
+        dt = args.datetime or datetime.now(timezone.utc).isoformat()
+        val = predict_for(args.lat, args.lon, dt, target=args.param)
+        print(f"Predicción {args.param} @ {args.lat},{args.lon} = {val:.4f}")
+
 if __name__ == "__main__":
-    # Cambia esto por tu string real de conexión
-    # Ejemplo PostgreSQL:
-    CONNECTION_STRING = "postgresql://usuario:contraseña@localhost:5432/air_quality_db"
+    main()
 
-    print("Cargando datos desde la base de datos...")
-    df = load_data_from_db(CONNECTION_STRING, "model_features")
-    print(f"Datos cargados: {len(df)} filas")
 
-    metrics = train_model(df, model_save_path="models", use_lightgbm=True)
-    print("\nMétricas finales:", metrics)
 
-    # Ejemplo de predicción
-    example = predict_for_date("models/climate_pipeline.joblib", "2026-01-15", lat=-33.45, lon=-70.66)
-    print("\nPredicción ejemplo para Santiago de Chile (2026-01-15):")
-    print(example)
 

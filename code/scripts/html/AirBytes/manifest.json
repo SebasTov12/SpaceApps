@@ -1,0 +1,63 @@
+{
+    "name": "AirBytes - Calidad del Aire",
+    "short_name": "AirBytes",
+    "description": "Monitoreo de calidad del aire y alertas de salud",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#dc3545",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "/airbytes_favicon.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/airbytes_favicon.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "categories": ["health", "weather", "utilities"],
+    "lang": "es",
+    "scope": "/",
+    "prefer_related_applications": false,
+    "related_applications": [],
+    "screenshots": [
+        {
+            "src": "/screenshot1.png",
+            "sizes": "1280x720",
+            "type": "image/png",
+            "form_factor": "wide"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Ver Calidad del Aire",
+            "short_name": "AQI",
+            "description": "Ver estado actual de la calidad del aire",
+            "url": "/?section=today",
+            "icons": [
+                {
+                    "src": "/airbytes_favicon.png",
+                    "sizes": "96x96"
+                }
+            ]
+        },
+        {
+            "name": "Alertas de Salud",
+            "short_name": "Salud",
+            "description": "Ver alertas y recomendaciones de salud",
+            "url": "/?section=health",
+            "icons": [
+                {
+                    "src": "/airbytes_favicon.png",
+                    "sizes": "96x96"
+                }
+            ]
+        }
+    ]
+}
