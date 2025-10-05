@@ -16,7 +16,7 @@ DB_CONFIG = {
     "user": "airbyter",
     "password": "AirBytes2025",
     "host": "localhost",
-    "port": 5432
+    "port": 5432,
 }
 
 OPENAQ_KEY = "523eb1251f97abc8f75087ea19ba06a04b2e6c04f4d128ef68862bf3a5b93a92"
@@ -41,8 +41,9 @@ def clean_str(value):
 
 #-------------- CONECT TO DB ------------
 def get_conn():
-    return psycopg2.connect(**DB_CONFIG)
-
+    return psycopg2.connect(
+        **DB_CONFIG,
+    )
 
 # ---------------- SATELLITE NRT (TEMPO + TROPOMI) ----------------
 
