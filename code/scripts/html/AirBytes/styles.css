@@ -1448,117 +1448,495 @@ body {
     font-size: 0.9rem;
 }
 
-/* Mobile First Responsive Design */
+/* Mobile First Responsive Design - All Mobile Devices */
 @media (max-width: 480px) {
-    body {
-        font-size: 14px;
-        line-height: 1.4;
-        overflow-x: hidden;
-    }
-    
-    /* Prevent horizontal scroll */
+    /* Reset and base styles for mobile portrait */
     * {
         box-sizing: border-box;
     }
     
-    /* Mobile header optimization */
+    body {
+        font-size: 14px;
+        line-height: 1.4;
+        overflow-x: hidden;
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        max-width: 100vw;
+        min-height: 100vh;
+    }
+    
+    /* Prevent horizontal scroll and ensure proper viewport */
+    html {
+        overflow-x: hidden;
+        width: 100%;
+        max-width: 100vw;
+        height: 100%;
+    }
+    
+    /* Container constraints */
+    .main-content,
+    .section,
+    .header,
+    .footer {
+        max-width: 100vw;
+        overflow-x: hidden;
+        width: 100%;
+    }
+    
+    /* Fix text overlap issues */
     .header {
-        padding: 1rem 0.5rem;
+        position: relative;
+        z-index: 10;
+        background: white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .main-navigation {
+        position: relative;
+        z-index: 9;
+        background: white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .main-content {
+        position: relative;
+        z-index: 1;
+        padding-top: 0;
+        margin-top: 0;
+    }
+    
+    /* Mobile header optimization - Portrait */
+    .header {
+        padding: 0.75rem 0.5rem;
         min-height: auto;
+        width: 100%;
+        max-width: 100vw;
+        overflow-x: hidden;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: white;
+        border-bottom: 1px solid #e0e0e0;
     }
     
     .header-content {
         flex-direction: column;
-        gap: 0.5rem;
-        padding: 0 0.5rem;
+        gap: 0.75rem;
+        padding: 0;
+        width: 100%;
+        max-width: 100%;
+        align-items: center;
+    }
+    
+    .logo {
+        text-align: center;
+        width: 100%;
+        margin-bottom: 0.5rem;
     }
     
     .logo h1 {
-        font-size: 1.2rem;
+        font-size: 1.3rem;
         margin: 0;
+        line-height: 1.2;
+        font-weight: 600;
     }
     
     .logo p {
-        font-size: 0.7rem;
+        font-size: 0.75rem;
         margin: 0;
+        line-height: 1.2;
+        color: #666;
     }
     
-    /* Mobile navigation */
-    .nav-buttons {
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        justify-content: center;
+    /* Mobile navigation - All mobile devices */
+    .main-navigation {
+        width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        position: sticky;
+        top: 0;
+        z-index: 99;
+        background: white;
+        border-bottom: 1px solid #e0e0e0;
+        padding: 0.5rem 0;
+        touch-action: pan-x;
+        overscroll-behavior-x: contain;
+        scroll-behavior: smooth;
+        scroll-snap-type: x mandatory;
+        scroll-padding: 0 20px;
+    }
+    
+    .main-navigation::-webkit-scrollbar {
+        display: none;
+    }
+    
+    .nav-container {
+        display: flex;
+        gap: 0.4rem;
+        padding: 0 0.5rem;
+        min-width: max-content;
+        width: max-content;
+        align-items: center;
+        flex-wrap: nowrap;
     }
     
     .nav-btn {
         padding: 0.5rem 0.8rem;
-        font-size: 0.8rem;
-        min-width: auto;
-        flex: 1;
-        max-width: 120px;
+        font-size: 0.7rem;
+        text-align: center;
+        white-space: nowrap;
+        min-height: 48px;
+        min-width: 70px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        color: #495057;
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        cursor: pointer;
+        scroll-snap-align: center;
+        scroll-snap-stop: normal;
     }
     
-    /* Mobile location selector */
+    .nav-btn:hover {
+        background: #e9ecef;
+        transform: translateY(-1px);
+    }
+    
+    .nav-btn.active {
+        background: #007bff;
+        color: white;
+        border-color: #007bff;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,123,255,0.3);
+    }
+    
+    .nav-btn i {
+        font-size: 0.9rem;
+        margin-bottom: 0.2rem;
+    }
+    
+    .nav-btn span {
+        font-size: 0.65rem;
+        line-height: 1;
+        font-weight: 500;
+    }
+    
+    /* Scroll indicators for mobile navigation */
+    .main-navigation::before,
+    .main-navigation::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 20px;
+        pointer-events: none;
+        z-index: 2;
+        transition: opacity 0.3s ease;
+    }
+    
+    .main-navigation::before {
+        left: 0;
+        background: linear-gradient(to right, 
+            rgba(255,255,255,1) 0%, 
+            rgba(255,255,255,0.8) 30%, 
+            rgba(255,255,255,0.4) 60%, 
+            transparent 100%
+        );
+    }
+    
+    .main-navigation::after {
+        right: 0;
+        background: linear-gradient(to left, 
+            rgba(255,255,255,1) 0%, 
+            rgba(255,255,255,0.8) 30%, 
+            rgba(255,255,255,0.4) 60%, 
+            transparent 100%
+        );
+    }
+    
+    /* Hide indicators when at scroll boundaries */
+    .main-navigation.scroll-start::before {
+        opacity: 0;
+    }
+    
+    .main-navigation.scroll-end::after {
+        opacity: 0;
+    }
+    
+    /* Fix text overlap issues in portrait mode */
+    .header-info,
+    .health-header-info,
+    .weather-header-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 0.5rem 0;
+        margin-bottom: 1rem;
+    }
+    
+    .header-info > div,
+    .health-header-info > div,
+    .weather-header-info > div {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.25rem 0;
+        font-size: 0.85rem;
+        color: #666;
+    }
+    
+    .header-info i,
+    .health-header-info i,
+    .weather-header-info i {
+        font-size: 0.9rem;
+        color: #007bff;
+        flex-shrink: 0;
+    }
+    
+    .header-info span,
+    .health-header-info span,
+    .weather-header-info span {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        line-height: 1.3;
+    }
+    
+    /* Fix location selector overlap */
+    .location-selector {
+        margin: 1rem 0;
+        padding: 0.5rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .location-selector select {
+        width: 100%;
+        padding: 0.75rem;
+        font-size: 16px;
+        border: 1px solid #ced4da;
+        border-radius: 6px;
+        background: white;
+        margin-bottom: 0.5rem;
+    }
+    
+    .location-btn {
+        width: 100%;
+        padding: 0.75rem;
+        font-size: 0.9rem;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-weight: 500;
+    }
+    
+    /* Fix grid items text overlap */
+    .weather-item,
+    .health-item,
+    .agricultural-item {
+        padding: 1rem;
+        margin: 0.5rem 0;
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .weather-item i,
+    .health-item i,
+    .agricultural-item i {
+        font-size: 1.3rem;
+        margin-right: 0.75rem;
+        color: #007bff;
+        flex-shrink: 0;
+    }
+    
+    .weather-item span,
+    .health-item span,
+    .agricultural-item span {
+        font-size: 0.9rem;
+        line-height: 1.4;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+    
+    /* Fix chatbot in portrait mode */
+    .chatbot-container {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        left: 20px;
+        height: 70vh;
+        max-height: 500px;
+        z-index: 1000;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+    
+    .chatbot-toggle {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 56px;
+        height: 56px;
+        z-index: 1001;
+        border-radius: 50%;
+        font-size: 1.2rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    
+    .chatbot-messages {
+        padding: 1rem;
+        height: calc(100% - 80px);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .chatbot-input-container {
+        padding: 1rem;
+        border-top: 1px solid #e9ecef;
+        background: white;
+    }
+    
+    .chatbot-input {
+        font-size: 16px;
+        padding: 0.75rem;
+        border: 1px solid #ced4da;
+        border-radius: 8px;
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .chatbot-send {
+        width: 100%;
+        padding: 0.75rem;
+        font-size: 0.9rem;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 500;
+    }
+    
+    /* Mobile location selector - Fixed layout */
     .location-selector {
         flex-direction: column;
         gap: 0.5rem;
         width: 100%;
+        margin: 0.5rem 0;
     }
     
     .location-selector select {
         width: 100%;
         font-size: 14px;
-        padding: 0.5rem;
+        padding: 0.6rem;
+        min-height: 44px;
+        border-radius: 8px;
     }
     
     .location-btn {
         width: 100%;
-        padding: 0.5rem;
+        padding: 0.6rem;
         font-size: 0.8rem;
+        min-height: 44px;
+        border-radius: 8px;
     }
     
-    /* Mobile main content */
+    /* Mobile main content - Portrait mode */
     .main-content {
-        padding: 0.5rem;
+        padding: 1rem 0.5rem;
+        width: 100%;
+        max-width: 100vw;
+        overflow-x: hidden;
+        margin-top: 0;
+        padding-top: 1rem;
     }
     
     .section {
         padding: 1rem 0.5rem;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+        margin-bottom: 1rem;
     }
     
-    /* Mobile cards optimization */
+    .content-section {
+        padding: 1rem 0.5rem;
+        margin: 0;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+    
+    /* Mobile cards optimization - Portrait mode */
     .current-aqi-card,
     .weather-card,
     .health-summary-card,
     .data-card {
-        padding: 1rem;
-        margin: 0.5rem 0;
+        padding: 1.25rem;
+        margin: 0.75rem 0;
         border-radius: 12px;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+        box-sizing: border-box;
+        position: relative;
+        z-index: 1;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
     
     .current-aqi-card h2,
     .weather-card h2,
     .health-summary-card h2 {
-        font-size: 1.1rem;
-        margin-bottom: 0.5rem;
+        font-size: 1.2rem;
+        margin-bottom: 0.75rem;
+        line-height: 1.3;
+        word-wrap: break-word;
+        color: #333;
+        font-weight: 600;
     }
     
     .aqi-value {
-        font-size: 2rem;
-        margin: 0.5rem 0;
+        font-size: 2.2rem;
+        margin: 0.75rem 0;
+        line-height: 1;
+        font-weight: 700;
     }
     
     .aqi-level {
         font-size: 0.9rem;
-        padding: 0.3rem 0.6rem;
+        padding: 0.4rem 0.8rem;
+        display: inline-block;
+        white-space: nowrap;
+        border-radius: 6px;
+        font-weight: 500;
     }
     
-    /* Mobile grid layouts */
+    /* Mobile grid layouts - Fixed to prevent overflow */
     .weather-grid,
     .health-grid,
     .agricultural-grid {
+        display: grid;
         grid-template-columns: 1fr;
         gap: 0.5rem;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
     }
     
     .weather-item,
@@ -1566,65 +1944,105 @@ body {
     .agricultural-item {
         padding: 0.8rem;
         font-size: 0.9rem;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+        box-sizing: border-box;
+        word-wrap: break-word;
     }
     
     .weather-item i,
     .health-item i,
     .agricultural-item i {
         font-size: 1.2rem;
+        flex-shrink: 0;
     }
     
-    /* Mobile charts */
+    /* Mobile charts - Fixed dimensions */
     .chart-container {
         height: 200px;
         margin: 1rem 0;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+        position: relative;
     }
     
     .chart-container canvas {
         max-height: 200px;
+        width: 100% !important;
+        height: 200px !important;
     }
     
-    /* Mobile tables */
+    /* Mobile tables - Fixed scroll */
+    .data-table-container {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
     .data-table {
         font-size: 0.8rem;
-        overflow-x: auto;
+        min-width: 100%;
+        width: max-content;
     }
     
     .data-table th,
     .data-table td {
         padding: 0.4rem 0.3rem;
         white-space: nowrap;
+        min-width: 80px;
     }
     
-    /* Mobile buttons */
+    /* Mobile buttons - Fixed touch targets */
     .btn {
         padding: 0.6rem 1rem;
         font-size: 0.8rem;
-        min-height: 44px; /* Touch-friendly */
+        min-height: 44px;
+        min-width: 44px;
+        width: auto;
+        max-width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
     }
     
     .btn-sm {
         padding: 0.4rem 0.8rem;
         font-size: 0.7rem;
         min-height: 36px;
+        min-width: 36px;
     }
     
-    /* Mobile forms */
+    /* Mobile forms - Fixed layout */
     .form-group {
         margin-bottom: 1rem;
+        width: 100%;
+        max-width: 100%;
     }
     
     .form-group label {
         font-size: 0.9rem;
         margin-bottom: 0.3rem;
+        display: block;
+        width: 100%;
+        word-wrap: break-word;
     }
     
     .form-group input,
     .form-group select,
     .form-group textarea {
         padding: 0.6rem;
-        font-size: 14px; /* Prevent zoom on iOS */
+        font-size: 16px; /* Prevent zoom on iOS */
         border-radius: 8px;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        min-height: 44px;
     }
     
     /* Mobile alerts */
@@ -1828,6 +2246,103 @@ body {
     
     ::-webkit-scrollbar-thumb:hover {
         background: #a8a8a8;
+    }
+    
+    /* Fix common mobile distortion issues */
+    
+    /* Prevent text overflow */
+    h1, h2, h3, h4, h5, h6, p, span, div {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        hyphens: auto;
+        max-width: 100%;
+    }
+    
+    /* Fix flex items overflow */
+    .flex, .d-flex, [class*="flex-"] {
+        min-width: 0;
+        flex-shrink: 1;
+    }
+    
+    /* Fix grid items overflow */
+    .grid, [class*="grid-"] {
+        min-width: 0;
+    }
+    
+    /* Fix absolute positioned elements */
+    .absolute, [class*="absolute"] {
+        max-width: 100vw;
+    }
+    
+    /* Fix fixed positioned elements */
+    .fixed, [class*="fixed"] {
+        max-width: 100vw;
+    }
+    
+    /* Ensure all containers respect viewport */
+    .container, .container-fluid, .row, .col, [class*="col-"] {
+        max-width: 100vw;
+        overflow-x: hidden;
+    }
+    
+    /* Fix images and media */
+    img, video, iframe, canvas {
+        max-width: 100%;
+        height: auto;
+        display: block;
+    }
+    
+    /* Fix long words and URLs */
+    .long-text, .url, .email {
+        word-break: break-all;
+        overflow-wrap: break-word;
+    }
+    
+    /* Fix modal and overlay issues */
+    .modal, .overlay, .popup {
+        max-width: 100vw;
+        max-height: 100vh;
+        overflow-x: hidden;
+    }
+    
+    /* Fix navigation overflow */
+    .nav, .navbar, .menu {
+        max-width: 100vw;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Fix footer issues */
+    .footer {
+        max-width: 100vw;
+        overflow-x: hidden;
+    }
+    
+    /* Fix specific AirBytes components */
+    .current-aqi-card,
+    .weather-card,
+    .health-summary-card,
+    .data-card,
+    .alert-card,
+    .recommendation-card {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+    
+    /* Fix chatbot mobile issues */
+    .chatbot-container {
+        max-width: 100vw;
+        overflow-x: hidden;
+    }
+    
+    .chatbot-messages {
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+    
+    .chatbot-message {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
     }
     
     .header-info {
@@ -2985,71 +3500,151 @@ input, select, textarea {
     }
 }
 
-/* Extra small screens (320px and below) */
+/* Extra small screens (320px and below) - Fixed distortion */
 @media (max-width: 320px) {
-    body {
+    /* Force viewport constraints */
+    html, body {
         font-size: 13px;
+        width: 100vw;
+        max-width: 100vw;
+        overflow-x: hidden;
+        margin: 0;
+        padding: 0;
     }
     
+    /* Header fixes for very small screens */
     .header {
         padding: 0.5rem 0.25rem;
+        width: 100vw;
+        max-width: 100vw;
+        overflow-x: hidden;
     }
     
     .logo h1 {
         font-size: 1rem;
+        line-height: 1.1;
+        word-wrap: break-word;
     }
     
     .logo p {
         font-size: 0.6rem;
+        line-height: 1.1;
+    }
+    
+    /* Navigation fixes for very small screens - Scrollable */
+    .main-navigation {
+        width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    
+    .main-navigation::-webkit-scrollbar {
+        display: none;
+    }
+    
+    .nav-container {
+        display: flex;
+        gap: 0.25rem;
+        padding: 0.25rem;
+        min-width: max-content;
+        width: max-content;
     }
     
     .nav-btn {
         padding: 0.4rem 0.6rem;
-        font-size: 0.7rem;
-        min-width: auto;
-        flex: 1;
-        max-width: 100px;
+        font-size: 0.65rem;
+        min-width: 70px;
+        width: auto;
+        max-width: none;
+        text-align: center;
+        white-space: nowrap;
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 40px;
     }
     
+    .nav-btn i {
+        font-size: 0.9rem;
+        margin-bottom: 0.1rem;
+    }
+    
+    .nav-btn span {
+        font-size: 0.6rem;
+        line-height: 1;
+    }
+    
+    /* Content fixes for very small screens */
     .main-content {
         padding: 0.25rem;
+        width: 100vw;
+        max-width: 100vw;
+        overflow-x: hidden;
     }
     
     .section {
         padding: 0.5rem 0.25rem;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
     }
     
+    /* Card fixes for very small screens */
     .current-aqi-card,
     .weather-card,
     .health-summary-card,
     .data-card {
         padding: 0.8rem;
         margin: 0.25rem 0;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+        box-sizing: border-box;
     }
     
     .aqi-value {
         font-size: 1.8rem;
+        line-height: 1;
     }
     
+    /* Button fixes for very small screens */
     .btn {
         padding: 0.5rem 0.8rem;
         font-size: 0.75rem;
         min-height: 40px;
+        width: 100%;
+        max-width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
     
+    /* Form fixes for very small screens */
     .form-group input,
     .form-group select,
     .form-group textarea {
         padding: 0.5rem;
-        font-size: 13px;
+        font-size: 16px; /* Keep 16px to prevent zoom */
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
     }
     
+    /* Chatbot fixes for very small screens */
     .chatbot-container {
         height: 80vh;
         max-height: 400px;
         bottom: 60px;
-        right: 3px;
-        left: 3px;
+        right: 2px;
+        left: 2px;
+        width: calc(100vw - 4px);
+        max-width: calc(100vw - 4px);
+        overflow-x: hidden;
     }
     
     .chatbot-toggle {
@@ -3063,17 +3658,66 @@ input, select, textarea {
     .chatbot-messages {
         padding: 0.6rem;
         font-size: 0.8rem;
+        max-width: 100%;
+        overflow-x: hidden;
     }
     
     .chatbot-input {
-        font-size: 12px;
+        font-size: 16px; /* Keep 16px to prevent zoom */
         padding: 0.6rem;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
     }
     
     .chatbot-send {
         width: 36px;
         height: 36px;
         font-size: 0.8rem;
+        flex-shrink: 0;
+    }
+    
+    /* Grid fixes for very small screens */
+    .weather-grid,
+    .health-grid,
+    .agricultural-grid {
+        grid-template-columns: 1fr;
+        gap: 0.25rem;
+    }
+    
+    .weather-item,
+    .health-item,
+    .agricultural-item {
+        padding: 0.6rem;
+        font-size: 0.8rem;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+    
+    /* Chart fixes for very small screens */
+    .chart-container {
+        height: 150px;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+    
+    .chart-container canvas {
+        width: 100% !important;
+        height: 150px !important;
+        max-width: 100%;
+    }
+    
+    /* Table fixes for very small screens */
+    .data-table {
+        font-size: 0.7rem;
+        min-width: 100%;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 0.3rem 0.2rem;
+        min-width: 60px;
     }
 }
 
@@ -3164,6 +3808,506 @@ input, select, textarea {
         background: #404040;
         color: #ffffff;
         border: 1px solid #555555;
+    }
+}
+
+/* Global Navigation Fixes */
+.content-section {
+    display: none;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
+}
+
+.content-section.active {
+    display: block;
+}
+
+.nav-btn {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+.nav-container {
+    flex-wrap: nowrap !important;
+    overflow: visible;
+}
+
+/* Additional Mobile Distortion Fixes */
+
+/* Fix for iOS Safari viewport issues */
+@supports (-webkit-touch-callout: none) {
+    @media (max-width: 768px) {
+        html {
+            -webkit-text-size-adjust: 100%;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            -webkit-overflow-scrolling: touch;
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
+        }
+        
+        .main-content,
+        .section {
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
+        }
+    }
+}
+
+/* Fix for Android Chrome viewport issues */
+@media (max-width: 768px) and (-webkit-min-device-pixel-ratio: 1) {
+    html {
+        -webkit-text-size-adjust: 100%;
+    }
+    
+    body {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+}
+
+/* Fix for specific mobile browsers */
+@media (max-width: 768px) {
+    /* Prevent horizontal scroll on all elements */
+    * {
+        max-width: 100vw;
+    }
+    
+    /* Fix for flexbox overflow issues */
+    .flex, .d-flex, [class*="flex-"] {
+        min-width: 0;
+        flex-shrink: 1;
+        flex-basis: auto;
+    }
+    
+    /* Fix for grid overflow issues */
+    .grid, [class*="grid-"] {
+        min-width: 0;
+        grid-template-columns: 1fr;
+    }
+    
+    /* Fix for absolute/fixed positioning issues */
+    .absolute, .fixed, [class*="absolute"], [class*="fixed"] {
+        max-width: 100vw;
+        left: 0;
+        right: 0;
+    }
+    
+    /* Fix for transform issues */
+    .transform, [class*="transform"] {
+        max-width: 100vw;
+    }
+    
+    /* Fix for specific AirBytes layout issues */
+    .header-content {
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .nav-buttons {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 0.5rem;
+        width: 100%;
+    }
+    
+    .location-selector {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    /* Fix for card overflow */
+    .card, .data-card, .weather-card, .health-summary-card {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        hyphens: auto;
+    }
+    
+    /* Fix for text overflow */
+    h1, h2, h3, h4, h5, h6 {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        hyphens: auto;
+        line-height: 1.2;
+    }
+    
+    p, span, div, li {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        hyphens: auto;
+    }
+    
+    /* Fix for button overflow */
+    .btn, .nav-btn {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-width: 44px;
+        min-height: 44px;
+    }
+    
+    /* Fix for input overflow */
+    input, select, textarea {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+    
+    /* Fix for image overflow */
+    img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+    }
+    
+    /* Fix for table overflow */
+    .data-table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    /* Fix for chart overflow */
+    .chart-container {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+    
+    .chart-container canvas {
+        max-width: 100%;
+        width: 100% !important;
+    }
+    
+    /* Fix for chatbot overflow */
+    .chatbot-container {
+        max-width: 100vw;
+        overflow-x: hidden;
+    }
+    
+    .chatbot-messages {
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+    
+    .chatbot-message {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+    
+    /* Fix for modal overflow */
+    .modal, .overlay {
+        max-width: 100vw;
+        max-height: 100vh;
+        overflow-x: hidden;
+    }
+    
+    /* Fix for footer overflow */
+    .footer {
+        max-width: 100vw;
+        overflow-x: hidden;
+    }
+    
+    /* Fix for specific AirBytes sections */
+    .weather-section,
+    .health-section,
+    .agricultural-section {
+        max-width: 100vw;
+        overflow-x: hidden;
+    }
+    
+    /* Fix for grid items */
+    .weather-grid,
+    .health-grid,
+    .agricultural-grid {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    .weather-item,
+    .health-item,
+    .agricultural-item {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+        word-wrap: break-word;
+    }
+}
+
+/* Navigation scrollable for all screen sizes - Enhanced */
+@media (max-width: 1024px) {
+    /* Force horizontal scroll for all devices */
+    .main-navigation {
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+        scrollbar-width: none !important;
+        -ms-overflow-style: none !important;
+        touch-action: pan-x !important;
+        overscroll-behavior-x: contain !important;
+        scroll-behavior: smooth !important;
+    }
+    
+    .main-navigation::-webkit-scrollbar {
+        display: none !important;
+    }
+    
+    .nav-container {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        min-width: max-content !important;
+        width: max-content !important;
+    }
+    
+    .nav-btn {
+        flex-shrink: 0 !important;
+        white-space: nowrap !important;
+    }
+    
+    .main-navigation {
+        width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE and Edge */
+        position: relative;
+        touch-action: pan-x;
+        overscroll-behavior-x: contain;
+        scroll-behavior: smooth;
+    }
+    
+    .main-navigation::-webkit-scrollbar {
+        display: none; /* Chrome, Safari, Opera */
+    }
+    
+    .nav-container {
+        display: flex;
+        gap: 0.5rem;
+        padding: 0.5rem;
+        min-width: max-content;
+        width: max-content;
+        flex-wrap: nowrap;
+        align-items: center;
+        height: 100%;
+    }
+    
+    .nav-btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.8rem;
+        text-align: center;
+        white-space: nowrap;
+        min-height: 44px;
+        min-width: 80px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        color: #495057;
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+    }
+    
+    .nav-btn:hover {
+        background: #e9ecef;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .nav-btn:active {
+        transform: translateY(0);
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    
+    .nav-btn i {
+        font-size: 1.1rem;
+        margin-bottom: 0.25rem;
+        flex-shrink: 0;
+    }
+    
+    .nav-btn span {
+        font-size: 0.75rem;
+        line-height: 1;
+        font-weight: 500;
+    }
+    
+    /* Enhanced scroll indicators for navigation */
+    .main-navigation {
+        position: relative;
+        background: linear-gradient(90deg, 
+            rgba(255,255,255,1) 0%, 
+            rgba(255,255,255,0.95) 5%, 
+            rgba(255,255,255,0.9) 10%, 
+            rgba(255,255,255,0.8) 15%, 
+            rgba(255,255,255,0.6) 20%, 
+            transparent 25%, 
+            transparent 75%, 
+            rgba(255,255,255,0.6) 80%, 
+            rgba(255,255,255,0.8) 85%, 
+            rgba(255,255,255,0.9) 90%, 
+            rgba(255,255,255,0.95) 95%, 
+            rgba(255,255,255,1) 100%
+        );
+    }
+    
+    .main-navigation::before,
+    .main-navigation::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 30px;
+        pointer-events: none;
+        z-index: 2;
+        transition: opacity 0.3s ease;
+    }
+    
+    .main-navigation::before {
+        left: 0;
+        background: linear-gradient(to right, 
+            rgba(255,255,255,1) 0%, 
+            rgba(255,255,255,0.8) 30%, 
+            rgba(255,255,255,0.4) 60%, 
+            transparent 100%
+        );
+    }
+    
+    .main-navigation::after {
+        right: 0;
+        background: linear-gradient(to left, 
+            rgba(255,255,255,1) 0%, 
+            rgba(255,255,255,0.8) 30%, 
+            rgba(255,255,255,0.4) 60%, 
+            transparent 100%
+        );
+    }
+    
+    /* Hide indicators when at scroll boundaries */
+    .main-navigation.scroll-start::before {
+        opacity: 0;
+    }
+    
+    .main-navigation.scroll-end::after {
+        opacity: 0;
+    }
+    
+    /* Active navigation button highlight */
+    .nav-btn.active {
+        background: #007bff;
+        color: white;
+        transform: scale(1.05);
+        box-shadow: 0 2px 8px rgba(0,123,255,0.3);
+    }
+    
+    .nav-btn:hover {
+        background: #f8f9fa;
+        transform: scale(1.02);
+    }
+    
+    .nav-btn:active {
+        transform: scale(0.98);
+    }
+    
+    /* Enhanced touch-friendly scroll improvements */
+    .main-navigation {
+        touch-action: pan-x;
+        overscroll-behavior-x: contain;
+        scroll-snap-type: x mandatory;
+        scroll-padding: 0 20px;
+    }
+    
+    /* Smooth scroll behavior */
+    .nav-container {
+        scroll-behavior: smooth;
+    }
+    
+    /* Snap scrolling for better UX */
+    .nav-btn {
+        scroll-snap-align: center;
+        scroll-snap-stop: normal;
+    }
+    
+    /* Enhanced scroll momentum */
+    .main-navigation {
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+        overscroll-behavior-x: contain;
+        overscroll-behavior-y: none;
+    }
+    
+    /* Scroll shadow effects */
+    .main-navigation.scroll-start::after {
+        opacity: 1;
+        animation: fadeInRight 0.3s ease;
+    }
+    
+    .main-navigation.scroll-end::before {
+        opacity: 1;
+        animation: fadeInLeft 0.3s ease;
+    }
+    
+    @keyframes fadeInRight {
+        from { opacity: 0; transform: translateX(10px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    
+    @keyframes fadeInLeft {
+        from { opacity: 0; transform: translateX(-10px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    
+    /* Active button pulse animation */
+    .nav-btn.active {
+        animation: pulseActive 2s infinite;
+    }
+    
+    @keyframes pulseActive {
+        0% { box-shadow: 0 2px 8px rgba(0,123,255,0.3); }
+        50% { box-shadow: 0 4px 16px rgba(0,123,255,0.5); }
+        100% { box-shadow: 0 2px 8px rgba(0,123,255,0.3); }
+    }
+    
+    /* Ensure all sections are accessible */
+    .content-section {
+        display: none;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+    
+    .content-section.active {
+        display: block;
+    }
+    
+    /* Fix for navigation button visibility */
+    .nav-btn {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+    }
+    
+    /* Ensure navigation container doesn't wrap */
+    .nav-container {
+        flex-wrap: nowrap !important;
+        overflow: visible;
     }
 }
 

@@ -129,6 +129,12 @@ class AirBytesApp {
         document.getElementById('refreshMapBtn').addEventListener('click', () => {
             this.refreshMapData();
         });
+        
+        // Debug: Check all sections are available
+        this.debugSections();
+        
+        // Initialize navigation scroll functionality
+        this.initializeNavigationScroll();
 
 
         document.addEventListener('click', (e) => {
@@ -712,27 +718,266 @@ class AirBytesApp {
     
 
     showSection(sectionName) {
+        console.log('🔄 Switching to section:', sectionName);
         
+        // Hide all sections
         document.querySelectorAll('.content-section').forEach(section => {
             section.classList.remove('active');
         });
 
-        
+        // Remove active class from all nav buttons
         document.querySelectorAll('.nav-btn').forEach(btn => {
             btn.classList.remove('active');
         });
 
+        // Show target section
+        const targetSection = document.getElementById(`${sectionName}-section`);
+        if (targetSection) {
+            targetSection.classList.add('active');
+            console.log('✅ Section activated:', sectionName);
+        } else {
+            console.error('❌ Section not found:', sectionName);
+        }
         
-        document.getElementById(`${sectionName}-section`).classList.add('active');
+        // Activate corresponding nav button
+        const activeButton = document.querySelector(`[data-section="${sectionName}"]`);
+        if (activeButton) {
+            activeButton.classList.add('active');
+            console.log('✅ Nav button activated:', sectionName);
+        } else {
+            console.error('❌ Nav button not found:', sectionName);
+        }
         
-        
-        document.querySelector(`[data-section="${sectionName}"]`).classList.add('active');
+        // Auto-scroll to center the active button
+        this.scrollToActiveNavButton(activeButton);
 
-        
         this.currentSection = sectionName;
 
-        
+        // Load section data
         this.loadSectionData(sectionName);
+    }
+    
+    debugSections() {
+        const sections = ['today', 'hourly', 'daily', 'monthly', 'air-quality', 'user-guide', 'farmers', 'health'];
+        console.log('🔍 Debugging sections availability:');
+        
+        sections.forEach(section => {
+            const sectionElement = document.getElementById(`${section}-section`);
+            const navButton = document.querySelector(`[data-section="${section}"]`);
+            
+            console.log(`📋 ${section}:`, {
+                sectionElement: sectionElement ? '✅ Found' : '❌ Missing',
+                navButton: navButton ? '✅ Found' : '❌ Missing',
+                sectionId: `${section}-section`,
+                dataSection: section
+            });
+        });
+    }
+    
+    initializeNavigationScroll() {
+        const navigation = document.querySelector('.main-navigation');
+        if (!navigation) return;
+        
+        console.log('🔄 Initializing navigation scroll functionality');
+        
+        // Force scroll properties for mobile
+        navigation.style.overflowX = 'auto';
+        navigation.style.overflowY = 'hidden';
+        navigation.style.webkitOverflowScrolling = 'touch';
+        navigation.style.scrollBehavior = 'smooth';
+        navigation.style.touchAction = 'pan-x';
+        navigation.style.overscrollBehaviorX = 'contain';
+        
+        // Ensure nav-container has proper flex properties
+        const navContainer = navigation.querySelector('.nav-container');
+        if (navContainer) {
+            navContainer.style.display = 'flex';
+            navContainer.style.flexWrap = 'nowrap';
+            navContainer.style.minWidth = 'max-content';
+            navContainer.style.width = 'max-content';
+        }
+        
+        // Ensure all nav buttons are properly configured
+        const navButtons = navigation.querySelectorAll('.nav-btn');
+        navButtons.forEach(btn => {
+            btn.style.flexShrink = '0';
+            btn.style.whiteSpace = 'nowrap';
+        });
+        
+        // Add scroll event listener
+        navigation.addEventListener('scroll', () => {
+            this.updateScrollIndicators(navigation);
+        });
+        
+        // Add touch event listeners for better mobile experience
+        navigation.addEventListener('touchstart', (e) => {
+            this.handleTouchStart(e, navigation);
+        });
+        
+        navigation.addEventListener('touchmove', (e) => {
+            this.handleTouchMove(e, navigation);
+        });
+        
+        navigation.addEventListener('touchend', (e) => {
+            this.handleTouchEnd(e, navigation);
+        });
+        
+        // Initial update of scroll indicators
+        this.updateScrollIndicators(navigation);
+        
+        // Force a reflow to ensure styles are applied
+        navigation.offsetHeight;
+        
+        console.log('✅ Navigation scroll initialized with forced properties');
+        
+        // Verify all sections are accessible
+        this.verifyMobileNavigation();
+    }
+    
+    verifyMobileNavigation() {
+        const navigation = document.querySelector('.main-navigation');
+        const navContainer = navigation?.querySelector('.nav-container');
+        const navButtons = navigation?.querySelectorAll('.nav-btn');
+        
+        console.log('📱 Mobile navigation verification:');
+        console.log('Navigation element:', navigation ? '✅ Found' : '❌ Missing');
+        console.log('Nav container:', navContainer ? '✅ Found' : '❌ Missing');
+        console.log('Nav buttons count:', navButtons?.length || 0);
+        
+        if (navContainer) {
+            console.log('Container styles:', {
+                display: getComputedStyle(navContainer).display,
+                flexWrap: getComputedStyle(navContainer).flexWrap,
+                minWidth: getComputedStyle(navContainer).minWidth,
+                width: getComputedStyle(navContainer).width
+            });
+        }
+        
+        if (navigation) {
+            console.log('Navigation styles:', {
+                overflowX: getComputedStyle(navigation).overflowX,
+                overflowY: getComputedStyle(navigation).overflowY,
+                webkitOverflowScrolling: getComputedStyle(navigation).webkitOverflowScrolling,
+                scrollBehavior: getComputedStyle(navigation).scrollBehavior
+            });
+        }
+        
+        // Test scroll functionality
+        if (navigation && navButtons.length > 4) {
+            console.log('🧪 Testing scroll functionality...');
+            const lastButton = navButtons[navButtons.length - 1];
+            const scrollLeft = lastButton.offsetLeft - navigation.clientWidth / 2;
+            
+            navigation.scrollTo({
+                left: scrollLeft,
+                behavior: 'smooth'
+            });
+            
+            setTimeout(() => {
+                console.log('📊 Scroll test result:', {
+                    scrollLeft: navigation.scrollLeft,
+                    maxScroll: navigation.scrollWidth - navigation.clientWidth,
+                    canScroll: navigation.scrollWidth > navigation.clientWidth
+                });
+            }, 500);
+        }
+    }
+    
+    updateScrollIndicators(navigation) {
+        const scrollLeft = navigation.scrollLeft;
+        const scrollWidth = navigation.scrollWidth;
+        const clientWidth = navigation.clientWidth;
+        const maxScroll = scrollWidth - clientWidth;
+        
+        // Remove existing classes
+        navigation.classList.remove('scroll-start', 'scroll-end');
+        
+        // Add appropriate classes based on scroll position
+        if (scrollLeft <= 5) {
+            navigation.classList.add('scroll-start');
+        }
+        
+        if (scrollLeft >= maxScroll - 5) {
+            navigation.classList.add('scroll-end');
+        }
+        
+        console.log('📊 Scroll indicators updated:', {
+            scrollLeft: scrollLeft,
+            maxScroll: maxScroll,
+            isAtStart: scrollLeft <= 5,
+            isAtEnd: scrollLeft >= maxScroll - 5
+        });
+    }
+    
+    handleTouchStart(e, navigation) {
+        this.touchStartX = e.touches[0].clientX;
+        this.touchStartScrollLeft = navigation.scrollLeft;
+        navigation.style.scrollBehavior = 'auto';
+    }
+    
+    handleTouchMove(e, navigation) {
+        if (!this.touchStartX) return;
+        
+        const touchCurrentX = e.touches[0].clientX;
+        const touchDiff = this.touchStartX - touchCurrentX;
+        const newScrollLeft = this.touchStartScrollLeft + touchDiff;
+        
+        // Prevent default to allow custom scroll behavior
+        e.preventDefault();
+        
+        // Apply scroll with momentum
+        navigation.scrollLeft = newScrollLeft;
+    }
+    
+    handleTouchEnd(e, navigation) {
+        if (!this.touchStartX) return;
+        
+        // Re-enable smooth scrolling
+        navigation.style.scrollBehavior = 'smooth';
+        
+        // Update scroll indicators
+        this.updateScrollIndicators(navigation);
+        
+        // Reset touch variables
+        this.touchStartX = null;
+        this.touchStartScrollLeft = null;
+    }
+    
+    scrollToActiveNavButton(activeButton) {
+        const navigation = document.querySelector('.main-navigation');
+        if (!navigation || !activeButton) return;
+        
+        console.log('🎯 Scrolling to active button:', activeButton);
+        
+        // Wait for next frame to ensure layout is complete
+        requestAnimationFrame(() => {
+            const containerRect = navigation.getBoundingClientRect();
+            const buttonRect = activeButton.getBoundingClientRect();
+            const containerCenter = containerRect.left + containerRect.width / 2;
+            const buttonCenter = buttonRect.left + buttonRect.width / 2;
+            
+            // Calculate scroll position to center the button
+            const scrollLeft = navigation.scrollLeft + (buttonCenter - containerCenter);
+            
+            console.log('📊 Scroll calculation:', {
+                containerCenter: containerCenter,
+                buttonCenter: buttonCenter,
+                currentScrollLeft: navigation.scrollLeft,
+                targetScrollLeft: scrollLeft,
+                scrollDiff: buttonCenter - containerCenter
+            });
+            
+            // Smooth scroll to center the active button
+            navigation.scrollTo({
+                left: scrollLeft,
+                behavior: 'smooth'
+            });
+            
+            // Update scroll indicators after scroll
+            setTimeout(() => {
+                this.updateScrollIndicators(navigation);
+            }, 300);
+        });
     }
 
     loadSectionData(sectionName) {
