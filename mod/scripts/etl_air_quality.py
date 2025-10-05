@@ -41,15 +41,21 @@ def clean_str(value):
 
 #-------------- CONECT TO DB ------------
 def get_conn():
-    dsn = (
-        f"dbname={DB_CONFIG['dbname']} "
-        f"user={DB_CONFIG['user']} "
-        f"password={DB_CONFIG['password']} "
-        f"host={DB_CONFIG['host']} "
-        f"port={DB_CONFIG['port']} "
-        f"options='-c client_encoding=UTF8'"
-    )
-    return psycopg2.connect(dsn)
+    """Conexión robusta a PostgreSQL, forzando codificación UTF-8"""
+    import psycopg2
+    import urllib.parse
+
+    dbname = DB_CONFIG["dbname"]
+    user = urllib.parse.quote(DB_CONFIG["user"])
+    password = urllib.parse.quote(DB_CONFIG["password"])
+    host = DB_CONFIG["host"]
+    port = DB_CONFIG["port"]
+
+    dsn = f"dbname={dbname} user={user} password={password} host={host} port={port} options='-c client_encoding=UTF8'"
+
+    return psycopg2.connect(dsn.encode("utf-8", errors="replace").decode("utf-8", errors="replace"))
+
+
 
 # ---------------- SATELLITE NRT (TEMPO + TROPOMI) ----------------
 
